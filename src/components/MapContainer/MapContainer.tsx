@@ -4,7 +4,7 @@ import { useCatalogContext } from "../../context/CatalogContext";
 import styles from "./MapContainer.module.css";
 import {
   CustomProperties,
-  FeatureCollection,
+  
 } from "../../types/allTypesAndInterfaces";
 
 mapboxgl.accessToken = process.env?.REACT_APP_MAPBOX_KEY ?? "";

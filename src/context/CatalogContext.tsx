@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import {
   CatalogContextType,
-  FeatureCollection,
+  MapFeatures,
   Feature,
   SaveResponse,
 } from "../types/allTypesAndInterfaces";
@@ -35,10 +35,8 @@ export function CatalogProvider(props: { children: ReactNode }) {
     "Catalogue" | "Layer" | "Home"
   >("Home");
 
-  const [geoPoints, setGeoPoints] = useState<FeatureCollection | string>("");
-  const [tempGeoPointsList, setTempGeoPointsList] = useState<
-    FeatureCollection[]
-  >([]);
+  const [geoPoints, setGeoPoints] = useState<MapFeatures | string>("");
+  const [tempGeoPointsList, setTempGeoPointsList] = useState<MapFeatures[]>([]);
   const [lastGeoIdRequest, setLastGeoIdRequest] = useState<
     string | undefined
   >();
@@ -75,10 +73,10 @@ export function CatalogProvider(props: { children: ReactNode }) {
 
 
   function processFeatureCollection(
-    item: FeatureCollection,
+    item: MapFeatures,
     id: string,
     color: string
-  ): FeatureCollection {
+  ): MapFeatures {
     return {
       ...item,
       features: item.features.map(function (feature) {
@@ -95,10 +93,10 @@ export function CatalogProvider(props: { children: ReactNode }) {
   }
 
   function processData(
-    data: FeatureCollection | FeatureCollection[],
+    data: MapFeatures | MapFeatures[],
     id: string,
     color: string
-  ): FeatureCollection[] {
+  ): MapFeatures[] {
     if (Array.isArray(data)) {
       return data
         .filter(function (item) {
@@ -181,7 +179,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
   }
 
   // This function combines multiple FeatureCollection objects into one, assigning colors based on selectedLayers and adding properties like color and geoPointId to each feature.
-  function mergeFeatures(featuresList: FeatureCollection[]): FeatureCollection {
+  function mergeFeatures(featuresList: MapFeatures[]): MapFeatures {
     const mergedFeatures = featuresList.reduce(function (
       acc,
       featureCollection
@@ -252,7 +250,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
         ? urls.fetch_ctlg_lyrs
         : urls.http_catlog_data;
 
-    await HttpReq<FeatureCollection | FeatureCollection[]>(
+    await HttpReq<MapFeatures | MapFeatures[]>(
       url,
       function (data) {
         const updatedDataArray = processData(data, id, color);

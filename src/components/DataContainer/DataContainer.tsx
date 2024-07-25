@@ -10,7 +10,7 @@ import {
 } from "../../types/allTypesAndInterfaces";
 import { useCatalogContext } from "../../context/CatalogContext";
 import { useUIContext } from "../../context/UIContext";
-import { FeatureCollection } from "../../types/allTypesAndInterfaces";
+import { MapFeatures } from "../../types/allTypesAndInterfaces";
 import UserLayerCard from "../UserLayerCard/UserLayerCard";
 import userIdData from "../../currentUserId.json";
 import { isValidColor, colorOptions } from "../../utils/helperFunctions";
@@ -166,7 +166,7 @@ function DataContainer() {
   // Handle click event on catalog card
   function handleCatalogCardClick(selectedItem: CardItem) {
     if (selectedContainerType === "Home") {
-      HttpReq<FeatureCollection>(
+      HttpReq<MapFeatures>(
         urls.http_catlog_data,
         setGeoPoints,
         setWsResMessage,

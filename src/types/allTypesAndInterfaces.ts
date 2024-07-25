@@ -40,7 +40,7 @@ export interface Catalog {
   prdcer_ctlg_name?: string;
   total_records?: number;
   ctlg_description?: string;
-  lyrs?: { layer_id: string; points_color: string }[]; 
+  lyrs?: { layer_id: string; points_color: string }[];
 }
 
 export interface UserLayer {
@@ -127,10 +127,8 @@ export interface CatalogContextType {
   ): void;
   handleSave(): void;
   resetFormStage(resetTo: string): void;
-  geoPoints: FeatureCollection | string;
-  setGeoPoints: React.Dispatch<
-    React.SetStateAction<FeatureCollection | string>
-  >;
+  geoPoints: MapFeatures | string;
+  setGeoPoints: React.Dispatch<React.SetStateAction<MapFeatures | string>>;
   selectedColor: string;
   setSelectedColor: React.Dispatch<React.SetStateAction<string>>;
   selectedLayers: {
@@ -156,9 +154,7 @@ export interface CatalogContextType {
   resetState(): void;
   updateLayerColor(layerIndex: number, newColor: string): void;
   updateLayerZone(layerIndex: number, isZoneLayer: boolean): void;
-  setTempGeoPointsList: React.Dispatch<
-    React.SetStateAction<FeatureCollection[]>
-  >;
+  setTempGeoPointsList: React.Dispatch<React.SetStateAction<MapFeatures[]>>;
   openDropdownIndex: number | null;
   setOpenDropdownIndex: React.Dispatch<React.SetStateAction<number | null>>;
   updateLayerDisplay(layerIndex: number, display: boolean): void;
@@ -188,13 +184,7 @@ export interface RequestType {
   error: Error | null;
 }
 
-export interface FirstFormResponse {
-  message: string;
-  request_id: string;
-  data: FeatureCollection;
-  bknd_dataset_id: string;
-  prdcer_lyr_id: string;
-}
+
 
 export interface LayerContextType {
   secondFormData: {
@@ -292,9 +282,19 @@ export interface Feature {
   };
 }
 
-export interface FeatureCollection {
+export interface MapFeatures {
   type: "FeatureCollection";
   features: Feature[];
+}
+
+
+export interface FirstFormResponse {
+  type: MapFeatures;
+  features: Feature[];
+  bknd_dataset_id: string;
+  prdcer_lyr_id: string;
+  records_count: number;
+  next_page_token: string;
 }
 
 // Commented out to avoid duplication
