@@ -1,4 +1,4 @@
-import React, { useEffect, useState, ChangeEvent } from "react";
+import React, { useEffect, useState, ChangeEvent, useRef } from "react";
 import { HttpReq } from "../../services/apiService";
 import {
   formatSubcategoryName,
@@ -12,11 +12,19 @@ import {
 import styles from "./LayerDetailsForm.module.css";
 import Loader from "../Loader/Loader";
 import { useLayerContext } from "../../context/LayerContext";
+import { useCatalogContext } from "../../context/CatalogContext";
 import urls from "../../urls.json";
 
 function LayerDetailsForm() {
-  const { handleNextStep, setFirstFormResponse, loading, setDatasetInfo } =
-    useLayerContext();
+  const {
+    handleNextStep,
+    setFirstFormResponse,
+    loading,
+    setDatasetInfo,
+    setCentralizeOnce,
+  } = useLayerContext();
+
+  const { setGeoPoints } = useCatalogContext();
 
   const [textSearchInput, setTextSearchInput] = useState<string>("");
   const [searchType, setSearchType] = useState<string>("new nearby search");
@@ -51,11 +59,17 @@ function LayerDetailsForm() {
   const [categoriesResId, setCategoriesResId] = useState<string>("");
 
   // Nearby_cities post response information
+  const [postResponse, setPostResponse] = useState<FirstFormResponse | null>(
+    null
+  );
   const [postResMessage, setPostResMessage] = useState<string>("");
   const [postResId, setPostResId] = useState<string>("");
 
   const [shouldMoveToNextStep, setShouldMoveToNextStep] =
     useState<boolean>(false);
+
+  const callCountRef = useRef(0);
+  const MAX_CALLS = 10;
 
   function fetchData() {
     HttpReq<string[]>(
@@ -83,6 +97,8 @@ function LayerDetailsForm() {
 
   useEffect(function () {
     fetchData();
+    setFirstFormResponse("");
+    setGeoPoints("");
   }, []);
 
   function handleChange(event: ChangeEvent<HTMLSelectElement>) {
@@ -146,12 +162,15 @@ function LayerDetailsForm() {
 
   function handleButtonClick(action: string) {
     if (validateForm(action)) {
+      if (action === "full data") {
+        setCentralizeOnce(true); // Set the centralizeOnce flag to true when fetching full data
+      }
       setShouldMoveToNextStep(true);
       handleFirstFormApiCall(action);
     }
   }
 
-  function handleFirstFormApiCall(action: string) {
+  function handleFirstFormApiCall(action: string, pageToken?: string) {
     const selectedCity = cities.find(function (city) {
       return city.name === firstFormData.selectedCity;
     });
@@ -161,97 +180,94 @@ function LayerDetailsForm() {
       return;
     }
 
-    let callCount = 0;
-    const MAX_CALLS = 10;
+    if (callCountRef.current >= MAX_CALLS) {
+      console.log("Reached maximum number of API calls");
+      handleNextStep();
+      return;
+    }
 
-    const makeApiCall = (pageToken?: string) => {
-      if (callCount >= MAX_CALLS) {
-        console.log("Reached maximum number of API calls");
-        handleNextStep();
-        return;
-      }
+    callCountRef.current++;
+    console.log(
+      `Making API call ${callCountRef.current} with pageToken: ${pageToken}`
+    );
 
-      callCount++;
-
-      const postData = {
-        dataset_category: firstFormData.selectedSubcategory,
-        dataset_country: firstFormData.selectedCountry,
-        dataset_city: firstFormData.selectedCity,
-        action: action,
-        search_type: searchType,
-        ...(searchType === "text search" && {
-          text_search_input: textSearchInput.trim(),
-        }),
-        ...(action === "full data" && { password: password }),
-        ...(pageToken && { page_token: pageToken }),
-      };
-
-      HttpReq<FirstFormResponse>(
-        urls.create_layer,
-        function (response) {
-          console.log("Response received:", response); // Add this log to trace the response
-          if (
-            !response ||
-            typeof response !== "object" ||
-            !Array.isArray(response.features)
-          ) {
-            console.error("Invalid GeoJSON object - no data", response);
-            setError(new Error("Input data is not a valid GeoJSON object."));
-            return;
-          }
-
-          setFirstFormResponse((prevResponse) => {
-            if (
-              prevResponse &&
-              typeof prevResponse !== "string" &&
-              prevResponse &&
-              response
-            ) {
-              // Merge the features from the new response with the existing ones
-              return {
-                ...response,
-                data: {
-                  ...response,
-                  features: [
-                    ...(prevResponse.features || []),
-                    ...(response.features || []),
-                  ],
-                },
-              };
-            }
-            return response;
-          });
-
-          if (response.bknd_dataset_id && response.prdcer_lyr_id) {
-            setDatasetInfo({
-              bknd_dataset_id: response.bknd_dataset_id,
-              prdcer_lyr_id: response.prdcer_lyr_id,
-            });
-          }
-
-          // Check if there's a next page token and if we haven't reached the max calls
-          if (response.next_page_token && callCount < MAX_CALLS) {
-            makeApiCall(response.next_page_token);
-          } else {
-            // If no more pages or reached max calls, proceed to the next step
-            handleNextStep();
-          }
-        },
-        setPostResMessage,
-        setPostResId,
-        setLocalLoading,
-        setError,
-        "post",
-        postData
-      );
+    const postData = {
+      dataset_category: firstFormData.selectedSubcategory,
+      dataset_country: firstFormData.selectedCountry,
+      dataset_city: firstFormData.selectedCity,
+      action: action,
+      search_type: searchType,
+      ...(searchType === "text search" && {
+        text_search_input: textSearchInput.trim(),
+      }),
+      ...(action === "full data" && { password: password }),
+      ...(pageToken && { page_token: pageToken }),
     };
 
-    // Initial API call
-    makeApiCall();
+    HttpReq<FirstFormResponse>(
+      urls.create_layer,
+      setPostResponse,
+      setPostResMessage,
+      setPostResId,
+      setLocalLoading,
+      setError,
+      "post",
+      postData
+    );
   }
 
   useEffect(() => {
-    if (shouldMoveToNextStep) {
+    if (postResponse) {
+      console.log("Post response changed:", postResponse);
+      if (
+        !postResponse ||
+        typeof postResponse !== "object" ||
+        !Array.isArray(postResponse.features)
+      ) {
+        console.error("Invalid GeoJSON object - no data", postResponse);
+        setError(new Error("Input data is not a valid GeoJSON object."));
+        return;
+      }
+
+      setFirstFormResponse((prevResponse) => {
+        if (
+          prevResponse &&
+          typeof prevResponse !== "string" &&
+          prevResponse &&
+          postResponse
+        ) {
+          // Merge the features from the new response with the existing ones
+          const existingFeatures = prevResponse.features || [];
+          const newFeatures = postResponse.features || [];
+          return {
+            ...postResponse,
+            features: [...existingFeatures, ...newFeatures],
+          };
+        }
+        return postResponse;
+      });
+
+      if (postResponse.bknd_dataset_id && postResponse.prdcer_lyr_id) {
+        setDatasetInfo({
+          bknd_dataset_id: postResponse.bknd_dataset_id,
+          prdcer_lyr_id: postResponse.prdcer_lyr_id,
+        });
+      }
+
+      // Check if there's a next page token and if we haven't reached the max calls
+      if (postResponse.next_page_token && callCountRef.current < MAX_CALLS) {
+        console.log(`Next page token found: ${postResponse.next_page_token}`);
+        handleFirstFormApiCall("full data", postResponse.next_page_token);
+      } else {
+        // If no more pages or reached max calls, proceed to the next step
+        console.log("No more pages or reached max calls");
+        handleNextStep();
+      }
+    }
+  }, [postResponse]);
+
+  useEffect(() => {
+    if (shouldMoveToNextStep && callCountRef.current >= MAX_CALLS) {
       handleNextStep();
     }
   }, [shouldMoveToNextStep]);
@@ -426,7 +442,6 @@ function LayerDetailsForm() {
           </>
         )}
       </div>
-      {localLoading && <Loader />}
     </div>
   );
 }

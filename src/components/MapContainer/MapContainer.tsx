@@ -1,11 +1,10 @@
-import React, { useEffect, useRef } from "react";
+// MapContainer.js
+import React, { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import { useCatalogContext } from "../../context/CatalogContext";
+import { useLayerContext } from "../../context/LayerContext"; // Import the LayerContext
 import styles from "./MapContainer.module.css";
-import {
-  CustomProperties,
-  
-} from "../../types/allTypesAndInterfaces";
+import { CustomProperties } from "../../types/allTypesAndInterfaces";
 
 mapboxgl.accessToken = process.env?.REACT_APP_MAPBOX_KEY ?? "";
 mapboxgl.setRTLTextPlugin(
@@ -15,6 +14,8 @@ mapboxgl.setRTLTextPlugin(
 
 function MapContainer() {
   const { geoPoints } = useCatalogContext();
+  const { centralizeOnce, initialFlyToDone, setInitialFlyToDone } =
+    useLayerContext(); // Use the LayerContext
 
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -169,16 +170,27 @@ function MapContainer() {
               number
             ];
 
-            if (
-              JSON.stringify(newCoordinates) !==
-              JSON.stringify(lastCoordinatesRef.current)
-            ) {
+            if (centralizeOnce && !initialFlyToDone) {
               mapRef.current.flyTo({
                 center: newCoordinates,
                 zoom: 13,
                 speed: 10,
                 curve: 1,
               });
+              lastCoordinatesRef.current = newCoordinates;
+              setInitialFlyToDone(true); // Set the state to prevent further flyTo
+            } else if (
+              JSON.stringify(newCoordinates) !==
+              JSON.stringify(lastCoordinatesRef.current)
+            ) {
+              if (!centralizeOnce) {
+                mapRef.current.flyTo({
+                  center: newCoordinates,
+                  zoom: 13,
+                  speed: 10,
+                  curve: 1,
+                });
+              }
               lastCoordinatesRef.current = newCoordinates;
             }
           }
@@ -204,7 +216,7 @@ function MapContainer() {
         }
       };
     },
-    [geoPoints]
+    [geoPoints, initialFlyToDone, centralizeOnce]
   );
 
   return (

@@ -234,6 +234,10 @@ export interface LayerContextType {
     React.SetStateAction<SaveProducerLayerResponse | null>
   >;
   setSaveReqId: React.Dispatch<React.SetStateAction<string>>;
+  centralizeOnce: boolean;
+  setCentralizeOnce: React.Dispatch<React.SetStateAction<boolean>>;
+  initialFlyToDone: boolean;
+  setInitialFlyToDone: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export interface ModalOptions {

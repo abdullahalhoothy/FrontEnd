@@ -31,7 +31,6 @@ export function UIProvider({ children }: { children: ReactNode }) {
     setSaveResponse: setCatalogIsSaved,
     setIsError: setCatalogIsError,
     resetFormStage,
-    setSelectedLayers,
     resetState,
   } = useCatalogContext();
 
@@ -41,11 +40,13 @@ export function UIProvider({ children }: { children: ReactNode }) {
     setSaveResponse: setLayerIsSaved,
     setIsError: setLayerIsError,
     setFormStage,
+    setCentralizeOnce,
+    setInitialFlyToDone,
   } = useLayerContext();
 
   // Function to open the modal with specified content and options
   function openModal(content: ReactNode, options: ModalOptions = {}) {
-    setModalContent(content);
+    setModalContent(content)
     setModalOptions(options);
     setIsModalOpen(true);
   }
@@ -56,6 +57,8 @@ export function UIProvider({ children }: { children: ReactNode }) {
     setModalContent(null);
     setModalOptions({});
     setFormStage("initial");
+    setCentralizeOnce(false);
+    setInitialFlyToDone(false);
 
     // Reset CatalogContext states if applicable
     if (catalogIsSaved || catalogIsError) {

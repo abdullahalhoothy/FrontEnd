@@ -50,6 +50,10 @@ export function LayerProvider(props: { children: ReactNode }) {
   // Define color options and selected color state
   const [selectedColor, setSelectedColor] = useState<string>("");
 
+  // Centralization control state
+  const [centralizeOnce, setCentralizeOnce] = useState<boolean>(false);
+  const [initialFlyToDone, setInitialFlyToDone] = useState(false);
+
   // Function to handle progressing to the next step in the form
   function handleNextStep() {
     if (formStage === "initial") {
@@ -159,6 +163,10 @@ export function LayerProvider(props: { children: ReactNode }) {
         setSaveResponseMsg,
         setSaveResponse,
         setSaveReqId,
+        centralizeOnce,
+        setCentralizeOnce,
+        initialFlyToDone,
+        setInitialFlyToDone,
       }}
     >
       {children}
