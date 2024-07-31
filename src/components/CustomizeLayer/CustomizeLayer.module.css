@@ -1,0 +1,77 @@
+.container {
+  display: flex;
+  flex-direction: column;
+}
+
+.title {
+  margin-bottom: 20px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+}
+
+.formGroup {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #333;
+}
+
+.input,
+.select,
+.textarea {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+  font-size: 16px;
+}
+
+.textarea {
+  resize: none;
+}
+
+.description {
+  height: 60px;
+}
+
+.select:focus,
+.input:focus,
+.textarea:focus {
+  border-color: #007bff;
+  background-color: #fff;
+  outline: none;
+}
+
+.buttonContainer {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 40px;
+}
+
+.button {
+  padding: 12px 20px;
+  background-color: rgb(17, 87, 64);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: rgb(14, 70, 52);
+}
+
+.error {
+  color: red;
+  margin-top: 10px;
+  text-align: center;
+}

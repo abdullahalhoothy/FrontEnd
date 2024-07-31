@@ -1,0 +1,82 @@
+.categoryContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.categoryGroup {
+  flex: 1;
+  min-width: 200px;
+}
+
+.categoryTitle {
+  font-size: 18px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.typeList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.typeButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.typeButton:hover {
+  background-color: #e0e0e0;
+}
+
+.included {
+  background-color: #72f77d;
+  border-color: #167a1b;
+  color: #167a1b;
+}
+
+.excluded {
+  background-color: #ffebee;
+  border-color: #f44336;
+  color: #c62828;
+}
+
+.toggleIcon {
+  margin-left: 8px;
+  font-weight: bold;
+}
+
+/* Adjust existing styles */
+.formGroup {
+  margin-bottom: 30px;
+}
+
+.label {
+  font-size: 18px;
+  margin-bottom: 15px;
+}
+
+/* You may want to adjust these button styles to match the image more closely */
+.button {
+  padding: 10px 20px;
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: #e0e0e0;
+}

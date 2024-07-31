@@ -1,0 +1,20 @@
+{
+  "REACT_APP_API_URL": "http://localhost:8000/fastapi",
+  "catlog_collection": "/catlog_collection",
+  "layer_collection": "/layer_collection",
+  "fetch_acknowlg_id": "/fetch_acknowlg_id",
+  "ws_dataset_load": "/ws_dataset_load/",
+  "http_catlog_data": "http_catlog_data",
+  "http_single_nearby": "http_single_nearby",
+  "country_city": "country_city",
+  "nearby_categories": "nearby_categories",
+  "old_nearby_categories": "old_nearby_categories",
+  "user_catalogs": "user_catalogs", 
+  "create_layer": "create_layer",
+  "save_producer_layer": "save_producer_layer",
+  "fetch_ctlg_lyrs": "fetch_ctlg_lyrs",
+  "user_layers": "user_layers",
+  "prdcer_lyr_map_data": "prdcer_lyr_map_data",
+  "save_producer_catalog": "save_producer_catalog"
+  
+}

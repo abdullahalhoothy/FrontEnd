@@ -1,0 +1,21 @@
+.successMessage {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+  margin-top: 20px;
+  font-size: 24px;
+  font-family: "Arial", sans-serif;
+}
+
+.successIcon {
+  color: rgb(17, 87, 64);
+  font-size: 50px;
+  margin-bottom: 10px;
+}
+
+.successMessage {
+  color: #333;
+}
