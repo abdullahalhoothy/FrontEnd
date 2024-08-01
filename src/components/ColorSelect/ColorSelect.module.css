@@ -41,14 +41,14 @@
 
 .colorCircleCatalog {
   position: static;
-  width: 18px;
-  height: 18px;
-  margin-left: 18px;
+  min-width: 14px;
+  min-height: 14px;
+  margin-left: 16px;
 }
 
 .colorCatalog {
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   position: static;
 }
 
@@ -72,17 +72,18 @@
 }
 
 .customSelectOption {
-  padding: 10px;
+  padding: 8px;
   margin: 0 auto;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  
 }
 
 .CatalogueSelectOptions {
-  max-width: 45px;
-  left: 4px;
+  max-width: 35px;
+  left: 5px;
   top: 30px;
   display: flex;
   flex-direction: column;

@@ -1,59 +1,64 @@
-import React, {
-  useState,
-  useEffect,
-  MouseEvent as ReactMouseEvent,
-  useMemo,
-} from "react";
+import React, { useEffect, MouseEvent as ReactMouseEvent } from "react";
 import styles from "./ColorSelect.module.css";
-import { useLayerContext } from "../../context/LayerContext";
 import { useCatalogContext } from "../../context/CatalogContext";
+import { useLayerContext } from "../../context/LayerContext";
 import { useUIContext } from "../../context/UIContext";
 import { MdKeyboardArrowDown } from "react-icons/md";
+import { colorOptions } from "../../utils/helperFunctions";
+
+// Create a mapping from hex code to color name
+const colorMap = new Map(colorOptions.map(({ name, hex }) => [hex, name]));
 
 interface ColorSelectProps {
   layerIndex?: number;
 }
 
-function ColorSelect(props: ColorSelectProps) {
-  const { layerIndex } = props;
+function ColorSelect({ layerIndex }: ColorSelectProps) {
   const { sidebarMode } = useUIContext();
+  const catalogContext = useCatalogContext();
+  const layerContext = useLayerContext();
+
   const {
-    selectedLayers,
-    updateLayerColor,
+    geoPoints,
     openDropdownIndex,
     setOpenDropdownIndex,
-  } = useCatalogContext();
-  const {
-    colorOptions,
-    selectedColor: selectedLayerColor,
-    setSelectedColor: setLayerColor,
-  } = useLayerContext();
+    updateLayerColor,
+  } = catalogContext;
 
-  const defaultIndex = 100;
-  const dropdownIndex = layerIndex !== undefined ? layerIndex : defaultIndex;
+  const { setSelectedColor, selectedColor } = layerContext;
 
-  const selectedColor =
-    sidebarMode === "catalog" && layerIndex !== undefined
-      ? selectedLayers[layerIndex].color
-      : selectedLayerColor;
+  const showLoaderTopup = layerContext.showLoaderTopup || false;
+  const dropdownIndex = layerIndex ?? -1;
+  const colorHex =
+    layerIndex !== undefined
+      ? geoPoints[layerIndex]?.points_color || ""
+      : selectedColor?.hex || "";
 
-  const setSelectedColor =
-    sidebarMode === "catalog" && layerIndex !== undefined
-      ? function (color: string) {
-          updateLayerColor(layerIndex, color);
-        }
-      : setLayerColor;
+  const colorName = colorMap.get(colorHex) || ""; // Get the color name from the map
 
   const isOpen = openDropdownIndex === dropdownIndex;
 
-  function handleOptionClick(option: string, event: ReactMouseEvent) {
+  function handleOptionClick(
+    optionName: string,
+    hex: string,
+    event: ReactMouseEvent
+  ) {
     event.stopPropagation();
-    setSelectedColor(option);
+    if (showLoaderTopup) {
+      console.log("Cannot change colors while loading.");
+      return;
+    }
+    updateLayerColor(layerIndex ?? null, hex);
+    setSelectedColor({ name: optionName, hex });
     setOpenDropdownIndex(null);
   }
 
   function toggleDropdown(event: ReactMouseEvent) {
     event.stopPropagation();
+    if (showLoaderTopup) {
+      console.log("Cannot open dropdown while loading.");
+      return;
+    }
     if (isOpen) {
       setOpenDropdownIndex(null);
     } else {
@@ -61,52 +66,45 @@ function ColorSelect(props: ColorSelectProps) {
     }
   }
 
-  useEffect(
-    function () {
-      function handleClickOutside(event: MouseEvent) {
-        var target = event.target as Node;
-        var dropdowns = document.querySelectorAll(
-          `.${styles.customSelectContainer}`
-        );
-        var clickedOutside = Array.from(dropdowns).every(function (dropdown) {
-          return !dropdown.contains(target);
-        });
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+      const dropdowns = document.querySelectorAll(
+        `.${styles.customSelectContainer}`
+      );
+      const clickedOutside = Array.from(dropdowns).every(function (dropdown) {
+        return !dropdown.contains(target);
+      });
 
-        if (clickedOutside) {
-          setOpenDropdownIndex(null);
-        }
+      if (clickedOutside) {
+        setOpenDropdownIndex(null);
       }
+    }
 
-      document.addEventListener("mousedown", handleClickOutside);
-      return function () {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    },
-    [setOpenDropdownIndex]
-  );
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [setOpenDropdownIndex]);
 
   function renderOptions() {
-    var options = colorOptions;
-    return options.map(function (option) {
+    return colorOptions.map(({ name, hex }) => {
       return (
         <div
-          key={option}
+          key={hex}
           className={`${styles.customSelectOption} ${
             sidebarMode === "catalog" ? styles.catalogSelect : ""
-          }`}
-          onClick={function (e) {
-            e.stopPropagation();
-            handleOptionClick(option, e);
-          }}
+          } ${showLoaderTopup ? styles.disabledOption : ""}`}
+          onClick={(e) => handleOptionClick(name, hex, e)}
         >
           {sidebarMode !== "catalog" && (
-            <span className={styles.optionText}>{option}</span>
+            <span className={styles.optionText}>{name}</span>
           )}
           <span
             className={`${styles.colorCircle} ${
               sidebarMode === "catalog" ? styles.colorCatalog : ""
             }`}
-            style={{ backgroundColor: option.toLowerCase() }}
+            style={{ backgroundColor: hex }}
           />
         </div>
       );
@@ -117,7 +115,7 @@ function ColorSelect(props: ColorSelectProps) {
     <div
       className={`${styles.customSelectContainer} ${
         sidebarMode === "catalog" ? styles.selectContainerContext : ""
-      }`}
+      } ${showLoaderTopup ? styles.disabled : ""}`}
     >
       <div
         className={`${styles.customSelectValue} ${
@@ -125,26 +123,25 @@ function ColorSelect(props: ColorSelectProps) {
         }`}
         onClick={toggleDropdown}
       >
-        {sidebarMode !== "catalog" && (
+        {sidebarMode !== "catalog" ? (
           <>
-            <span
-              className={
-                selectedColor ? styles.selectedText : styles.placeholder
-              }
-            >
-              {selectedColor || "Select a color"}
+            <span className={styles.selectedText}>
+              {colorName || "Select a color"}
             </span>
             <MdKeyboardArrowDown
               className={`${styles.arrowIcon} ${isOpen ? styles.open : ""}`}
             />
           </>
+        ) : (
+          <>
+            <span
+              className={`${styles.colorCircle} ${
+                sidebarMode === "catalog" ? styles.colorCircleCatalog : ""
+              }`}
+              style={{ backgroundColor: colorHex }}
+            />
+          </>
         )}
-        <span
-          className={`${styles.colorCircle} ${
-            sidebarMode === "catalog" ? styles.colorCircleCatalog : ""
-          }`}
-          style={{ backgroundColor: selectedColor.toLowerCase() }}
-        />
       </div>
       {isOpen && (
         <div

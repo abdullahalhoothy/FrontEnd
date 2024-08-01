@@ -1,18 +1,12 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { AgGridReact } from "ag-grid-react"; // React Data Grid Component
 import "ag-grid-community/styles/ag-grid.css"; // Mandatory CSS required by the grid
 import "ag-grid-community/styles/ag-theme-quartz.css"; // Optional Theme applied to the grid
-import { FaImages } from "react-icons/fa";
-import { Tooltip } from "react-tooltip";
 import { useCatalogContext } from "../../context/CatalogContext";
-import { TabularData, Feature } from '../../types/allTypesAndInterfaces';
-import { useGetData } from '../../context/AppDataContext';
-import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-quartz.css";
+import { TabularData, Feature } from "../../types/allTypesAndInterfaces";
 import { ColDef } from "ag-grid-community";
 
-
-
+// Define the column definitions for the grid
 export const columnDefs: ColDef<TabularData>[] = [
   { headerName: "Name", field: "name", sortable: true, filter: true },
   {
@@ -39,7 +33,7 @@ export const columnDefs: ColDef<TabularData>[] = [
   },
 ];
 
-
+// Function to map a feature to tabular data
 export function mapFeatureToTabularData(feature: Feature): TabularData {
   return {
     name: feature.properties.name,
@@ -55,11 +49,13 @@ const Dataview: React.FC = () => {
   const { geoPoints } = useCatalogContext();
 
   useEffect(() => {
-    if (geoPoints && typeof geoPoints !== "string"){
-      const tabularData = geoPoints.features.map(mapFeatureToTabularData);
+    if (geoPoints.length > 0) {
+      // Use flatMap to combine features from all MapFeatures objects
+      const tabularData = geoPoints.flatMap((mapFeature) =>
+        mapFeature.features.map(mapFeatureToTabularData)
+      );
       setBusinesses(tabularData);
     } else {
-      // Use a default value when x is undefined or doesn't have features
       setBusinesses([]);
     }
   }, [geoPoints]);
@@ -74,7 +70,6 @@ const Dataview: React.FC = () => {
         rowData={businesses}
         pagination={true}
         paginationPageSize={10}
-        paginationPageSizeSelector={[10, 25, 50]}
       />
     </div>
   );

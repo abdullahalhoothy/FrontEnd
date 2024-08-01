@@ -15,10 +15,24 @@ export function processData(data: any, setData: Function): string[] {
   return [];
 }
 
-export const colorOptions = ["Red", "Green", "Blue", "Yellow", "Black"];
+export const colorOptions = [
+  { name: "Red", hex: "#FF5733" },
+  { name: "Green", hex: "#28A745" },
+  { name: "Blue", hex: "#007BFF" },
+  { name: "Yellow", hex: "#FFC107" },
+  { name: "Black", hex: "#343A40" },
+];
 
 export function isValidColor(color: string): boolean {
-  return colorOptions.includes(
-    color.charAt(0).toUpperCase() + color.slice(1).toLowerCase()
-  );
+  // Check if the color is a valid hex color
+  const hexColorRegex = /^#([0-9A-Fa-f]{3}){1,2}$/;
+  if (hexColorRegex.test(color)) {
+    return true;
+  }
+
+  // Check if the color is a valid named color using CSS
+  const option = document.createElement("div");
+  option.style.color = color;
+  return option.style.color !== "";
 }
+

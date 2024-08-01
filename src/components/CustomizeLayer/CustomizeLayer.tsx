@@ -10,7 +10,7 @@ function CustomizeLayer() {
     handleNextStep,
     resetFormStage,
     selectedColor,
-    setSelectedColor,
+    showLoaderTopup,
   } = useLayerContext();
 
   const { closeModal } = useUIContext();
@@ -53,12 +53,10 @@ function CustomizeLayer() {
   function handleButtonClick() {
     if (validateForm()) {
       setSecondFormData({
-        pointColor: selectedColor,
         legend,
         description,
         name,
       });
-      setSelectedColor("");
       handleNextStep();
     }
   }
@@ -120,8 +118,12 @@ function CustomizeLayer() {
         <button className={styles.button} onClick={handleDiscardClick}>
           Discard
         </button>
-        <button className={styles.button} onClick={handleButtonClick}>
-          Save
+        <button
+          className={styles.button}
+          onClick={handleButtonClick}
+          disabled={showLoaderTopup}
+        >
+          {showLoaderTopup ? "Loading..." : "Save"}
         </button>
       </div>
     </div>
