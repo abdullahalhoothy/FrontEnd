@@ -9,8 +9,8 @@ export interface ModalProps {
 export interface FormData {
   selectedCountry: string;
   selectedCity: string;
-  selectedCategory: string;
-  selectedSubcategory: string;
+  includedTypes: string[];
+  excludedTypes: string[];
 }
 
 export interface ExpandableMenuProps {
@@ -210,26 +210,21 @@ export interface LayerContextType {
   showLoaderTopup: boolean;
   setShowLoaderTopup: React.Dispatch<React.SetStateAction<boolean>>;
   handleFirstFormApiCall(action: string, pageToken?: string): void;
-  firstFormData: {
-    selectedCountry: string;
-    selectedCity: string;
-    selectedCategory: string;
-    selectedSubcategory: string;
-  };
-  setFirstFormData: React.Dispatch<
-    React.SetStateAction<{
-      selectedCountry: string;
-      selectedCity: string;
-      selectedCategory: string;
-      selectedSubcategory: string;
-    }>
-  >;
+  firstFormData: FormData;
+  setFirstFormData: React.Dispatch<React.SetStateAction<FormData>>;
   textSearchInput: string;
   setTextSearchInput: React.Dispatch<React.SetStateAction<string>>;
   searchType: string;
   setSearchType: React.Dispatch<React.SetStateAction<string>>;
   password: string;
   setPassword: React.Dispatch<React.SetStateAction<string>>;
+}
+
+export interface FormData {
+  selectedCountry: string;
+  selectedCity: string;
+  includedTypes: string[];
+  excludedTypes: string[];
 }
 
 export interface ModalOptions {

@@ -89,6 +89,11 @@ export function CatalogProvider(props: { children: ReactNode }) {
       apiJsonRequest
     );
 
+   if (isError) {
+     console.error("An error occurred while fetching geo points.");
+     return;
+   }
+
     if (unprocessedData) {
       var updatedDataArray = (
         Array.isArray(unprocessedData) ? unprocessedData : [unprocessedData]
@@ -113,12 +118,12 @@ export function CatalogProvider(props: { children: ReactNode }) {
   }
 
   function handleSave() {
-    const layersData = geoPoints.map(function (layer) {
-      return {
-        layer_id: layer.prdcer_lyr_id,
-        points_color: layer.points_color,
-      };
-    });
+    const layersData = Array.isArray(geoPoints)
+      ? geoPoints.map((layer) => ({
+          layer_id: layer.prdcer_lyr_id,
+          points_color: layer.points_color,
+        }))
+      : [];
 
     const requestBody = {
       prdcer_ctlg_name: name,

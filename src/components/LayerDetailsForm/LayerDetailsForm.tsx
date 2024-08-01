@@ -1,7 +1,7 @@
 import React, { useEffect, useState, ChangeEvent } from "react";
 import {
   formatSubcategoryName,
-  processData,
+  processCityData,
 } from "../../utils/helperFunctions";
 import { City } from "../../types/allTypesAndInterfaces";
 import styles from "./LayerDetailsForm.module.css";
@@ -9,6 +9,10 @@ import { useLayerContext } from "../../context/LayerContext";
 import { useCatalogContext } from "../../context/CatalogContext";
 import urls from "../../urls.json";
 import { HttpReq } from "../../services/apiService";
+
+export interface CategoryData {
+  [category: string]: string[];
+}
 
 function LayerDetailsForm() {
   const {
@@ -33,7 +37,7 @@ function LayerDetailsForm() {
   const [citiesData, setCitiesData] = useState<{ [country: string]: City[] }>(
     {}
   );
-  const [categories, setCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<CategoryData>({});
   const [subcategories, setSubcategories] = useState<string[]>([]);
   const [categoriesData, setCategoriesData] = useState<{
     [category: string]: string[];
@@ -45,11 +49,7 @@ function LayerDetailsForm() {
 
   function fetchData() {
     function handleCountryCityResponse(data: string[]) {
-      setCountries(processData(data, setCitiesData));
-    }
-
-    function handleCategoriesResponse(data: string[]) {
-      setCategories(processData(data, setCategoriesData));
+      setCountries(processCityData(data, setCitiesData));
     }
 
     HttpReq<string[]>(
@@ -61,9 +61,9 @@ function LayerDetailsForm() {
       setError
     );
 
-    HttpReq<string[]>(
+    HttpReq<CategoryData>(
       urls.nearby_categories,
-      handleCategoriesResponse,
+      setCategories,
       setPostResMessage,
       setPostResId,
       setLocalLoading,
@@ -77,13 +77,14 @@ function LayerDetailsForm() {
     setFirstFormData({
       selectedCountry: "",
       selectedCity: "",
-      selectedCategory: "",
-      selectedSubcategory: "",
+      includedTypes: [],
+      excludedTypes: [],
     });
   }, []);
 
   function handleChange(event: ChangeEvent<HTMLSelectElement>) {
     const { name, value } = event.target;
+
     setFirstFormData(function (prevData) {
       return {
         ...prevData,
@@ -94,46 +95,80 @@ function LayerDetailsForm() {
     if (name === "selectedCountry") {
       const selectedCountryCities = citiesData[value] || [];
       setCities(selectedCountryCities);
+
       setFirstFormData(function (prevData) {
         return {
           ...prevData,
           selectedCity: "",
         };
       });
-    } else if (name === "selectedCategory") {
-      const selectedSubcategories = categoriesData[value] || [];
-      setSubcategories(selectedSubcategories);
-      setFirstFormData(function (prevData) {
-        return {
-          ...prevData,
-          selectedSubcategory: "",
-        };
-      });
     }
   }
 
+  function handleTypeToggle(type: string) {
+    setFirstFormData(function (prevData) {
+      if (prevData.includedTypes.includes(type)) {
+        // If currently included, move to excluded
+        return {
+          ...prevData,
+          includedTypes: prevData.includedTypes.filter(function (t) {
+            return t !== type;
+          }),
+          excludedTypes: [...prevData.excludedTypes, type],
+        };
+      } else if (prevData.excludedTypes.includes(type)) {
+        // If currently excluded, move to not selected
+        return {
+          ...prevData,
+          excludedTypes: prevData.excludedTypes.filter(function (t) {
+            return t !== type;
+          }),
+        };
+      } else {
+        // If not selected, move to included
+        return {
+          ...prevData,
+          includedTypes: [...prevData.includedTypes, type],
+        };
+      }
+    });
+  }
+
   function validateForm(action: string) {
-    if (
-      !firstFormData.selectedCountry ||
-      !firstFormData.selectedCity ||
-      !firstFormData.selectedCategory ||
-      !firstFormData.selectedSubcategory
-    ) {
-      setError(new Error("All fields are required."));
+    if (!firstFormData.selectedCountry || !firstFormData.selectedCity) {
+      setError(new Error("Country and city are required."));
       return false;
     }
 
-    if (searchType === "text search") {
-      if (!textSearchInput.trim()) {
-        setError(
-          new Error("Text search input cannot be empty or just spaces.")
-        );
-        return false;
-      }
+    if (
+      firstFormData.includedTypes.length === 0 &&
+      firstFormData.excludedTypes.length === 0
+    ) {
+      setError(
+        new Error("At least one category must be included or excluded.")
+      );
+      return false;
+    }
+
+    if (
+      firstFormData.includedTypes.length > 50 ||
+      firstFormData.excludedTypes.length > 50
+    ) {
+      setError(
+        new Error(
+          "Up to 50 types can be specified in each type restriction category."
+        )
+      );
+      return false;
+    }
+
+    if (searchType === "text search" && !textSearchInput.trim()) {
+      setError(new Error("Text search input cannot be empty or just spaces."));
+      return false;
     }
 
     if (action === "full data" && password.toLowerCase() !== "1235") {
-      setError(new Error("Correct password is required to full data."));
+      setError(new Error("Correct password is required for full data."));
       return false;
     }
 
@@ -141,7 +176,12 @@ function LayerDetailsForm() {
     return true;
   }
 
-  function handleButtonClick(action: string) {
+  function handleButtonClick(
+    action: string,
+    event: React.MouseEvent<HTMLButtonElement>
+  ) {
+    event.preventDefault(); 
+
     if (validateForm(action)) {
       if (action === "full data") {
         setCentralizeOnce(true);
@@ -153,7 +193,7 @@ function LayerDetailsForm() {
   }
 
   return (
-    <div className={styles.container}>
+    <form className={styles.container}>
       <div className={styles.formGroup}>
         <label className={styles.label} htmlFor="searchType">
           Search Type:
@@ -175,6 +215,7 @@ function LayerDetailsForm() {
           <option value="text search">Text Search</option>
         </select>
       </div>
+
       <div className={styles.formGroup}>
         <label className={styles.label} htmlFor="password">
           Password:
@@ -183,14 +224,16 @@ function LayerDetailsForm() {
           type="password"
           id="password"
           name="password"
-          className={styles.input}
+          className={styles.select}
           value={password}
+          autoComplete="new-password"
           onChange={function (e) {
             setPassword(e.target.value);
           }}
           placeholder="Enter password for 'full data'"
         />
       </div>
+
       {searchType === "text search" && (
         <div className={styles.formGroup}>
           <label className={styles.label} htmlFor="textSearchInput">
@@ -209,6 +252,7 @@ function LayerDetailsForm() {
           />
         </div>
       )}
+
       <div className={styles.formGroup}>
         <label className={styles.label} htmlFor="country">
           Country:
@@ -232,6 +276,7 @@ function LayerDetailsForm() {
           })}
         </select>
       </div>
+
       <div className={styles.formGroup}>
         <label className={styles.label} htmlFor="city">
           City:
@@ -256,75 +301,73 @@ function LayerDetailsForm() {
           })}
         </select>
       </div>
+
       <div className={styles.formGroup}>
-        <label className={styles.label} htmlFor="category">
-          Category:
-        </label>
-        <select
-          id="category"
-          name="selectedCategory"
-          className={styles.select}
-          value={firstFormData.selectedCategory}
-          onChange={handleChange}
-        >
-          <option value="" disabled>
-            Select a category
-          </option>
-          {categories.map(function (category) {
+        <label className={styles.label}>What are you looking for?</label>
+        <div className={styles.categoryContainer}>
+          {Object.entries(categories).map(function (entry) {
+            var category = entry[0];
+            var types = entry[1];
             return (
-              <option key={category} value={category}>
-                {category}
-              </option>
+              <div key={category} className={styles.categoryGroup}>
+                <h3 className={styles.categoryTitle}>{category}</h3>
+                <div className={styles.typeList}>
+                  {types.map(function (type) {
+                    var included = firstFormData.includedTypes.includes(type);
+                    var excluded = firstFormData.excludedTypes.includes(type);
+                    return (
+                      <button
+                        key={type}
+                        type="button"
+                        className={`${styles.typeButton} ${
+                          included
+                            ? styles.included
+                            : excluded
+                            ? styles.excluded
+                            : ""
+                        }`}
+                        onClick={function (e) {
+                          e.preventDefault();
+                          handleTypeToggle(type);
+                        }}
+                      >
+                        {formatSubcategoryName(type)}
+                        <span className={styles.toggleIcon}>
+                          {included ? "✓" : excluded ? "−" : "+"}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             );
           })}
-        </select>
-      </div>
-      <div className={styles.formGroup}>
-        <label className={styles.label} htmlFor="subcategory">
-          Subcategory:
-        </label>
-        <select
-          id="subcategory"
-          name="selectedSubcategory"
-          className={styles.select}
-          value={firstFormData.selectedSubcategory}
-          onChange={handleChange}
-          disabled={!firstFormData.selectedCategory}
-        >
-          <option value="" disabled>
-            Select a subcategory
-          </option>
-          {subcategories.map(function (subcategory) {
-            return (
-              <option key={subcategory} value={subcategory}>
-                {formatSubcategoryName(subcategory)}
-              </option>
-            );
-          })}
-        </select>
+        </div>
       </div>
       {error && <p className={styles.error}>{error.message}</p>}
+
       <div className={styles.buttonContainer}>
         <>
           <button
-            className={styles.button}
-            onClick={function () {
-              handleButtonClick("Get Sample");
+            type="button"
+            onClick={function (e) {
+              handleButtonClick("Get Sample", e);
             }}
           >
             Get Sample
           </button>
           <button
+            type="button"
             className={styles.button}
-            onClick={function () {
-              handleButtonClick("full data");
+            onClick={function (e) {
+              handleButtonClick("full data", e);
             }}
           >
             Full data
           </button>
         </>
       </div>
-    </div>
+    </form>
   );
 }
 

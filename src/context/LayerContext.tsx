@@ -11,10 +11,12 @@ import {
   CreateLayerResponse,
   LayerContextType,
   SaveResponse,
+  FormData
 } from "../types/allTypesAndInterfaces";
 import urls from "../urls.json";
 import { useCatalogContext } from "./CatalogContext";
 import userIdData from "../currentUserId.json";
+
 
 const LayerContext = createContext<LayerContextType | undefined>(undefined);
 
@@ -55,11 +57,11 @@ export function LayerProvider(props: { children: ReactNode }) {
 
   const [showLoaderTopup, setShowLoaderTopup] = useState<boolean>(false);
 
-  const [firstFormData, setFirstFormData] = useState({
+  const [firstFormData, setFirstFormData] = useState<FormData>({
     selectedCountry: "",
     selectedCity: "",
-    selectedCategory: "",
-    selectedSubcategory: "",
+    includedTypes: [],
+    excludedTypes: [],
   });
 
   const [postResponse, setPostResponse] = useState<CreateLayerResponse | null>(
@@ -189,15 +191,16 @@ export function LayerProvider(props: { children: ReactNode }) {
 
   function handleFirstFormApiCall(action: string, pageToken?: string) {
     const postData = {
-      dataset_category: firstFormData.selectedSubcategory,
       dataset_country: firstFormData.selectedCountry,
       dataset_city: firstFormData.selectedCity,
-      action,
+      includedTypes: firstFormData.includedTypes,
+      excludedTypes: firstFormData.excludedTypes,
+      action: action,
       search_type: searchType,
       ...(searchType === "text search" && {
         text_search_input: textSearchInput.trim(),
       }),
-      ...(action === "full data" && { password }),
+      ...(action === "full data" && { password: password }),
       ...(pageToken && { page_token: pageToken }),
     };
 

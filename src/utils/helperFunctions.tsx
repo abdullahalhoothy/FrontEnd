@@ -6,7 +6,7 @@ export function formatSubcategoryName(name: string): string {
     .join(" ");
 }
 
-export function processData(data: any, setData: Function): string[] {
+export function processCityData(data: any, setData: Function): string[] {
   if (typeof data === "object" && data !== null) {
     const keys = Object.keys(data);
     setData(data);

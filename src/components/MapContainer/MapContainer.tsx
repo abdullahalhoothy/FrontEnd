@@ -66,6 +66,7 @@ function MapContainer() {
           });
 
           geoPoints.forEach(function (featureCollection, index) {
+            
             const sourceId = "circle-source-" + index;
             const layerId = "circle-layer-" + index;
             const existingSource = mapRef.current
