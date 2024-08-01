@@ -1,5 +1,4 @@
 import React, { ReactNode } from "react";
-import { Interface } from "readline";
 
 export interface ModalProps {
   children: React.ReactNode;
@@ -20,12 +19,6 @@ export interface ExpandableMenuProps {
 
 export interface MultipleLayersSettingProps {
   layerIndex: number;
-}
-
-export interface SaveProducerLayerResponse {
-  message: string;
-  request_id: string;
-  data: string;
 }
 
 export interface Catalog {
@@ -67,12 +60,10 @@ export interface CatalogueCardProps {
 export interface CustomProperties {
   name: string;
   rating: number;
-  address: string;
-  phone: string;
-  website: string;
-  business_status: string;
   user_ratings_total: number;
+  [key: string]: string | number | string[] | undefined;
 }
+
 export interface UserLayerCardProps {
   id: string;
   name: string;
@@ -121,47 +112,31 @@ export interface CatalogContextType {
     id: string,
     name: string,
     typeOfCard: string,
-    existingColor?: string,
     legend?: string,
     layers?: { layer_id: string; points_color: string }[]
   ): void;
   handleSave(): void;
   resetFormStage(resetTo: string): void;
-  geoPoints: MapFeatures | string;
-  setGeoPoints: React.Dispatch<React.SetStateAction<MapFeatures | string>>;
-  selectedColor: string;
-  setSelectedColor: React.Dispatch<React.SetStateAction<string>>;
-  selectedLayers: {
-    name: string;
-    id: string;
-    color: string;
-    is_zone_lyr: boolean;
-    display: boolean;
-    legend?: string;
-  }[];
-  setSelectedLayers: React.Dispatch<
-    React.SetStateAction<
-      {
-        name: string;
-        id: string;
-        color: string;
-        is_zone_lyr: boolean;
-        display: boolean;
-        legend?: string;
-      }[]
-    >
-  >;
+  geoPoints: MapFeatures[];
+  setGeoPoints: React.Dispatch<React.SetStateAction<MapFeatures[]>>;
+  selectedColor: Color | null;
+  setSelectedColor: React.Dispatch<React.SetStateAction<Color | null>>;
   resetState(): void;
-  updateLayerColor(layerIndex: number, newColor: string): void;
-  updateLayerZone(layerIndex: number, isZoneLayer: boolean): void;
-  setTempGeoPointsList: React.Dispatch<React.SetStateAction<MapFeatures[]>>;
-  openDropdownIndex: number | null;
-  setOpenDropdownIndex: React.Dispatch<React.SetStateAction<number | null>>;
+  updateLayerColor(layerIndex: number | null, newColor: string): void;
   updateLayerDisplay(layerIndex: number, display: boolean): void;
+  // updateLayerZone(layerIndex: number, isZoneLayer: boolean): void;
+  removeLayer(layerIndex: number): void;
   saveResponse: SaveResponse | null;
   saveResponseMsg: string;
   saveReqId: string;
   setSaveResponse: React.Dispatch<React.SetStateAction<SaveResponse | null>>;
+  openDropdownIndex: number | null;
+  setOpenDropdownIndex: React.Dispatch<React.SetStateAction<number | null>>;
+}
+
+interface Color {
+  name: string;
+  hex: string;
 }
 
 export interface SaveResponse {
@@ -184,18 +159,14 @@ export interface RequestType {
   error: Error | null;
 }
 
-
-
 export interface LayerContextType {
   secondFormData: {
-    pointColor: string;
     legend: string;
     description: string;
     name: string;
   };
   setSecondFormData: React.Dispatch<
     React.SetStateAction<{
-      pointColor: string;
       legend: string;
       description: string;
       name: string;
@@ -203,23 +174,23 @@ export interface LayerContextType {
   >;
   formStage: string;
   isError: Error | null;
-  firstFormResponse: string | FirstFormResponse;
+  firstFormResponse: CreateLayerResponse | undefined;
   saveMethod: string;
   loading: boolean;
-  saveResponse: SaveProducerLayerResponse | null;
+  saveResponse: SaveResponse | null;
   setFormStage: React.Dispatch<React.SetStateAction<string>>;
   setIsError: React.Dispatch<React.SetStateAction<Error | null>>;
   setFirstFormResponse: React.Dispatch<
-    React.SetStateAction<string | FirstFormResponse>
+    React.SetStateAction<CreateLayerResponse | undefined>
   >;
   setSaveMethod: React.Dispatch<React.SetStateAction<string>>;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
   handleNextStep(): void;
   handleSave(): void;
   resetFormStage(): void;
-  colorOptions: string[];
-  selectedColor: string;
-  setSelectedColor: React.Dispatch<React.SetStateAction<string>>;
+  selectedColor: Color | null;
+  setSelectedColor: React.Dispatch<React.SetStateAction<Color | null>>;
+  saveOption: string;
   setSaveOption: React.Dispatch<React.SetStateAction<string>>;
   datasetInfo: { bknd_dataset_id: string; prdcer_lyr_id: string } | null;
   setDatasetInfo: React.Dispatch<
@@ -230,14 +201,35 @@ export interface LayerContextType {
   >;
   saveResponseMsg: string;
   setSaveResponseMsg: React.Dispatch<React.SetStateAction<string>>;
-  setSaveResponse: React.Dispatch<
-    React.SetStateAction<SaveProducerLayerResponse | null>
-  >;
+  setSaveResponse: React.Dispatch<React.SetStateAction<SaveResponse | null>>;
   setSaveReqId: React.Dispatch<React.SetStateAction<string>>;
   centralizeOnce: boolean;
   setCentralizeOnce: React.Dispatch<React.SetStateAction<boolean>>;
   initialFlyToDone: boolean;
   setInitialFlyToDone: React.Dispatch<React.SetStateAction<boolean>>;
+  showLoaderTopup: boolean;
+  setShowLoaderTopup: React.Dispatch<React.SetStateAction<boolean>>;
+  handleFirstFormApiCall(action: string, pageToken?: string): void;
+  firstFormData: {
+    selectedCountry: string;
+    selectedCity: string;
+    selectedCategory: string;
+    selectedSubcategory: string;
+  };
+  setFirstFormData: React.Dispatch<
+    React.SetStateAction<{
+      selectedCountry: string;
+      selectedCity: string;
+      selectedCategory: string;
+      selectedSubcategory: string;
+    }>
+  >;
+  textSearchInput: string;
+  setTextSearchInput: React.Dispatch<React.SetStateAction<string>>;
+  searchType: string;
+  setSearchType: React.Dispatch<React.SetStateAction<string>>;
+  password: string;
+  setPassword: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export interface ModalOptions {
@@ -273,43 +265,35 @@ export interface BoxmapProperties {
   website: string;
   business_status: string;
   user_ratings_total: number | string;
-  geoPointId: string;
-  color: string;
 }
 
 export interface Feature {
   type: "Feature";
   properties: BoxmapProperties;
+  display: boolean;
   geometry: {
     type: "Point";
     coordinates: [number, number];
   };
 }
-
-export interface MapFeatures {
+export interface CreateLayerResponse {
   type: "FeatureCollection";
-  features: Feature[];
-}
-
-
-export interface FirstFormResponse {
-  type: MapFeatures;
   features: Feature[];
   bknd_dataset_id: string;
   prdcer_lyr_id: string;
   records_count: number;
   next_page_token: string;
+  display?: boolean;
 }
 
-// Commented out to avoid duplication
-// export interface BusinessResponse {
-//     geometry: {
-//       location: {
-//         lng: number;
-//         lat: number;
-//       };
-//     };
-//   }
+export interface MapFeatures extends CreateLayerResponse {
+  prdcer_layer_name?: string;
+  points_color?: string;
+  layer_legend?: string;
+  layer_description?: string;
+  is_zone_lyr?: string;
+  [key: string]: any;
+}
 
 export interface TabularData {
   formatted_address: string;

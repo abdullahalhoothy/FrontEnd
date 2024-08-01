@@ -3,11 +3,11 @@
   justify-content: space-between;
   align-items: center;
   gap: 10px;
-  padding: 24px;
+  padding: 24px 14px;
   border: 1px solid #ddd;
   border-radius: 8px;
   max-width: 350px;
-  min-height: 60px;
+  min-height: 34px;
   margin-top: 20px;
   background-color: #fff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -43,7 +43,7 @@
 }
 
 .zl {
-  font-size: 12px;
+  font-size: 11px;
   margin: 2px 0;
   color: #555;
   white-space: nowrap;
@@ -53,7 +53,7 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  gap: 2px;
+  gap: 1px;
   min-width: 85px;
 }
 
@@ -67,8 +67,8 @@
 
 .checkbox {
   appearance: none;
-  width: 13px;
-  height: 13px;
+  width: 11px;
+  height: 11px;
   cursor: pointer;
   border: 1px solid #28a745;
   border-radius: 2px;
@@ -84,9 +84,9 @@
   content: "";
   position: absolute;
   top: 0.4px;
-  left: 3.4px;
+  left: 2.8px;
   width: 2px;
-  height: 7px;
+  height: 5px;
   border: solid white;
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
@@ -96,14 +96,14 @@
   background: none;
   border: none;
   color: #ff4d4f;
-  font-size: 14px;
+  font-size: 16px;
   cursor: pointer;
   position: absolute;
-  top: 3px;
-  right: 3px;
+  top: 2px;
+  right: 2px;
   border-radius: 50%;
-  height: 22px;
-  width: 22px;
+  height: 20px;
+  width: 20px;
   display: flex;
   justify-content: center;
   align-items: center;

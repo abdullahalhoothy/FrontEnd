@@ -1,0 +1,17 @@
+.topupContainer {
+  position: fixed;
+  top: 12px;
+  right: 70px;
+  width: auto; 
+  height: auto; 
+  border-radius: 10px;
+  background-color: #f7fef7;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 10px;
+  font-size: 14px; 
+  color: #333; 
+}

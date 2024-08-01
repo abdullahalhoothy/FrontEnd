@@ -25,7 +25,7 @@ function CatalogDetailsForm() {
 
   const [error, setError] = useState<string | null>(null);
 
-  // This effect runs whenever isLoading, isSaved, or isError changes.
+  // This effect runs whenever isLoading, saveResponse, or isError changes.
   useEffect(
     function () {
       if (isLoading || saveResponse || isError) {
@@ -78,16 +78,21 @@ function CatalogDetailsForm() {
     setSidebarMode("default");
   }
 
-  function handleNameChange(event: ChangeEvent<HTMLInputElement>) {
-    setName(event.target.value);
-  }
-
-  function handleDescriptionChange(event: ChangeEvent<HTMLTextAreaElement>) {
-    setDescription(event.target.value);
-  }
-
-  function handleSubscriptionPriceChange(event: ChangeEvent<HTMLInputElement>) {
-    setSubscriptionPrice(event.target.value);
+  function handleChange(
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) {
+    const { id, value } = event.target;
+    switch (id) {
+      case "name":
+        setName(value);
+        break;
+      case "description":
+        setDescription(value);
+        break;
+      case "subprice":
+        setSubscriptionPrice(value);
+        break;
+    }
   }
 
   return (
@@ -117,7 +122,7 @@ function CatalogDetailsForm() {
           id="subprice"
           className={styles.select}
           value={subscriptionPrice}
-          onChange={handleSubscriptionPriceChange}
+          onChange={handleChange}
         />
       </div>
       <div className={styles.formGroup}>
@@ -129,7 +134,7 @@ function CatalogDetailsForm() {
           id="name"
           className={styles.select}
           value={name}
-          onChange={handleNameChange}
+          onChange={handleChange}
         />
       </div>
       <div className={styles.formGroup}>
@@ -140,7 +145,7 @@ function CatalogDetailsForm() {
           id="description"
           className={`${styles.select} ${styles.textArea}`}
           value={description}
-          onChange={handleDescriptionChange}
+          onChange={handleChange}
         ></textarea>
       </div>
       {error && <p className={styles.error}>{error}</p>}

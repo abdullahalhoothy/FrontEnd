@@ -1,4 +1,4 @@
-import React, { useState, MouseEvent } from "react";
+import React, { useState, MouseEvent, useEffect } from "react";
 import styles from "./CatalogSideMenu.module.css";
 import { MdLayers, MdArrowBackIos } from "react-icons/md";
 import { useUIContext } from "../../context/UIContext";
@@ -10,13 +10,19 @@ function CatalogSideMenu() {
   const { openModal, setSidebarMode } = useUIContext();
   const {
     setSelectedContainerType,
-    selectedLayers,
     resetState,
     setFormStage,
     setLegendList,
-    formStage,
-    setSubscriptionPrice,
+    geoPoints,
+    setGeoPoints,
   } = useCatalogContext();
+
+  useEffect(
+    function () {
+      setGeoPoints([]);
+    },
+    [setGeoPoints]
+  );
 
   function openCatalogModal(contentType: "Catalogue" | "Layer") {
     setSelectedContainerType(contentType);
@@ -40,19 +46,21 @@ function CatalogSideMenu() {
     setSidebarMode("default");
   }
 
-function handleSaveClick() {
-  const legends = selectedLayers
-    .map(function (layer) {
-      return layer.legend;
-    })
-    .filter(function (legend): legend is string {
-      return !!legend;
-    });
+  const safeGeoPoints = Array.isArray(geoPoints) ? geoPoints : [];
 
-  setLegendList(legends);
-  setFormStage("catalogue details");
-  setSidebarMode("catalogDetails");
-}
+  function handleSaveClick() {
+    const legends = safeGeoPoints
+      .map(function (featureCollection) {
+        return featureCollection.layer_legend;
+      })
+      .filter(function (legend): legend is string {
+        return !!legend;
+      });
+
+    setLegendList(legends);
+    setFormStage("catalogue details");
+    setSidebarMode("catalogDetails");
+  }
 
   return (
     <div className={styles.container}>
@@ -79,11 +87,11 @@ function handleSaveClick() {
             + Add Layer
           </button>
         </div>
-        {selectedLayers.map(function (layer, index) {
+        {safeGeoPoints.map(function (featureCollection, index) {
           return <MultipleLayersSetting key={index} layerIndex={index} />;
         })}
       </div>
-      {selectedLayers.length > 0 && (
+      {safeGeoPoints.length > 0 && (
         <div className={styles.saveButtonsContainer}>
           <button
             onClick={handleDiscardClick}

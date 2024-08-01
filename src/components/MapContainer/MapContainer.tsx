@@ -1,24 +1,19 @@
-// MapContainer.js
-import React, { useEffect, useRef, useState } from "react";
-import mapboxgl from "mapbox-gl";
+import React, { useEffect, useRef } from "react";
+import mapboxgl, { Map as MapboxMap, GeoJSONSource } from "mapbox-gl";
 import { useCatalogContext } from "../../context/CatalogContext";
-import { useLayerContext } from "../../context/LayerContext"; // Import the LayerContext
+import { useLayerContext } from "../../context/LayerContext";
 import styles from "./MapContainer.module.css";
 import { CustomProperties } from "../../types/allTypesAndInterfaces";
+import mapConfig from "../../mapConfig.json";
 
-mapboxgl.accessToken = process.env?.REACT_APP_MAPBOX_KEY ?? "";
-mapboxgl.setRTLTextPlugin(
-  "https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-rtl-text/v0.2.3/mapbox-gl-rtl-text.js",
-  function () {}
-);
+mapboxgl.accessToken = process.env.REACT_APP_MAPBOX_KEY ?? "";
 
 function MapContainer() {
   const { geoPoints } = useCatalogContext();
   const { centralizeOnce, initialFlyToDone, setInitialFlyToDone } =
-    useLayerContext(); // Use the LayerContext
-
+    useLayerContext();
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const mapRef = useRef<MapboxMap | null>(null);
   const styleLoadedRef = useRef(false);
   const lastCoordinatesRef = useRef<[number, number] | null>(null);
 
@@ -27,9 +22,9 @@ function MapContainer() {
       mapRef.current = new mapboxgl.Map({
         container: mapContainerRef.current,
         style: "mapbox://styles/mapbox/streets-v11",
-        center: [39.6074258, 24.4738121],
+        center: mapConfig.center as [number, number],
         attributionControl: true,
-        zoom: 13,
+        zoom: mapConfig.zoom,
       });
 
       mapRef.current.addControl(new mapboxgl.NavigationControl(), "top-right");
@@ -50,157 +45,178 @@ function MapContainer() {
   useEffect(
     function () {
       function addGeoPoints() {
-        if (
-          mapRef.current &&
-          styleLoadedRef.current &&
-          geoPoints &&
-          typeof geoPoints !== "string"
-        ) {
-          const source = mapRef.current.getSource(
-            "circle"
-          ) as mapboxgl.GeoJSONSource;
+        if (mapRef.current && styleLoadedRef.current) {
+          const existingLayers = mapRef.current.getStyle().layers;
+          const existingLayerIds = existingLayers
+            ? existingLayers.map(function (layer) {
+                return layer.id;
+              })
+            : [];
 
-          if (source) {
-            source.setData(geoPoints);
-          } else {
-            mapRef.current.addSource("circle", {
-              type: "geojson",
-              data: geoPoints,
-              generateId: true,
-            });
-
-            mapRef.current.addLayer({
-              id: "circle-layer",
-              type: "circle",
-              source: "circle",
-              paint: {
-                "circle-radius": [
-                  "case",
-                  ["boolean", ["feature-state", "hover"], false],
-                  16, // Radius when hovered
-                  13, // Default radius
-                ],
-                "circle-color": ["coalesce", ["get", "color"], "#12939A"], // Default to a specific color if no color property
-                "circle-opacity": 0.8,
-                "circle-stroke-width": 0.4,
-                "circle-stroke-color": "#898989",
-              },
-            });
-
-            let hoveredStateId: number | null = null;
-            let popup: mapboxgl.Popup | null = null;
-
-            mapRef.current.on(
-              "mousemove",
-              "circle-layer",
-              function (e: mapboxgl.MapMouseEvent & mapboxgl.EventData) {
+          existingLayerIds.forEach(function (layerId) {
+            if (layerId.startsWith("circle-layer-")) {
+              const index = parseInt(layerId.replace("circle-layer-", ""), 10);
+              if (!geoPoints[index] || !geoPoints[index].display) {
                 if (mapRef.current) {
-                  mapRef.current.getCanvas().style.cursor = "pointer";
-                }
-                if (e.features && e.features.length > 0) {
-                  if (hoveredStateId !== null) {
-                    mapRef.current?.setFeatureState(
-                      { source: "circle", id: hoveredStateId },
-                      { hover: false }
-                    );
-                  }
-                  hoveredStateId = e.features[0].id as number;
-                  mapRef.current?.setFeatureState(
-                    { source: "circle", id: hoveredStateId },
-                    { hover: true }
-                  );
-
-                  const coordinates = (
-                    e.features[0].geometry as any
-                  ).coordinates.slice();
-                  const {
-                    name,
-                    address,
-                    rating,
-                    business_status,
-                    user_ratings_total,
-                  } = e.features[0].properties as CustomProperties;
-                  const description = `
-                  <div class="${styles.popupContent}">
-                    <strong class="${styles.popupContentStrong}">${name}</strong>
-                    <div class="${styles.popupContentDiv}">Address: ${address}</div>
-                    <div class="${styles.popupContentDiv} ${styles.popupContentRating}">Rating: ${rating}</div>
-                    <div class="${styles.popupContentDiv} ${styles.popupContentStatus}">Status: ${business_status}</div>
-                    <div class="${styles.popupContentDiv} ${styles.popupContentTotalRatings}">Total Ratings: ${user_ratings_total}</div>
-                  </div>
-                `;
-
-                  if (popup) {
-                    popup.remove();
-                  }
-                  popup = new mapboxgl.Popup({
-                    closeButton: false,
-                    className: styles.popup,
-                  })
-                    .setLngLat(coordinates)
-                    .setHTML(description)
-                    .addTo(mapRef.current!);
+                  mapRef.current.removeLayer(layerId);
+                  mapRef.current.removeSource("circle-source-" + index);
                 }
               }
-            );
-
-            mapRef.current.on("mouseleave", "circle-layer", function () {
-              if (mapRef.current) {
-                mapRef.current.getCanvas().style.cursor = "";
-                if (hoveredStateId !== null) {
-                  mapRef.current.setFeatureState(
-                    { source: "circle", id: hoveredStateId },
-                    { hover: false }
-                  );
-                }
-              }
-              hoveredStateId = null;
-              if (popup) {
-                popup.remove();
-                popup = null;
-              }
-            });
-          }
-
-          if (geoPoints.features && geoPoints.features.length) {
-            const lastFeature =
-              geoPoints.features[geoPoints.features.length - 1];
-            const newCoordinates = lastFeature.geometry.coordinates as [
-              number,
-              number
-            ];
-
-            if (centralizeOnce && !initialFlyToDone) {
-              mapRef.current.flyTo({
-                center: newCoordinates,
-                zoom: 13,
-                speed: 10,
-                curve: 1,
-              });
-              lastCoordinatesRef.current = newCoordinates;
-              setInitialFlyToDone(true); // Set the state to prevent further flyTo
-            } else if (
-              JSON.stringify(newCoordinates) !==
-              JSON.stringify(lastCoordinatesRef.current)
-            ) {
-              if (!centralizeOnce) {
-                mapRef.current.flyTo({
-                  center: newCoordinates,
-                  zoom: 13,
-                  speed: 10,
-                  curve: 1,
-                });
-              }
-              lastCoordinatesRef.current = newCoordinates;
             }
-          }
-        } else {
-          if (mapRef.current?.getLayer("circle-layer")) {
-            mapRef.current.removeLayer("circle-layer");
-          }
-          if (mapRef.current?.getSource("circle")) {
-            mapRef.current.removeSource("circle");
-          }
+          });
+
+          geoPoints.forEach(function (featureCollection, index) {
+            const sourceId = "circle-source-" + index;
+            const layerId = "circle-layer-" + index;
+            const existingSource = mapRef.current
+              ? (mapRef.current.getSource(sourceId) as GeoJSONSource)
+              : null;
+
+            if (featureCollection.display) {
+              if (existingSource) {
+                existingSource.setData(featureCollection);
+                if (mapRef.current) {
+                  mapRef.current.setPaintProperty(
+                    layerId,
+                    "circle-color",
+                    featureCollection.points_color || mapConfig.defaultColor
+                  );
+                }
+              } else {
+                if (mapRef.current) {
+                  mapRef.current.addSource(sourceId, {
+                    type: "geojson",
+                    data: featureCollection,
+                    generateId: true,
+                  });
+
+                  mapRef.current.addLayer({
+                    id: layerId,
+                    type: "circle",
+                    source: sourceId,
+                    paint: {
+                      "circle-radius": [
+                        "case",
+                        ["boolean", ["feature-state", "hover"], false],
+                        mapConfig.hoverCircleRadius,
+                        mapConfig.circleRadius,
+                      ],
+                      "circle-color":
+                        featureCollection.points_color ||
+                        mapConfig.defaultColor,
+                      "circle-opacity": mapConfig.circleOpacity,
+                      "circle-stroke-width": mapConfig.circleStrokeWidth,
+                      "circle-stroke-color": mapConfig.circleStrokeColor,
+                    },
+                  });
+                }
+
+                let hoveredStateId: number | null = null;
+                let popup: mapboxgl.Popup | null = null;
+
+                if (mapRef.current) {
+                  mapRef.current.on(
+                    "mousemove",
+                    layerId,
+                    function (e: mapboxgl.MapMouseEvent & mapboxgl.EventData) {
+                      if (mapRef.current) {
+                        mapRef.current.getCanvas().style.cursor = "pointer";
+                      }
+                      if (e.features && e.features.length > 0) {
+                        if (hoveredStateId !== null && mapRef.current) {
+                          mapRef.current.setFeatureState(
+                            { source: sourceId, id: hoveredStateId },
+                            { hover: false }
+                          );
+                        }
+                        hoveredStateId = e.features[0].id as number;
+                        if (mapRef.current) {
+                          mapRef.current.setFeatureState(
+                            { source: sourceId, id: hoveredStateId },
+                            { hover: true }
+                          );
+                        }
+
+                        const coordinates = (
+                          e.features[0].geometry as any
+                        ).coordinates.slice();
+                        const properties = e.features[0]
+                          .properties as CustomProperties;
+
+                        const description = generatePopupContent(properties);
+
+                        if (popup) {
+                          popup.remove();
+                        }
+                        popup = new mapboxgl.Popup({
+                          closeButton: false,
+                          className: styles.popup,
+                        })
+                          .setLngLat(coordinates)
+                          .setHTML(description)
+                          .addTo(mapRef.current!); 
+                      }
+                    }
+                  );
+
+                  mapRef.current.on("mouseleave", layerId, function () {
+                    if (mapRef.current) {
+                      mapRef.current.getCanvas().style.cursor = "";
+                      if (hoveredStateId !== null) {
+                        mapRef.current.setFeatureState(
+                          { source: sourceId, id: hoveredStateId },
+                          { hover: false }
+                        );
+                      }
+                    }
+                    hoveredStateId = null;
+                    if (popup) {
+                      popup.remove();
+                      popup = null;
+                    }
+                  });
+                }
+              }
+
+              if (
+                index === geoPoints.length - 1 &&
+                featureCollection.features.length
+              ) {
+                const lastFeature =
+                  featureCollection.features[
+                    featureCollection.features.length - 1
+                  ];
+                const newCoordinates = lastFeature.geometry.coordinates as [
+                  number,
+                  number
+                ];
+
+                if (centralizeOnce && !initialFlyToDone && mapRef.current) {
+                  mapRef.current.flyTo({
+                    center: newCoordinates,
+                    zoom: mapConfig.zoom,
+                    speed: mapConfig.speed,
+                    curve: 1,
+                  });
+                  lastCoordinatesRef.current = newCoordinates;
+                  setInitialFlyToDone(true);
+                } else if (
+                  JSON.stringify(newCoordinates) !==
+                  JSON.stringify(lastCoordinatesRef.current)
+                ) {
+                  if (!centralizeOnce && mapRef.current) {
+                    mapRef.current.flyTo({
+                      center: newCoordinates,
+                      zoom: mapConfig.zoom,
+                      speed: mapConfig.speed,
+                      curve: 1,
+                    });
+                  }
+                  lastCoordinatesRef.current = newCoordinates;
+                }
+              }
+            }
+          });
         }
       }
 
@@ -210,7 +226,7 @@ function MapContainer() {
         mapRef.current.on("styledata", addGeoPoints);
       }
 
-      return function cleanup() {
+      return function () {
         if (mapRef.current) {
           mapRef.current.off("styledata", addGeoPoints);
         }
@@ -226,6 +242,55 @@ function MapContainer() {
       style={{ width: "96%", height: "100vh", zIndex: 99 }}
     />
   );
+}
+
+function generatePopupContent(properties: CustomProperties): string {
+  let content = `<div class="${styles.popupContent}">`;
+
+  // Always included fields at the top
+  content += `<strong class="${styles.popupContentStrong}">${properties.name}</strong>`;
+
+  // Dynamically included fields in the middle
+  for (const key in properties) {
+    const value = properties[key];
+    if (
+      key !== "name" &&
+      key !== "user_ratings_total" &&
+      key !== "rating" &&
+      value !== undefined &&
+      value !== null &&
+      value !== ""
+    ) {
+      let parsedValue = value;
+      if (
+        typeof value === "string" &&
+        value.startsWith("[") &&
+        value.endsWith("]")
+      ) {
+        try {
+          parsedValue = JSON.parse(value);
+        } catch (e) {
+          console.error(`Failed to parse value for key: ${key}`, e);
+        }
+      }
+
+      if (Array.isArray(parsedValue)) {
+        content += `<div class="${
+          styles.popupContentDiv
+        }">${key}: ${parsedValue.join(", ")}</div>`;
+      } else {
+        content += `<div class="${styles.popupContentDiv}">${key}: ${parsedValue}</div>`;
+      }
+    }
+  }
+
+  // Always included fields at the end
+  content += `<div class="${styles.popupContentDiv} ${styles.popupContentTotalRatings}">Total Ratings: ${properties.user_ratings_total}</div>`;
+  content += `<div class="${styles.popupContentDiv} ${styles.popupContentRating}">Rating: ${properties.rating}</div>`;
+
+  content += `</div>`;
+
+  return content;
 }
 
 export default MapContainer;

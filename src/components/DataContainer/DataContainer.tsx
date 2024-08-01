@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import CatalogueCard from "../CatalogueCard/CatalogueCard";
 import styles from "./DataContainer.module.css";
 import { HttpReq } from "../../services/apiService";
@@ -13,15 +13,11 @@ import { useUIContext } from "../../context/UIContext";
 import { MapFeatures } from "../../types/allTypesAndInterfaces";
 import UserLayerCard from "../UserLayerCard/UserLayerCard";
 import userIdData from "../../currentUserId.json";
-import { isValidColor, colorOptions } from "../../utils/helperFunctions";
+import { isValidColor } from "../../utils/helperFunctions";
 
 function DataContainer() {
-  const {
-    selectedContainerType,
-    handleAddClick,
-    setGeoPoints,
-    selectedLayers,
-  } = useCatalogContext();
+  const { selectedContainerType, handleAddClick, setGeoPoints } =
+    useCatalogContext();
   const { closeModal } = useUIContext();
   const [activeTab, setActiveTab] = useState("Data Catalogue");
   const [resData, setResData] = useState<(Catalog | UserLayer)[] | string>("");
@@ -38,20 +34,16 @@ function DataContainer() {
   const [wsResMessage, setWsResMessage] = useState<string>("");
   const [wsResId, setWsResId] = useState<string>("");
   const [wsResloading, setWsResLoading] = useState<boolean>(true);
-  const [wsReserror, setWsResError] = useState<Error | null>(null);
+  const [wsResError, setWsResError] = useState<Error | null>(null);
 
   useEffect(
     function () {
-      var isMounted = true; // Flag to ensure we don't update state on an unmounted component
-
       // Fetch user layers data
       function fetchUserLayers() {
         var body = { user_id: userIdData.user_id };
         HttpReq<UserLayer[]>(
           urls.user_layers,
-          function (response) {
-            if (isMounted) setUserLayersData(response);
-          },
+          setUserLayersData,
           setResMessage,
           setResId,
           setLoading,
@@ -65,9 +57,7 @@ function DataContainer() {
       function fetchCatalogCollection() {
         HttpReq<Catalog[]>(
           urls.catlog_collection,
-          function (response) {
-            if (isMounted) setCatalogCollectionData(response);
-          },
+          setCatalogCollectionData,
           setResMessage,
           setResId,
           setLoading,
@@ -75,15 +65,12 @@ function DataContainer() {
         );
       }
 
-
       // Fetch user catalogs data
       function fetchUserCatalogs() {
         var body = { user_id: userIdData.user_id };
         HttpReq<Catalog[]>(
           urls.user_catalogs,
-          function (response) {
-            if (isMounted) setUserCatalogsData(response);
-          },
+          setUserCatalogsData,
           setResMessage,
           setResId,
           setLoading,
@@ -111,10 +98,6 @@ function DataContainer() {
       }
 
       fetchData();
-
-      return function () {
-        isMounted = false; // Cleanup function to avoid setting state on unmounted component
-      };
     },
     [selectedContainerType]
   );
@@ -145,28 +128,10 @@ function DataContainer() {
     ]
   );
 
-  // Filter out already selected layers from the data to be displayed
-  const filteredData = useMemo(
-    function () {
-      if (Array.isArray(resData)) {
-        return resData.filter(function (item) {
-          return !selectedLayers.some(function (layer) {
-            return (
-              (item as Catalog).id === layer.id ||
-              (item as UserLayer).prdcer_lyr_id === layer.id
-            );
-          });
-        });
-      }
-      return resData;
-    },
-    [resData, selectedLayers]
-  );
-
   // Handle click event on catalog card
   function handleCatalogCardClick(selectedItem: CardItem) {
     if (selectedContainerType === "Home") {
-      HttpReq<MapFeatures>(
+      HttpReq<MapFeatures[]>(
         urls.http_catlog_data,
         setGeoPoints,
         setWsResMessage,
@@ -183,7 +148,6 @@ function DataContainer() {
         selectedItem.id,
         selectedItem.name,
         selectedItem.typeOfCard,
-        selectedItem.points_color,
         selectedItem.legend,
         selectedItem.lyrs
       );
@@ -192,14 +156,13 @@ function DataContainer() {
     closeModal();
   }
 
-
   // Render a card based on the item type
-  function makeCard(item: Catalog | UserLayer) {
+  function makeCard(item: Catalog | UserLayer, index: number) {
     if ("prdcer_lyr_id" in item) {
       // Render UserLayerCard if item is a user layer
       return (
         <UserLayerCard
-          key={item.prdcer_lyr_id}
+          key={item.prdcer_lyr_id + "-" + index} // Use a combination of id and index
           id={item.prdcer_lyr_id}
           name={item.prdcer_layer_name}
           description={item.layer_description}
@@ -224,7 +187,7 @@ function DataContainer() {
       var typeOfCard = "prdcer_ctlg_name" in item ? "userCatalog" : "catalog";
       return (
         <CatalogueCard
-          key={item.id || item.prdcer_ctlg_id || ""}
+          key={(item.id || item.prdcer_ctlg_id || "") + "-" + index}
           id={item.id || item.prdcer_ctlg_id || ""}
           thumbnail_url={item.thumbnail_url || ""}
           name={item.name || item.prdcer_ctlg_name || ""}
@@ -245,16 +208,15 @@ function DataContainer() {
     }
   }
 
-
   // Render cards based on filtered data
   function renderCards() {
-    if (typeof filteredData === "string") {
-      return <div>{filteredData}</div>;
+    if (typeof resData === "string") {
+      return <div>{resData}</div>;
     }
 
-    if (Array.isArray(filteredData)) {
-      return filteredData.map(function (item) {
-        return makeCard(item);
+    if (Array.isArray(resData)) {
+      return resData.map(function (item, index) {
+        return makeCard(item, index);
       });
     }
 

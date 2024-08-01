@@ -1,0 +1,62 @@
+.topupContainer {
+  position: fixed;
+  top: 20px;
+  right: 70px;
+  width: 160px;
+  height: 26px;
+  border-radius: 10px;
+  background-color: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 10px;
+  transition: all 0.3s ease;
+}
+
+.loaderWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.loadingText {
+  font-size: 16px;
+  font-weight: 700;
+  background: linear-gradient(
+    to right,
+    #006400, /* Dark Green */
+    #32CD32, /* Lime Green */
+    #228B22, /* Forest Green */
+    #008000, /* Green */
+    #006400  /* Dark Green */
+  );
+  background-size: 200% auto;
+  color: transparent;
+  background-clip: text;
+  animation: color-shift 3s linear infinite, pulse 4s ease-in-out infinite;
+}
+
+@keyframes color-shift {
+  0% {
+    background-position: 0% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
