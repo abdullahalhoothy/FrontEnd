@@ -1,3 +1,4 @@
+
 // src/App.tsx
 
 import React from "react";
@@ -8,6 +9,7 @@ import { LayerProvider } from "./context/LayerContext";
 import { UIProvider } from "./context/UIContext";
 import CheckExtensions from "./components/CheckExtension/CheckExtensions";
 import { AuthProvider } from './context/AuthContext';
+
 
 const App: React.FC = () => {
   return (
