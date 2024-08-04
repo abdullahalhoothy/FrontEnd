@@ -21,7 +21,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const [modalContent, setModalContent] = useState<ReactNode>(null);
   const [modalOptions, setModalOptions] = useState<ModalOptions>({});
   const [sidebarMode, setSidebarModeState] = useState("default");
-  const [isMenuExpanded, setIsMenuExpanded] = useState(false);
+  const [isMenuExpanded, setIsMenuExpanded] = useState(true);
   const [isViewClicked, setIsViewClicked] = useState(false);
 
   // Use CatalogContext and LayerContext to manage their respective states
@@ -77,6 +77,11 @@ export function UIProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // Function to reset the view state
+  function resetViewState() {
+    setIsViewClicked(false);
+  }
+
   // Function to toggle the menu expansion state
   function toggleMenu() {
     setIsMenuExpanded(!isMenuExpanded);
@@ -106,6 +111,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
         toggleMenu,
         handleViewClick,
         setSidebarMode,
+        resetViewState
       }}
     >
       {children}

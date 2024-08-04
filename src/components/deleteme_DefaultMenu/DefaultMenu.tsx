@@ -45,9 +45,9 @@ function DefaultMenu() {
         </Link>
       </li>
       <li>
-        <Link to="/about">
+        <Link to="https://northernacs.com/">
           <MdInfo className={styles.icon} />
-          {isMenuExpanded && <span> About</span>}
+          {isMenuExpanded && <span> About Us</span>}
         </Link>
       </li>
       <li>

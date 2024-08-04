@@ -1,3 +1,5 @@
+// src/components/CatalogDetailsForm/CatalogDetailsForm.tsx
+
 import React, { useState, useEffect, ChangeEvent } from "react";
 import styles from "./CatalogDetailsForm.module.css";
 import SaveOptions from "../SaveOptions/SaveOptions";

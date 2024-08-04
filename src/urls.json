@@ -15,6 +15,10 @@
   "fetch_ctlg_lyrs": "fetch_ctlg_lyrs",
   "user_layers": "user_layers",
   "prdcer_lyr_map_data": "prdcer_lyr_map_data",
-  "save_producer_catalog": "save_producer_catalog"
+  "save_producer_catalog": "save_producer_catalog",
+  "login":"login",
+  "reset_password":"reset_password",
+  "create_user_profile":"create_user_profile",
+  "user_profile":"user_profile"
   
 }

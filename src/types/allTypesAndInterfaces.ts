@@ -244,6 +244,7 @@ export interface UIContextProps {
   toggleMenu(): void;
   handleViewClick(): void;
   setSidebarMode(mode: string): void;
+  resetViewState(): void;
 }
 
 export interface GeoPoint {
@@ -296,4 +297,45 @@ export interface TabularData {
   rating: number;
   user_ratings_total: number;
   website: string;
+}
+export interface AuthSuccessResponse {
+  kind: string;
+  localId: string;
+  email: string;
+  displayName: string;
+  idToken: string;
+  registered: boolean;
+  refreshToken: string;
+  expiresIn: string;
+  created_at: number; // We'll add this when saving to localStorage
+}
+
+export interface AuthFailedResponse {
+  error: {
+    code: number;
+    message: string;
+    errors: {
+      message: string;
+      domain: string;
+      reason: string;
+    }[];
+  };
+}
+export interface UserProfile {
+  name: string;
+  email: string;
+}
+export interface User {
+    id: string;
+    email: string;
+    name: string;
+}
+
+export type AuthResponse = AuthSuccessResponse | AuthFailedResponse | null;
+
+export interface AuthContextType {
+  authResponse: AuthResponse;
+  setAuthResponse: (response: AuthResponse) => void;
+  isAuthenticated: boolean;
+  logout: () => void;
 }

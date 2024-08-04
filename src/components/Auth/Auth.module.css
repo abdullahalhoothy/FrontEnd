@@ -1,0 +1,97 @@
+/* src/components/Auth/Auth.module.css */
+
+.authContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #115740;
+}
+
+.authCard {
+  background-color: #ffffff;
+  padding: 40px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+}
+
+.authTitle {
+  font-size: 24px;
+  color: #006400;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.authMessage {
+  color: #ff0000;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.authForm {
+  display: flex;
+  flex-direction: column;
+}
+
+.inputGroup {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  background-color: #f0f8f0;
+  border-radius: 4px;
+}
+
+.icon {
+  color: #006400;
+  margin-left: 10px;
+}
+
+.authInput {
+  flex: 1;
+  padding: 10px;
+  font-size: 16px;
+  border: none;
+  background-color: transparent;
+  outline: none;
+}
+
+.authButton {
+  padding: 12px;
+  font-size: 16px;
+  color: #ffffff;
+  background-color: #155315;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.authButton:hover {
+  background-color: #155315;
+}
+
+.authButton:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.authOptions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+}
+
+.authToggle {
+  color: #006400;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 5px;
+}
+
+.authToggle:hover {
+  text-decoration: underline;
+}

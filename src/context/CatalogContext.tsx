@@ -1,10 +1,3 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from "react";
 import {
   CatalogContextType,
   MapFeatures,
@@ -13,10 +6,16 @@ import {
 import { HttpReq } from "../services/apiService";
 import urls from "../urls.json";
 import userIdData from "../currentUserId.json";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { useAuth } from "../context/AuthContext"; // Add this import
+import { useNavigate } from 'react-router-dom';
 
 const CatalogContext = createContext<CatalogContextType | undefined>(undefined);
 
+
 export function CatalogProvider(props: { children: ReactNode }) {
+  const { authResponse } = useAuth(); // Add this line
+  const navigate = useNavigate();
   const { children } = props;
 
   const [formStage, setFormStage] = useState("catalogue");
@@ -55,22 +54,27 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [saveReqId, setSaveReqId] = useState("");
 
   async function fetchGeoPoints(id: string, typeOfCard: string) {
+    if (!authResponse || !('idToken' in authResponse)) {
+      setIsError(new Error("User is not authenticated!"));
+      navigate('/auth');
+      return;
+    }
     const apiJsonRequest =
       typeOfCard === "layer"
         ? {
-            prdcer_lyr_id: id,
-            user_id: userIdData.user_id,
-          }
+          prdcer_lyr_id: id,
+          user_id: userIdData.user_id,
+        }
         : typeOfCard === "userCatalog"
-        ? { prdcer_ctlg_id: id, as_layers: true, user_id: userIdData.user_id }
-        : { catalogue_dataset_id: id };
+          ? { prdcer_ctlg_id: id, as_layers: true, user_id: authResponse.localId }
+          : { catalogue_dataset_id: id };
 
     const url =
       typeOfCard === "layer"
         ? urls.prdcer_lyr_map_data
         : typeOfCard === "userCatalog"
-        ? urls.fetch_ctlg_lyrs
-        : urls.http_catlog_data;
+          ? urls.fetch_ctlg_lyrs
+          : urls.http_catlog_data;
 
     let unprocessedData: MapFeatures | MapFeatures[] | null = null;
 
@@ -86,13 +90,14 @@ export function CatalogProvider(props: { children: ReactNode }) {
       setIsLoading,
       setIsError,
       "post",
-      apiJsonRequest
+      apiJsonRequest,
+      authResponse.idToken
     );
 
-   if (isError) {
-     console.error("An error occurred while fetching geo points.");
-     return;
-   }
+    if (isError) {
+      console.error("An error occurred while fetching geo points.");
+      return;
+    }
 
     if (unprocessedData) {
       var updatedDataArray = (
@@ -118,11 +123,16 @@ export function CatalogProvider(props: { children: ReactNode }) {
   }
 
   function handleSave() {
+    if (!authResponse || !('idToken' in authResponse)) {
+      setIsError(new Error("User is not authenticated!"));
+      navigate('/auth');
+      return;
+    }
     const layersData = Array.isArray(geoPoints)
       ? geoPoints.map((layer) => ({
-          layer_id: layer.prdcer_lyr_id,
-          points_color: layer.points_color,
-        }))
+        layer_id: layer.prdcer_lyr_id,
+        points_color: layer.points_color,
+      }))
       : [];
 
     const requestBody = {
@@ -131,7 +141,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
       ctlg_description: description,
       total_records: 0,
       lyrs: layersData,
-      user_id: userIdData.user_id,
+      user_id: authResponse.localId,
       thumbnail_url: "",
     };
 
@@ -143,7 +153,8 @@ export function CatalogProvider(props: { children: ReactNode }) {
       setIsLoading,
       setIsError,
       "post",
-      requestBody
+      requestBody,
+      authResponse.idToken
     );
   }
 

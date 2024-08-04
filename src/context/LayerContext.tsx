@@ -16,11 +16,17 @@ import {
 import urls from "../urls.json";
 import { useCatalogContext } from "./CatalogContext";
 import userIdData from "../currentUserId.json";
+import { useAuth } from "../context/AuthContext"; // Add this import
+import { useNavigate } from 'react-router-dom';
 
 
 const LayerContext = createContext<LayerContextType | undefined>(undefined);
 
+
 export function LayerProvider(props: { children: ReactNode }) {
+  const navigate = useNavigate();
+
+  const { authResponse } = useAuth(); // Add this line
   const { children } = props;
   const { geoPoints, setGeoPoints } = useCatalogContext();
 
@@ -97,6 +103,12 @@ export function LayerProvider(props: { children: ReactNode }) {
   }
 
   function handleSave() {
+    if (!authResponse || !('idToken' in authResponse)) {
+      navigate('/auth');
+      setIsError(new Error("User is not authenticated!"));
+      return;
+    }
+
     if (!datasetInfo) {
       setIsError(new Error("Dataset information is missing!"));
       console.error("Dataset information is missing!");
@@ -118,7 +130,7 @@ export function LayerProvider(props: { children: ReactNode }) {
       points_color: selectedColor.hex,
       layer_legend: secondFormData.legend,
       layer_description: secondFormData.description,
-      user_id: userId,
+      user_id: authResponse.localId,
     };
 
     setLoading(true);
@@ -131,7 +143,8 @@ export function LayerProvider(props: { children: ReactNode }) {
       setLoading,
       setIsError,
       "post",
-      postData
+      postData,
+      authResponse.idToken
     );
   }
 
@@ -190,6 +203,22 @@ export function LayerProvider(props: { children: ReactNode }) {
   }
 
   function handleFirstFormApiCall(action: string, pageToken?: string) {
+    let user_id: string;
+    let idToken:string
+
+    if (authResponse && ('idToken' in authResponse)) {
+      user_id = authResponse.localId;
+      idToken = authResponse.idToken
+    }  else if (action=="full data"){
+      navigate('/auth');
+      setIsError(new Error("User is not authenticated!"));
+      return
+    }else {
+      user_id = "0000";
+      idToken = "";
+      
+    }
+
     const postData = {
       dataset_country: firstFormData.selectedCountry,
       dataset_city: firstFormData.selectedCity,
@@ -202,6 +231,7 @@ export function LayerProvider(props: { children: ReactNode }) {
       }),
       ...(action === "full data" && { password: password }),
       ...(pageToken && { page_token: pageToken }),
+      user_id: user_id
     };
 
     if (callCountRef.current >= MAX_CALLS) {
@@ -220,7 +250,8 @@ export function LayerProvider(props: { children: ReactNode }) {
       setLocalLoading,
       setIsError,
       "post",
-      postData
+      postData,
+      idToken
     );
   }
 

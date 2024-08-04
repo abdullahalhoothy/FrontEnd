@@ -1,3 +1,5 @@
+// src/components/ErrorIconFeedback/ErrorIconFeedback.tsx
+
 import React from "react";
 import { MdOutlineErrorOutline } from "react-icons/md";
 import styles from "./ErrorIconFeedback.module.css";
@@ -7,7 +9,7 @@ function ErrorIconFeedback() {
   return (
     <div className={styles.errorMessage}>
       <MdOutlineErrorOutline className={styles.errorIcon} />
-      <p>Failed to save. Please try again later.</p>
+      <p>Failed. Please relogin and try again.</p>
     </div>
   );
 }

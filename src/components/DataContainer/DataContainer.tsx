@@ -14,11 +14,15 @@ import { MapFeatures } from "../../types/allTypesAndInterfaces";
 import UserLayerCard from "../UserLayerCard/UserLayerCard";
 import userIdData from "../../currentUserId.json";
 import { isValidColor } from "../../utils/helperFunctions";
+import { useAuth } from "../../context/AuthContext"; // Add this import
+import { useNavigate } from 'react-router-dom';
+
 
 function DataContainer() {
   const { selectedContainerType, handleAddClick, setGeoPoints } =
     useCatalogContext();
-  const { closeModal } = useUIContext();
+    const { isAuthenticated, authResponse, logout } = useAuth();
+      const { closeModal } = useUIContext();
   const [activeTab, setActiveTab] = useState("Data Catalogue");
   const [resData, setResData] = useState<(Catalog | UserLayer)[] | string>("");
   const [userLayersData, setUserLayersData] = useState<UserLayer[]>([]);
@@ -36,23 +40,12 @@ function DataContainer() {
   const [wsResloading, setWsResLoading] = useState<boolean>(true);
   const [wsResError, setWsResError] = useState<Error | null>(null);
 
-  useEffect(
-    function () {
-      // Fetch user layers data
-      function fetchUserLayers() {
-        var body = { user_id: userIdData.user_id };
-        HttpReq<UserLayer[]>(
-          urls.user_layers,
-          setUserLayersData,
-          setResMessage,
-          setResId,
-          setLoading,
-          setError,
-          "post",
-          body
-        );
-      }
+  const navigate = useNavigate();
 
+
+  useEffect(() => {
+
+    
       // Fetch catalog collection data
       function fetchCatalogCollection() {
         HttpReq<Catalog[]>(
@@ -65,9 +58,32 @@ function DataContainer() {
         );
       }
 
-      // Fetch user catalogs data
+    function fetchUserLayers() {
+      if (!authResponse || !('idToken' in authResponse)) {
+        navigate('/auth');
+        return};
+
+      const body = { user_id: authResponse.localId };
+      HttpReq<UserLayer[]>(
+        urls.user_layers,
+        setUserLayersData,
+        setResMessage,
+        setResId,
+        setLoading,
+        setError,
+        "post",
+        body,
+        authResponse.idToken // Add this line
+      );
+    }
+
+
       function fetchUserCatalogs() {
-        var body = { user_id: userIdData.user_id };
+        if (!authResponse || !('idToken' in authResponse)) {
+          navigate('/auth');
+          return};
+  
+        const body = { user_id: authResponse.localId };
         HttpReq<Catalog[]>(
           urls.user_catalogs,
           setUserCatalogsData,
@@ -76,7 +92,8 @@ function DataContainer() {
           setLoading,
           setError,
           "post",
-          body
+          body,
+          authResponse.idToken // Add this line
         );
       }
 
@@ -99,7 +116,7 @@ function DataContainer() {
 
       fetchData();
     },
-    [selectedContainerType]
+    [selectedContainerType, authResponse]
   );
 
   useEffect(
