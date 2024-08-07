@@ -70,7 +70,7 @@ function Layout() {
               className={styles.iconContainer}
             >
               <FaLayerGroup className={styles.icon} />
-              {isMenuExpanded && <span> Create Layer</span>}
+              {isMenuExpanded && <span> Locate</span>}
             </div>
           </li>
           <li>

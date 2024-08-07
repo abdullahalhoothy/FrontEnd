@@ -31,8 +31,8 @@ function CreateLayer() {
     if (formStage === "initial" || formStage === "secondStep") {
       return (
         <>
-          <h2 className={styles.title}>Create Layer</h2>
-          <p>Provide some details to create a new layer.</p>
+          <h2 className={styles.title}>Locate</h2>
+          <p>What you are looking for.</p>
           {formStage === "initial" && <LayerDetailsForm />}
           {formStage === "secondStep" && <CustomizeLayer />}
         </>

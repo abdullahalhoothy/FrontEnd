@@ -207,11 +207,7 @@ function LayerDetailsForm() {
             setSearchType(e.target.value);
           }}
         >
-          <option value="old nearby search">Old Nearby Search</option>
           <option value="new nearby search">New Nearby Search</option>
-          <option value="nearby but actually text search">
-            Nearby But Actually Text Search
-          </option>
           <option value="text search">Text Search</option>
         </select>
       </div>
@@ -351,7 +347,7 @@ function LayerDetailsForm() {
           <button
             type="button"
             onClick={function (e) {
-              handleButtonClick("Get Sample", e);
+              handleButtonClick("sample", e);
             }}
           >
             Get Sample
