@@ -1,25 +1,18 @@
-import React, { useState } from "react";
+import { useCatalogContext } from "../../context/CatalogContext";
+import React from "react";
 import { formatSubcategoryName } from "../../utils/helperFunctions";
 import styles from "./LayerDetailsForm.module.css";
 import { useLayerContext } from "../../context/LayerContext";
-import { useCatalogContext } from "../../context/CatalogContext";
-import withLocationAndCategories, { WithLocationAndCategoriesProps } from "./withLocationAndCategories";
+import { useState } from "react";
+import { useLocationAndCategories } from '../../hooks/useLocationAndCategories';
 
-interface LayerDetailsFormProps extends WithLocationAndCategoriesProps {
-  // Add any additional props specific to LayerDetailsForm here
-}
-
-function LayerDetailsForm({
-  countries,
-  cities,
-  categories,
-  firstFormData,
-  handleChange,
-  handleTypeToggle,
-  validateForm,
-  setFirstFormData,
-}: LayerDetailsFormProps) {
+function LayerDetailsForm() {
   const {
+    countries,
+    cities,
+    categories,
+    firstFormData,
+    setFirstFormData,
     handleNextStep,
     setCentralizeOnce,
     setShowLoaderTopup,
@@ -31,6 +24,11 @@ function LayerDetailsForm({
     password,
     setPassword,
   } = useLayerContext();
+  
+  const { 
+    handleChange,
+    handleTypeToggle,
+    validateForm } = useLocationAndCategories() 
 
   const { setGeoPoints } = useCatalogContext();
 
@@ -207,4 +205,4 @@ function LayerDetailsForm({
   );
 }
 
-export default withLocationAndCategories(LayerDetailsForm);
+export default LayerDetailsForm;

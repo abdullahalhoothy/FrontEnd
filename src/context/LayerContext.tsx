@@ -1,23 +1,22 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  ReactNode,
-  useRef,
-  useEffect,
-} from "react";
+// src/context/LayerContext.tsx
+
+
+import React, { createContext, useContext, useState, ReactNode, useRef, useEffect } from "react";
 import { HttpReq } from "../services/apiService";
 import {
   CreateLayerResponse,
   LayerContextType,
   SaveResponse,
-  FormData
+  FormData,
+  City,
+  CategoryData
 } from "../types/allTypesAndInterfaces";
 import urls from "../urls.json";
 import { useCatalogContext } from "./CatalogContext";
 import userIdData from "../currentUserId.json";
-import { useAuth } from "../context/AuthContext"; // Add this import
+import { useAuth } from "../context/AuthContext";
 import { useNavigate } from 'react-router-dom';
+import { processCityData } from '../utils/helperFunctions';
 
 
 const LayerContext = createContext<LayerContextType | undefined>(undefined);
@@ -25,11 +24,20 @@ const LayerContext = createContext<LayerContextType | undefined>(undefined);
 
 export function LayerProvider(props: { children: ReactNode }) {
   const navigate = useNavigate();
-
   const { authResponse } = useAuth(); // Add this line
   const { children } = props;
   const { geoPoints, setGeoPoints } = useCatalogContext();
-
+  // State from useLocationAndCategories
+  const [countries, setCountries] = useState<string[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
+  const [citiesData, setCitiesData] = useState<{ [country: string]: City[] }>({});
+  const [categories, setCategories] = useState<CategoryData>({});
+  const [firstFormData, setFirstFormData] = useState<FormData>({
+    selectedCountry: '',
+    selectedCity: '',
+    includedTypes: [],
+    excludedTypes: [],
+  });
   const [secondFormData, setSecondFormData] = useState({
     legend: "",
     description: "",
@@ -62,13 +70,6 @@ export function LayerProvider(props: { children: ReactNode }) {
   const [initialFlyToDone, setInitialFlyToDone] = useState<boolean>(false);
 
   const [showLoaderTopup, setShowLoaderTopup] = useState<boolean>(false);
-
-  const [firstFormData, setFirstFormData] = useState<FormData>({
-    selectedCountry: "",
-    selectedCity: "",
-    includedTypes: [],
-    excludedTypes: [],
-  });
 
   const [postResponse, setPostResponse] = useState<CreateLayerResponse | null>(
     null
@@ -300,14 +301,22 @@ export function LayerProvider(props: { children: ReactNode }) {
         showLoaderTopup,
         setShowLoaderTopup,
         handleFirstFormApiCall,
-        firstFormData,
-        setFirstFormData,
         textSearchInput,
         setTextSearchInput,
         searchType,
         setSearchType,
         password,
         setPassword,
+        countries,
+        setCountries,
+        cities,
+        setCities,
+        citiesData,
+        setCitiesData,
+        categories,
+        setCategories,
+        firstFormData,
+        setFirstFormData,
       }}
     >
       {children}

@@ -218,6 +218,15 @@ export interface LayerContextType {
   setSearchType: React.Dispatch<React.SetStateAction<string>>;
   password: string;
   setPassword: React.Dispatch<React.SetStateAction<string>>;
+  countries: string[];
+  setCountries: React.Dispatch<React.SetStateAction<string[]>>;
+  cities: City[];
+  setCities: React.Dispatch<React.SetStateAction<City[]>>;
+  citiesData: { [country: string]: City[] };
+  setCitiesData: React.Dispatch<React.SetStateAction<{ [country: string]: City[] }>>;
+  categories: CategoryData;
+  setCategories: React.Dispatch<React.SetStateAction<CategoryData>>;
+
 }
 
 export interface FormData {
@@ -341,4 +350,9 @@ export interface AuthContextType {
 }
 export interface CategoryData {
   [category: string]: string[];
+}
+
+export interface CostEstimate {
+  cost: number;
+  api_calls: number;
 }

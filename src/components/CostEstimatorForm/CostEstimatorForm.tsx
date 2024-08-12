@@ -1,37 +1,34 @@
 // src/components/CostEstimatorForm/CostEstimatorForm.tsx
-
 import React, { useState } from "react";
 import { formatSubcategoryName } from "../../utils/helperFunctions";
 import styles from "./CostEstimatorForm.module.css";
-import withLocationAndCategories, { WithLocationAndCategoriesProps } from "../LayerDetailsForm/withLocationAndCategories";
+import { useLayerContext } from "../../context/LayerContext";
 import { HttpReq } from "../../services/apiService";
 import urls from "../../urls.json";
+import { CostEstimate } from '../../types/allTypesAndInterfaces';
+import { useLocationAndCategories } from '../../hooks/useLocationAndCategories';
 
-interface CostEstimatorFormProps extends WithLocationAndCategoriesProps {
-  // Add any additional props specific to CostEstimatorForm here
-}
+function CostEstimatorForm() {
+  const {
+    countries,
+    cities,
+    categories,
+    firstFormData,
+    isError,
+    setIsError
+  } = useLayerContext();
+  
+  const { 
+    handleChange,
+    handleTypeToggle,
+    validateForm } = useLocationAndCategories() 
 
-interface CostEstimate {
-  cost: number;
-  api_calls: number;
-}
-
-function CostEstimatorForm({
-  countries,
-  cities,
-  categories,
-  firstFormData,
-  handleChange,
-  handleTypeToggle,
-  validateForm,
-}: CostEstimatorFormProps) {
   const [costEstimate, setCostEstimate] = useState<CostEstimate | null>(null);
-  const [error, setError] = useState<Error | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   function handleCostEstimate(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-  
+
     if (validateForm("estimate")) {
       setIsLoading(true);
       const requestBody = {
@@ -40,20 +37,20 @@ function CostEstimatorForm({
         city_name: firstFormData.selectedCity,
         country: firstFormData.selectedCountry,
       };
-  
+
       HttpReq<CostEstimate>(
         urls.cost_calculator,
         (data) => {
           if (data && typeof data.cost === 'number' && typeof data.api_calls === 'number') {
             setCostEstimate(data);
           } else {
-            setError(new Error('Invalid response from server'));
+            setIsError(new Error('Invalid response from server'));
           }
         },
         () => {},
         () => {},
         () => setIsLoading(false),
-        setError,
+        setIsError,
         "post",
         requestBody
       );
@@ -146,7 +143,7 @@ function CostEstimatorForm({
         </div>
       </div>
 
-      {error && <p className={styles.error}>{error.message}</p>}
+      {isError && <p className={styles.error}>{isError.message}</p>}
 
       <div className={styles.buttonContainer}>
       <button type="submit" className={styles.button} disabled={isLoading}>
@@ -162,9 +159,9 @@ function CostEstimatorForm({
       </div>
     )}
 
-    {error && <p className={styles.error}>{error.message}</p>}
+    {isError && <p className={styles.error}>{isError.message}</p>}
   </form>
 );
 }
 
-export default withLocationAndCategories(CostEstimatorForm);
+export default CostEstimatorForm;
