@@ -6,12 +6,6 @@ export interface ModalProps {
   isSmaller?: boolean;
 }
 
-export interface FormData {
-  selectedCountry: string;
-  selectedCity: string;
-  includedTypes: string[];
-  excludedTypes: string[];
-}
 
 export interface ExpandableMenuProps {
   children: ReactNode;
@@ -115,7 +109,7 @@ export interface CatalogContextType {
     legend?: string,
     layers?: { layer_id: string; points_color: string }[]
   ): void;
-  handleSave(): void;
+  handleSaveLayer(): void;
   resetFormStage(resetTo: string): void;
   geoPoints: MapFeatures[];
   setGeoPoints: React.Dispatch<React.SetStateAction<MapFeatures[]>>;
@@ -160,33 +154,33 @@ export interface RequestType {
 }
 
 export interface LayerContextType {
-  secondFormData: {
+  reqSaveLayer: {
     legend: string;
     description: string;
     name: string;
   };
-  setSecondFormData: React.Dispatch<
+  setReqSaveLayer: React.Dispatch<
     React.SetStateAction<{
       legend: string;
       description: string;
       name: string;
     }>
   >;
-  formStage: string;
+  createLayerformStage: string;
   isError: Error | null;
-  firstFormResponse: CreateLayerResponse | undefined;
+  manyFetchDatasetResp: FetchDatasetResponse | undefined;
   saveMethod: string;
   loading: boolean;
   saveResponse: SaveResponse | null;
   setFormStage: React.Dispatch<React.SetStateAction<string>>;
   setIsError: React.Dispatch<React.SetStateAction<Error | null>>;
-  setFirstFormResponse: React.Dispatch<
-    React.SetStateAction<CreateLayerResponse | undefined>
+  setManyFetchDatasetResp: React.Dispatch<
+    React.SetStateAction<FetchDatasetResponse | undefined>
   >;
   setSaveMethod: React.Dispatch<React.SetStateAction<string>>;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
-  handleNextStep(): void;
-  handleSave(): void;
+  incrementFormStage(): void;
+  handleSaveLayer(): void;
   resetFormStage(): void;
   selectedColor: Color | null;
   setSelectedColor: React.Dispatch<React.SetStateAction<Color | null>>;
@@ -209,9 +203,9 @@ export interface LayerContextType {
   setInitialFlyToDone: React.Dispatch<React.SetStateAction<boolean>>;
   showLoaderTopup: boolean;
   setShowLoaderTopup: React.Dispatch<React.SetStateAction<boolean>>;
-  handleFirstFormApiCall(action: string, pageToken?: string): void;
-  firstFormData: FormData;
-  setFirstFormData: React.Dispatch<React.SetStateAction<FormData>>;
+  handleFetchDataset(action: string, pageToken?: string): void;
+  reqFetchDataset: ReqFetchDataset;
+  setReqFetchDataset: React.Dispatch<React.SetStateAction<ReqFetchDataset>>;
   textSearchInput: string;
   setTextSearchInput: React.Dispatch<React.SetStateAction<string>>;
   searchType: string;
@@ -226,10 +220,13 @@ export interface LayerContextType {
   setCitiesData: React.Dispatch<React.SetStateAction<{ [country: string]: City[] }>>;
   categories: CategoryData;
   setCategories: React.Dispatch<React.SetStateAction<CategoryData>>;
-
+  handleCountryCitySelection: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+  handleTypeToggle: (type: string) => void;
+  validateFetchDatasetForm: () => true | Error;
+  resetFetchDatasetForm(): void;
 }
 
-export interface FormData {
+export interface ReqFetchDataset {
   selectedCountry: string;
   selectedCity: string;
   includedTypes: string[];
@@ -281,7 +278,7 @@ export interface Feature {
     coordinates: [number, number];
   };
 }
-export interface CreateLayerResponse {
+export interface FetchDatasetResponse {
   type: "FeatureCollection";
   features: Feature[];
   bknd_dataset_id: string;
@@ -291,7 +288,7 @@ export interface CreateLayerResponse {
   display?: boolean;
 }
 
-export interface MapFeatures extends CreateLayerResponse {
+export interface MapFeatures extends FetchDatasetResponse {
   prdcer_layer_name?: string;
   points_color?: string;
   layer_legend?: string;

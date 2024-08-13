@@ -2,8 +2,8 @@
 
 import React from "react";
 import { useLayerContext } from "../../context/LayerContext";
-import styles from "./CreateLayer.module.css";
-import LayerDetailsForm from "../LayerDetailsForm/LayerDetailsForm";
+import styles from "./FormLoader.module.css";
+import FetchDatasetForm from "../FetchDatasetForm/FetchDatasetForm";
 import CustomizeLayer from "../CustomizeLayer/CustomizeLayer";
 import SaveOptions from "../SaveOptions/SaveOptions";
 import Loader from "../Loader/Loader";
@@ -11,8 +11,8 @@ import ErrorIconFeedback from "../ErrorIconFeedback/ErrorIconFeedback";
 import SavedIconFeedback from "../SavedIconFeedback/SavedIconFeedback";
 import LoaderTopup from "../LoaderTopup/LoaderTopup";
 
-function CreateLayer() {
-  const { formStage, loading, isError, saveResponse, showLoaderTopup } =
+function FormLoader() {
+  const { createLayerformStage, loading, isError, saveResponse, showLoaderTopup } =
     useLayerContext();
 
   function renderContent() {
@@ -28,18 +28,18 @@ function CreateLayer() {
   }
 
   function renderFormContent() {
-    if (formStage === "initial" || formStage === "secondStep") {
+    if (createLayerformStage === "initial" || createLayerformStage === "secondStep") {
       return (
         <>
           <h2 className={styles.title}>Locate</h2>
           <p>What you are looking for.</p>
-          {formStage === "initial" && <LayerDetailsForm />}
-          {formStage === "secondStep" && <CustomizeLayer />}
+          {createLayerformStage === "initial" && <FetchDatasetForm />}
+          {createLayerformStage === "secondStep" && <CustomizeLayer />}
         </>
       );
     }
 
-    if (formStage === "thirdStep") {
+    if (createLayerformStage === "thirdStep") {
       return <SaveOptions />;
     }
 
@@ -54,4 +54,4 @@ function CreateLayer() {
   );
 }
 
-export default CreateLayer;
+export default FormLoader;

@@ -1,0 +1,11 @@
+.sideMenuLoader {
+    background-color: #115740;
+    border-right: 1px solid #ccc;
+  }
+  
+  .CreateCatalogMenu {
+    padding: 0.75rem 0;
+    width: 340px;
+    background-color: #115740;
+    color: #fff;
+  }

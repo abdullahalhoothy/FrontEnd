@@ -6,8 +6,8 @@ import { useUIContext } from "../../context/UIContext";
 
 function CustomizeLayer() {
   const {
-    setSecondFormData,
-    handleNextStep,
+    setReqSaveLayer,
+    incrementFormStage,
     resetFormStage,
     selectedColor,
     showLoaderTopup,
@@ -52,12 +52,12 @@ function CustomizeLayer() {
 
   function handleButtonClick() {
     if (validateForm()) {
-      setSecondFormData({
+      setReqSaveLayer({
         legend,
         description,
         name,
       });
-      handleNextStep();
+      incrementFormStage();
     }
   }
 

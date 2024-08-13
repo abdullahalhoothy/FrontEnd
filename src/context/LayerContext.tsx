@@ -4,10 +4,10 @@
 import React, { createContext, useContext, useState, ReactNode, useRef, useEffect } from "react";
 import { HttpReq } from "../services/apiService";
 import {
-  CreateLayerResponse,
+  FetchDatasetResponse,
   LayerContextType,
   SaveResponse,
-  FormData,
+  ReqFetchDataset,
   City,
   CategoryData
 } from "../types/allTypesAndInterfaces";
@@ -32,24 +32,27 @@ export function LayerProvider(props: { children: ReactNode }) {
   const [cities, setCities] = useState<City[]>([]);
   const [citiesData, setCitiesData] = useState<{ [country: string]: City[] }>({});
   const [categories, setCategories] = useState<CategoryData>({});
-  const [firstFormData, setFirstFormData] = useState<FormData>({
+  const [reqFetchDataset, setReqFetchDataset] = useState<ReqFetchDataset>({
     selectedCountry: '',
     selectedCity: '',
     includedTypes: [],
     excludedTypes: [],
   });
-  const [secondFormData, setSecondFormData] = useState({
+  const [reqSaveLayer, setReqSaveLayer] = useState({
     legend: "",
     description: "",
     name: "",
   });
 
-  const [formStage, setFormStage] = useState<string>("initial");
+  const [createLayerformStage, setCreateLayerformStage] = useState<string>("initial");
   const [loading, setLoading] = useState<boolean>(false);
   const [isError, setIsError] = useState<Error | null>(null);
-  const [firstFormResponse, setFirstFormResponse] = useState<
-    CreateLayerResponse | undefined
+  const [manyFetchDatasetResp, setManyFetchDatasetResp] = useState<
+    FetchDatasetResponse | undefined
   >(undefined);
+  const [FetchDatasetResp, setFetchDatasetResp] = useState<FetchDatasetResponse | null>(
+    null
+  );
   const [saveMethod, setSaveMethod] = useState<string>("");
   const [datasetInfo, setDatasetInfo] = useState<{
     bknd_dataset_id: string;
@@ -71,9 +74,7 @@ export function LayerProvider(props: { children: ReactNode }) {
 
   const [showLoaderTopup, setShowLoaderTopup] = useState<boolean>(false);
 
-  const [postResponse, setPostResponse] = useState<CreateLayerResponse | null>(
-    null
-  );
+
   const [postResMessage, setPostResMessage] = useState<string>("");
   const [postResId, setPostResId] = useState<string>("");
 
@@ -85,25 +86,17 @@ export function LayerProvider(props: { children: ReactNode }) {
   const callCountRef = useRef<number>(0);
   const MAX_CALLS = 10;
 
-  useEffect(
-    function () {
-      if (isError) {
-        setShowLoaderTopup(false);
-        callCountRef.current = 0;
-      }
-    },
-    [isError]
-  );
 
-  function handleNextStep() {
-    if (formStage === "initial") {
-      setFormStage("secondStep");
-    } else if (formStage === "secondStep") {
-      setFormStage("thirdStep");
+
+  function incrementFormStage() {
+    if (createLayerformStage === "initial") {
+      setCreateLayerformStage("secondStep");
+    } else if (createLayerformStage === "secondStep") {
+      setCreateLayerformStage("thirdStep");
     }
   }
 
-  function handleSave() {
+  function handleSaveLayer() {
     if (!authResponse || !('idToken' in authResponse)) {
       navigate('/auth');
       setIsError(new Error("User is not authenticated!"));
@@ -125,19 +118,19 @@ export function LayerProvider(props: { children: ReactNode }) {
     const userId = userIdData.user_id;
 
     const postData = {
-      prdcer_layer_name: secondFormData.name,
+      prdcer_layer_name: reqSaveLayer.name,
       prdcer_lyr_id: datasetInfo.prdcer_lyr_id,
       bknd_dataset_id: datasetInfo.bknd_dataset_id,
       points_color: selectedColor.hex,
-      layer_legend: secondFormData.legend,
-      layer_description: secondFormData.description,
+      layer_legend: reqSaveLayer.legend,
+      layer_description: reqSaveLayer.description,
       user_id: authResponse.localId,
     };
 
     setLoading(true);
 
     HttpReq<SaveResponse>(
-      urls.save_producer_layer,
+      urls.save_layer,
       setSaveResponse,
       setSaveResponseMsg,
       setSaveReqId,
@@ -151,10 +144,12 @@ export function LayerProvider(props: { children: ReactNode }) {
 
   function resetFormStage() {
     setIsError(null);
-    setFormStage("initial");
+    setCreateLayerformStage("initial");
   }
 
-  function handlePostResponse(response: CreateLayerResponse) {
+
+  function updateGeoJSONDataset(response: FetchDatasetResponse) {
+    // Validate input to ensure it's a valid GeoJSON object
     if (
       !response ||
       typeof response !== "object" ||
@@ -163,8 +158,8 @@ export function LayerProvider(props: { children: ReactNode }) {
       setIsError(new Error("Input data is not a valid GeoJSON object."));
       return;
     }
-
-    setFirstFormResponse(function (prevResponse) {
+    // Update the accumulated dataset response, merging new features with existing ones
+    setManyFetchDatasetResp(function (prevResponse) {
       if (prevResponse && typeof prevResponse !== "string") {
         return {
           ...prevResponse,
@@ -176,7 +171,7 @@ export function LayerProvider(props: { children: ReactNode }) {
         features: response.features,
       };
     });
-
+    // Add the new GeoJSON data to the list of geo points for display
     setGeoPoints(function (prevGeoPoints) {
       return [
         ...prevGeoPoints,
@@ -187,44 +182,45 @@ export function LayerProvider(props: { children: ReactNode }) {
         },
       ];
     });
-
+    // Update dataset info if backend IDs are provided
     if (response.bknd_dataset_id && response.prdcer_lyr_id) {
       setDatasetInfo({
         bknd_dataset_id: response.bknd_dataset_id,
         prdcer_lyr_id: response.prdcer_lyr_id,
       });
     }
-
+    // Handle pagination by initiating a new fetch if a next page token exists
+    // and the maximum call limit hasn't been reached
     if (response.next_page_token && callCountRef.current < MAX_CALLS) {
-      handleFirstFormApiCall("full data", response.next_page_token);
+      handleFetchDataset("full data", response.next_page_token);
     } else {
       setShowLoaderTopup(false);
       callCountRef.current = 0;
     }
   }
 
-  function handleFirstFormApiCall(action: string, pageToken?: string) {
+  function handleFetchDataset(action: string, pageToken?: string) {
     let user_id: string;
-    let idToken:string
+    let idToken: string
 
     if (authResponse && ('idToken' in authResponse)) {
       user_id = authResponse.localId;
       idToken = authResponse.idToken
-    }  else if (action=="full data"){
+    } else if (action == "full data") {
       navigate('/auth');
       setIsError(new Error("User is not authenticated!"));
       return
-    }else {
+    } else {
       user_id = "0000";
       idToken = "";
-      
+
     }
 
     const postData = {
-      dataset_country: firstFormData.selectedCountry,
-      dataset_city: firstFormData.selectedCity,
-      includedTypes: firstFormData.includedTypes,
-      excludedTypes: firstFormData.excludedTypes,
+      dataset_country: reqFetchDataset.selectedCountry,
+      dataset_city: reqFetchDataset.selectedCity,
+      includedTypes: reqFetchDataset.includedTypes,
+      excludedTypes: reqFetchDataset.excludedTypes,
       action: action,
       search_type: searchType,
       ...(searchType === "text search" && {
@@ -243,9 +239,9 @@ export function LayerProvider(props: { children: ReactNode }) {
 
     callCountRef.current++;
 
-    HttpReq<CreateLayerResponse>(
-      urls.create_layer,
-      setPostResponse,
+    HttpReq<FetchDatasetResponse>(
+      urls.fetch_dataset,
+      setFetchDatasetResp,
       setPostResMessage,
       setPostResId,
       setLocalLoading,
@@ -256,33 +252,145 @@ export function LayerProvider(props: { children: ReactNode }) {
     );
   }
 
+
+
+  function handleGetCountryCityCategory() {
+    HttpReq<string[]>(
+      urls.country_city,
+      (data) => setCountries(processCityData(data, setCitiesData)),
+      () => { },
+      () => { },
+      () => { },
+      setIsError
+    );
+
+    HttpReq<CategoryData>(
+      urls.nearby_categories,
+      setCategories,
+      () => { },
+      () => { },
+      () => { },
+      setIsError
+    );
+  }
+
+  function handleCountryCitySelection(event: React.ChangeEvent<HTMLSelectElement>) {
+    const { name: changed_select_element, value } = event.target;
+
+    // Update the reqFetchDataset state using the functional update form
+    setReqFetchDataset((prevData) => ({
+      ...prevData,  // Spread the previous state
+      [changed_select_element]: value,  // Update the field corresponding to the changed select element
+    }));
+
+    // Check if the changed select element is the country selector
+    if (changed_select_element === 'selectedCountry') {
+      // Get the cities for the selected country from the citiesData object
+      // If the country has no cities, use an empty array
+      const selectedCountryCities = citiesData[value] || [];
+
+      // Update the cities state with the new list of cities
+      setCities(selectedCountryCities);
+
+      // Reset the selected city in the reqFetchDataset state
+      setReqFetchDataset((prevData) => ({
+        ...prevData,  // Spread the previous state
+        selectedCity: '',  // Clear the selected city
+      }));
+    }
+  }
+
+  function handleTypeToggle(type: string) {
+    setReqFetchDataset((prevData) => {
+      if (prevData.includedTypes.includes(type)) {
+        return {
+          ...prevData,
+          includedTypes: prevData.includedTypes.filter((t) => t !== type),
+          excludedTypes: [...prevData.excludedTypes, type],
+        };
+      } else if (prevData.excludedTypes.includes(type)) {
+        return {
+          ...prevData,
+          excludedTypes: prevData.excludedTypes.filter((t) => t !== type),
+        };
+      } else {
+        return {
+          ...prevData,
+          includedTypes: [...prevData.includedTypes, type],
+        };
+      }
+    });
+  }
+
+  function validateFetchDatasetForm() {
+    if (!reqFetchDataset.selectedCountry || !reqFetchDataset.selectedCity) {
+      return new Error('Country and city are required.');
+    }
+    if (reqFetchDataset.includedTypes.length === 0 && reqFetchDataset.excludedTypes.length === 0) {
+      return new Error('At least one category must be included or excluded.');
+    }
+    if (reqFetchDataset.includedTypes.length > 50 || reqFetchDataset.excludedTypes.length > 50) {
+      return new Error('Up to 50 types can be specified in each type restriction category.');
+    }
+    return true;
+  }
+
+  function resetFetchDatasetForm() {
+    // Reset form data when component unmounts
+    setReqFetchDataset({
+      selectedCountry: '',
+      selectedCity: '',
+      includedTypes: [],
+      excludedTypes: [],
+    });
+    setTextSearchInput('');
+    setSearchType('new nearby search');
+    setPassword('');
+  };
+
   useEffect(
     function () {
-      if (postResponse) {
-        handlePostResponse(postResponse);
+      if (isError) {
+        setShowLoaderTopup(false);
+        callCountRef.current = 0;
       }
     },
-    [postResponse]
+    [isError]
   );
+  useEffect(
+    function () {
+      if (FetchDatasetResp) {
+        updateGeoJSONDataset(FetchDatasetResp);
+      }
+    },
+    [FetchDatasetResp]
+  );
+
+
+  useEffect(() => {
+    handleGetCountryCityCategory();
+  }, []);
+
+
 
   return (
     <LayerContext.Provider
       value={{
-        secondFormData,
-        setSecondFormData,
-        formStage,
+        reqSaveLayer,
+        setReqSaveLayer,
+        createLayerformStage,
         isError,
-        firstFormResponse,
+        manyFetchDatasetResp,
         saveMethod,
         loading,
         saveResponse,
-        setFormStage,
+        setFormStage: setCreateLayerformStage,
         setIsError,
-        setFirstFormResponse,
+        setManyFetchDatasetResp,
         setSaveMethod,
         setLoading,
-        handleNextStep,
-        handleSave,
+        incrementFormStage,
+        handleSaveLayer,
         resetFormStage,
         selectedColor,
         setSelectedColor,
@@ -300,7 +408,7 @@ export function LayerProvider(props: { children: ReactNode }) {
         setInitialFlyToDone,
         showLoaderTopup,
         setShowLoaderTopup,
-        handleFirstFormApiCall,
+        handleFetchDataset,
         textSearchInput,
         setTextSearchInput,
         searchType,
@@ -315,8 +423,12 @@ export function LayerProvider(props: { children: ReactNode }) {
         setCitiesData,
         categories,
         setCategories,
-        firstFormData,
-        setFirstFormData,
+        reqFetchDataset,
+        setReqFetchDataset,
+        handleCountryCitySelection,
+        handleTypeToggle,
+        validateFetchDatasetForm,
+        resetFetchDatasetForm
       }}
     >
       {children}

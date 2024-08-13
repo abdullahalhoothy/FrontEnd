@@ -8,13 +8,13 @@ function SaveOptions() {
   const layerContext = useLayerContext();
   const catalogContext = useCatalogContext();
 
-  const isLayerContextActive = layerContext.formStage === "thirdStep";
+  const isLayerContextActive = layerContext.createLayerformStage === "thirdStep";
   const setSaveOption = isLayerContextActive
     ? layerContext.setSaveOption
     : catalogContext.setSaveMethod;
-  const handleSave = isLayerContextActive
-    ? layerContext.handleSave
-    : catalogContext.handleSave;
+  const handleSaveLayer = isLayerContextActive
+    ? layerContext.handleSaveLayer
+    : catalogContext.handleSaveLayer;
 
   function handleOptionChange(event: React.ChangeEvent<HTMLInputElement>) {
     const { value } = event.target;
@@ -23,7 +23,7 @@ function SaveOptions() {
   }
 
   function handleSaveClick() {
-    handleSave();
+    handleSaveLayer();
   }
 
   return (

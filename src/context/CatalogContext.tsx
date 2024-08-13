@@ -122,7 +122,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
     fetchGeoPoints(id, typeOfCard);
   }
 
-  function handleSave() {
+  function handleSaveLayer() {
     if (!authResponse || !('idToken' in authResponse)) {
       setIsError(new Error("User is not authenticated!"));
       navigate('/auth');
@@ -232,7 +232,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
         setDescription,
         setName,
         handleAddClick,
-        handleSave,
+        handleSaveLayer,
         resetFormStage,
         selectedContainerType,
         setSelectedContainerType,

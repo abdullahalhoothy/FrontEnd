@@ -1,34 +1,40 @@
 import { useCatalogContext } from "../../context/CatalogContext";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { formatSubcategoryName } from "../../utils/helperFunctions";
-import styles from "./LayerDetailsForm.module.css";
+import styles from "./FetchDatasetForm.module.css";
 import { useLayerContext } from "../../context/LayerContext";
-import { useState } from "react";
-import { useLocationAndCategories } from '../../hooks/useLocationAndCategories';
 
-function LayerDetailsForm() {
+function FetchDatasetForm() {
   const {
     countries,
     cities,
     categories,
-    firstFormData,
-    setFirstFormData,
-    handleNextStep,
+    reqFetchDataset,
+    setReqFetchDataset,
+    incrementFormStage,
     setCentralizeOnce,
     setShowLoaderTopup,
     textSearchInput,
     setTextSearchInput,
-    handleFirstFormApiCall,
+    handleFetchDataset,
     searchType,
     setSearchType,
     password,
     setPassword,
-  } = useLayerContext();
-  
-  const { 
-    handleChange,
+    handleCountryCitySelection,
     handleTypeToggle,
-    validateForm } = useLocationAndCategories() 
+    validateFetchDatasetForm,
+    resetFetchDatasetForm
+  } = useLayerContext();
+
+
+
+    // when form first loads, reset previous form data setReqFetchDataset()to its initial state
+    // The empty dependency array [] at the end of the useEffect hook means this effect will 
+    // only run once, after the initial render, and when the component unmounts.
+    useEffect(() => {
+      return resetFetchDatasetForm
+    }, []);
 
   const { setGeoPoints } = useCatalogContext();
 
@@ -38,16 +44,23 @@ function LayerDetailsForm() {
     action: string,
     event: React.MouseEvent<HTMLButtonElement>
   ) {
-    event.preventDefault(); 
+    event.preventDefault();
 
-    if (validateForm(action)) {
+    const result = validateFetchDatasetForm()
+
+    if (result === true) {
       if (action === "full data") {
         setCentralizeOnce(true);
       }
       setShowLoaderTopup(true);
-      handleNextStep();
-      handleFirstFormApiCall(action);
+      incrementFormStage();
+      handleFetchDataset(action);
     }
+    else if(result instanceof Error){
+      setError(result);
+      return false
+    }
+    
   }
 
   return (
@@ -109,8 +122,8 @@ function LayerDetailsForm() {
           id="country"
           name="selectedCountry"
           className={styles.select}
-          value={firstFormData.selectedCountry}
-          onChange={handleChange}
+          value={reqFetchDataset.selectedCountry}
+          onChange={handleCountryCitySelection}
         >
           <option value="" disabled>
             Select a country
@@ -131,9 +144,9 @@ function LayerDetailsForm() {
           id="city"
           name="selectedCity"
           className={styles.select}
-          value={firstFormData.selectedCity}
-          onChange={handleChange}
-          disabled={!firstFormData.selectedCountry}
+          value={reqFetchDataset.selectedCity}
+          onChange={handleCountryCitySelection}
+          disabled={!reqFetchDataset.selectedCountry}
         >
           <option value="" disabled>
             Select a city
@@ -154,19 +167,18 @@ function LayerDetailsForm() {
               <h3 className={styles.categoryTitle}>{category}</h3>
               <div className={styles.typeList}>
                 {(types as string[]).map((type: string) => {
-                  const included = firstFormData.includedTypes.includes(type);
-                  const excluded = firstFormData.excludedTypes.includes(type);
+                  const included = reqFetchDataset.includedTypes.includes(type);
+                  const excluded = reqFetchDataset.excludedTypes.includes(type);
                   return (
                     <button
                       key={type}
                       type="button"
-                      className={`${styles.typeButton} ${
-                        included
-                          ? styles.included
-                          : excluded
+                      className={`${styles.typeButton} ${included
+                        ? styles.included
+                        : excluded
                           ? styles.excluded
                           : ""
-                      }`}
+                        }`}
                       onClick={(e) => {
                         e.preventDefault();
                         handleTypeToggle(type);
@@ -205,4 +217,4 @@ function LayerDetailsForm() {
   );
 }
 
-export default LayerDetailsForm;
+export default FetchDatasetForm;

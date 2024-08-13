@@ -1,0 +1,63 @@
+.menu {
+    background-color: #115740;
+    border-right: 1px solid #ccc;
+    transition: width 0.3s;
+    overflow: hidden;
+    width: 50px;
+    position: relative;
+  }
+  
+  .menu.expanded {
+    width: 160px;
+  }
+  
+  .toggleButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0px 10px;
+  }
+  
+  .menuItems {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+  
+  .menuList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    color: #fff;
+  }
+  
+  .menuList li {
+    display: flex;
+    align-items: center;
+    padding: 5px 10px;
+  }
+  
+  .menuList li a {
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    align-items: center;
+  }
+  
+  .iconContainer {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+  }
+  
+  .icon {
+    margin: 5px;
+    font-size: 1.2em;
+    color: #fff;
+  }
+  
+  .iconItems {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }

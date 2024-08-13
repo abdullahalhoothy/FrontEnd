@@ -1,27 +1,33 @@
 // src/components/CostEstimatorForm/CostEstimatorForm.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { formatSubcategoryName } from "../../utils/helperFunctions";
 import styles from "./CostEstimatorForm.module.css";
 import { useLayerContext } from "../../context/LayerContext";
 import { HttpReq } from "../../services/apiService";
 import urls from "../../urls.json";
 import { CostEstimate } from '../../types/allTypesAndInterfaces';
-import { useLocationAndCategories } from '../../hooks/useLocationAndCategories';
+
 
 function CostEstimatorForm() {
   const {
     countries,
     cities,
     categories,
-    firstFormData,
+    reqFetchDataset,
     isError,
-    setIsError
+    setIsError,
+    handleCountryCitySelection,
+    handleTypeToggle,
+    validateFetchDatasetForm,
+    resetFetchDatasetForm
   } = useLayerContext();
   
-  const { 
-    handleChange,
-    handleTypeToggle,
-    validateForm } = useLocationAndCategories() 
+    // when form first loads, reset previous form data setReqFetchDataset()to its initial state
+    // The empty dependency array [] at the end of the useEffect hook means this effect will 
+    // only run once, after the initial render, and when the component unmounts.
+    useEffect(() => {
+      return resetFetchDatasetForm
+    }, []);
 
   const [costEstimate, setCostEstimate] = useState<CostEstimate | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -29,13 +35,13 @@ function CostEstimatorForm() {
   function handleCostEstimate(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (validateForm("estimate")) {
+    if (validateFetchDatasetForm()) {
       setIsLoading(true);
       const requestBody = {
-        included_categories: firstFormData.includedTypes,
-        excluded_categories: firstFormData.excludedTypes,
-        city_name: firstFormData.selectedCity,
-        country: firstFormData.selectedCountry,
+        included_categories: reqFetchDataset.includedTypes,
+        excluded_categories: reqFetchDataset.excludedTypes,
+        city_name: reqFetchDataset.selectedCity,
+        country: reqFetchDataset.selectedCountry,
       };
 
       HttpReq<CostEstimate>(
@@ -67,8 +73,8 @@ function CostEstimatorForm() {
           id="country"
           name="selectedCountry"
           className={styles.select}
-          value={firstFormData.selectedCountry}
-          onChange={handleChange}
+          value={reqFetchDataset.selectedCountry}
+          onChange={handleCountryCitySelection}
         >
           <option value="" disabled>
             Select a country
@@ -89,9 +95,9 @@ function CostEstimatorForm() {
           id="city"
           name="selectedCity"
           className={styles.select}
-          value={firstFormData.selectedCity}
-          onChange={handleChange}
-          disabled={!firstFormData.selectedCountry}
+          value={reqFetchDataset.selectedCity}
+          onChange={handleCountryCitySelection}
+          disabled={!reqFetchDataset.selectedCountry}
         >
           <option value="" disabled>
             Select a city
@@ -112,8 +118,8 @@ function CostEstimatorForm() {
               <h3 className={styles.categoryTitle}>{category}</h3>
               <div className={styles.typeList}>
                 {types.map((type) => {
-                  const included = firstFormData.includedTypes.includes(type);
-                  const excluded = firstFormData.excludedTypes.includes(type);
+                  const included = reqFetchDataset.includedTypes.includes(type);
+                  const excluded = reqFetchDataset.excludedTypes.includes(type);
                   return (
                     <button
                       key={type}
