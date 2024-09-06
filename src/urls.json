@@ -20,6 +20,6 @@
   "reset_password":"reset_password",
   "create_user_profile":"create_user_profile",
   "user_profile":"user_profile",
-  "cost_calculator": "cost_calculator"
-  
+  "cost_calculator": "cost_calculator",
+  "street_view_link": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint="
 }

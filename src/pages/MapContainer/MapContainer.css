@@ -1,0 +1,22 @@
+.street-view-popup {
+    max-width: 100% !important
+}
+
+.street-view-popup .mapboxgl-popup-content {
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+.street-view-popup .mapboxgl-popup-close-button {
+    font-size: 18px;
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    right: 4px;
+    top: 4px;
+}
+
+.street-view-popup .mapboxgl-popup-tip {
+    margin: -1px;
+}
