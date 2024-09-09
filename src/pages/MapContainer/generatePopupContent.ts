@@ -9,7 +9,7 @@ export function generatePopupContent(
   loading: boolean,
   hasStreetView: boolean
 ): string {
-  let content = `<div class="${styles.popupContent}">`;
+  let content = `<div class="popup-content">`;
 
   // Always included fields at the top
   content += `<strong class="${styles.popupContentStrong}">${properties.name}</strong>`;

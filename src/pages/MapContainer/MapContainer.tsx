@@ -25,113 +25,6 @@ import { generatePopupContent } from "./generatePopupContent";
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_KEY;
 
-// class StylesControl {
-//   constructor(setGeoPoints) {
-//     this.setGeoPoints = setGeoPoints;
-
-//     this.styles = [
-//       {
-//         name: "Light",
-//         url: "mapbox://styles/mapbox/streets-v12",
-//       },
-//       {
-//         name: "Satellite Streets",
-//         url: "mapbox://styles/mapbox/satellite-streets-v12",
-//       },
-//       {
-//         name: "Dark",
-//         url: "mapbox://styles/mapbox/dark-v11",
-//       },
-//     ];
-//   }
-
-//   onAdd(map) {
-//     this._map = map;
-//     this._container = document.createElement("div");
-//     this._container.className =
-//       "mapboxgl-ctrl mapboxgl-ctrl-group bg-transparent  !border-none !shadow-none";
-
-//     // Create toggle button with SVG
-//     const toggleButton = document.createElement("button");
-//     toggleButton.className =
-//       "!bg-white !w-auto !h-auto !rounded-md !p-2 hover:bg-gray-100 transition-colors shadow-sm !border !border-gray-200";
-//     toggleButton.innerHTML = `
-//       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-//         <rect x="11" y="2" width="11" height="11" rx="2.5" />
-//         <path d="M11 6.50049C8.97247 6.50414 7.91075 6.55392 7.23223 7.23243C6.5 7.96467 6.5 9.14318 6.5 11.5002V12.5002C6.5 14.8572 6.5 16.0357 7.23223 16.768C7.96447 17.5002 9.14298 17.5002 11.5 17.5002H12.5C14.857 17.5002 16.0355 17.5002 16.7678 16.768C17.4463 16.0895 17.4961 15.0277 17.4997 13.0002" />
-//         <path d="M6.5 11.0005C4.47247 11.0041 3.41075 11.0539 2.73223 11.7324C2 12.4647 2 13.6432 2 16.0002V17.0002C2 19.3572 2 20.5357 2.73223 21.268C3.46447 22.0002 4.64298 22.0002 7 22.0002H8C10.357 22.0002 11.5355 22.0002 12.2678 21.268C12.9463 20.5895 12.9961 19.5277 12.9997 17.5002" />
-//       </svg>
-//     `;
-
-//     // Create styles container (hidden by default)
-//     const StylesContainer = document.createElement("div");
-//     StylesContainer.className =
-//       "hidden mt-2 flex flex-col rounded-md shadow-sm bg-white p-2 gap-2";
-//     StylesContainer.innerHTML = this.styles
-//       .map(
-//         (s) => `
-//         <button class="bg-gray-200 !rounded text-nowrap !w-auto !h-auto !px-4 !p-2 text-sm font-medium !border-none transition-colors
-//           ${
-//             s.url === this.defaultStyle
-//               ? "!bg-primary !text-white"
-//               : "text-gray-700 hover:text-gray-900"
-//           }"
-//           data-style="${s.url}">
-//           ${s.name}
-//         </button>
-//       `
-//       )
-//       .join("");
-
-//     this._container.appendChild(toggleButton);
-//     this._container.appendChild(StylesContainer);
-
-//     // Toggle visibility of styles container
-//     toggleButton.addEventListener("click", () => {
-//       StylesContainer.classList.toggle("hidden");
-//       toggleButton.classList.toggle("text-primary");
-//     });
-
-//     // Style selection
-//     StylesContainer.addEventListener("click", (e) => {
-//       const selectedStyle = e.target.getAttribute("data-style");
-//       if (selectedStyle) {
-//         this._map.setStyle(selectedStyle);
-//         this._updateButtons(selectedStyle);
-//         this._map.once("styledata", () => {
-//           this.setGeoPoints((prevGeoPoints) => {
-//             return prevGeoPoints.map((layer) => {
-//               return Object.assign({}, layer);
-//             });
-//           });
-//         });
-//         StylesContainer.classList.add("hidden");
-//         toggleButton.classList.remove("text-primary");
-//       }
-//     });
-
-//     return this._container;
-//   }
-
-//   onRemove() {
-//     this._container.parentNode.removeChild(this._container);
-//     this._map = undefined;
-//   }
-
-//   _updateButtons(selectedStyle) {
-//     const buttons = this._container.querySelectorAll("button[data-style]");
-//     buttons.forEach((button) => {
-//       if (button.getAttribute("data-style") === selectedStyle) {
-//         button.classList.add("!bg-primary", "text-white");
-//         button.classList.remove("text-gray-700", "hover:text-gray-900");
-//       } else {
-//         button.classList.remove("!bg-primary", "text-white");
-//         button.classList.add("text-gray-700", "hover:text-gray-900");
-//       }
-//     });
-//   }
-// }
-
 function Container() {
   const {
     polygons,
@@ -149,6 +42,9 @@ function Container() {
   const styleLoadedRef = useRef(false);
   const lastCoordinatesRef = useRef<[number, number] | null>(null);
   const legendRef = useRef<HTMLDivElement | null>(null);
+  const [currentStyle, setCurrentStyle] = useState(
+    "mapbox://styles/mapbox/streets-v12"
+  );
 
   useEffect(function () {
     if (mapContainerRef.current && !mapRef.current) {
@@ -170,10 +66,9 @@ function Container() {
 
       mapRef.current.addControl(new mapboxgl.NavigationControl(), "top-right");
 
-      const stylesControl = new StylesControl((setGeoPoints) => {
-        return setGeoPoints;
-      });
+      const stylesControl = new StylesControl(currentStyle, setCurrentStyle);
       mapRef.current.addControl(stylesControl, "top-left");
+
       const draw = new MapboxDraw({
         displayControlsDefault: false,
         controls: {
@@ -608,7 +503,7 @@ function Container() {
   useEffect(() => {
     if (mapRef.current && styleLoadedRef.current && geoPoints.length > 0) {
       const hasAtLeastOneValidName = geoPoints.some(
-        (point) => point.prdcer_layer_name
+        (point) => point.layer_legend
       );
       if (!hasAtLeastOneValidName) {
         legendRef.current?.remove();
@@ -626,7 +521,7 @@ function Container() {
           if (!point.display) {
             return;
           }
-          if (!point.prdcer_layer_name) {
+          if (!point.layer_legend) {
             return;
           }
           const item = document.createElement("div");
@@ -635,7 +530,7 @@ function Container() {
           <div class="w-3 h-3 rounded-full" style="background-color: ${
             point.points_color || mapConfig.defaultColor
           }"></div>
-          <span class="text-sm">${point.prdcer_layer_name || "Unnamed"}</span>`;
+          <span class="text-sm">${point.layer_legend || "Unnamed"}</span>`;
           legendRef.current.appendChild(item);
         });
         // Update the legend position
@@ -652,7 +547,7 @@ function Container() {
           if (!point.display) {
             return;
           }
-          if (!point.prdcer_layer_name) {
+          if (!point.layer_legend) {
             return;
           }
           const item = document.createElement("div");
@@ -661,7 +556,7 @@ function Container() {
           <div class="w-3 h-3 rounded-full" style="background-color: ${
             point.points_color || mapConfig.defaultColor
           }"></div>
-          <span class="text-sm">${point.prdcer_layer_name || "Unnamed"}</span>`;
+          <span class="text-sm">${point.layer_legend || "Unnamed"}</span>`;
           legendRef.current.appendChild(item);
         });
         mapRef.current?.getContainer().appendChild(legendRef.current);
@@ -688,6 +583,17 @@ function Container() {
     };
   }, [geoPoints]);
 
+  useEffect(() => {
+    if (mapRef.current && styleLoadedRef.current) {
+      mapRef.current.once("styledata", () => {
+        setGeoPoints((prevGeoPoints) => {
+          return prevGeoPoints.map((layer) => {
+            return Object.assign({}, layer);
+          });
+        });
+      });
+    }
+  }, [currentStyle]);
   return (
     <div className="w-[80%] h-full relative overflow-hidden ">
       <div

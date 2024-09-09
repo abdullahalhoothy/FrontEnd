@@ -1,8 +1,15 @@
-// StylesControl.js
-
 // Define the StylesControl function (constructor)
-function StylesControl(setGeoPoints) {
-  this.setGeoPoints = setGeoPoints;
+
+type SetCurrentStyle = (style: string) => void;
+
+type currentStyle = string;
+
+function StylesControl(
+  currentStyle: currentStyle,
+  setCurrentStyle: SetCurrentStyle
+) {
+  this.currentStyle = currentStyle;
+  this.setCurrentStyle = setCurrentStyle;
 
   this.styles = [
     { name: "Light", url: "mapbox://styles/mapbox/streets-v12" },
@@ -41,11 +48,7 @@ StylesControl.prototype.onAdd = function (map) {
     .map(
       (style) => `
       <button class="bg-gray-200 !rounded text-nowrap !w-auto !h-auto !px-4 !p-2 text-sm font-medium !border-none transition-colors
-     ${
-       style.url === this.defaultStyle
-         ? "!bg-primary !text-white"
-         : "text-gray-700 hover:text-gray-900"
-     }"
+     ${style.url === this.currentStyle ? "!bg-primary !text-white" : ""}"
          data-style="${style.url}">
         ${style.name}
       </button>
@@ -67,14 +70,11 @@ StylesControl.prototype.onAdd = function (map) {
     const target = e.target;
     if (target && target.tagName === "BUTTON") {
       const selectedStyle = target.getAttribute("data-style");
-      if (selectedStyle) {
+      if (selectedStyle && selectedStyle !== this.currentStyle) {
         this._map.setStyle(selectedStyle);
         this._updateButtons(selectedStyle);
-        this._map.once("styledata", () => {
-          this.setGeoPoints((prevGeoPoints) =>
-            prevGeoPoints.map((layer) => ({ ...layer }))
-          );
-        });
+        this.setCurrentStyle((prev) => selectedStyle);
+        this.currentStyle = selectedStyle;
         stylesContainer.classList.add("hidden");
         toggleButton.classList.remove("text-primary");
       }
@@ -97,10 +97,10 @@ StylesControl.prototype._updateButtons = function (selectedStyle) {
   const buttons = this._container.querySelectorAll("button[data-style]");
   buttons.forEach((button) => {
     if (button.getAttribute("data-style") === selectedStyle) {
-      button.classList.add("!bg-primary", "text-white");
+      button.classList.add("!bg-primary", "!text-white");
       button.classList.remove("text-gray-700", "hover:text-gray-900");
     } else {
-      button.classList.remove("!bg-primary", "text-white");
+      button.classList.remove("!bg-primary", "!text-white");
       button.classList.add("text-gray-700", "hover:text-gray-900");
     }
   });
