@@ -6,7 +6,6 @@ export interface ModalProps {
   isSmaller?: boolean;
 }
 
-
 export interface ExpandableMenuProps {
   children: ReactNode;
 }
@@ -91,7 +90,9 @@ export interface CatalogContextType {
   description: string;
   name: string;
   selectedContainerType: "Catalogue" | "Layer" | "Home";
-  setFormStage: React.Dispatch<React.SetStateAction<'catalog' | 'catalogDetails' | 'save'>>;
+  setFormStage: React.Dispatch<
+    React.SetStateAction<"catalog" | "catalogDetails" | "save">
+  >;
   setSaveMethod: React.Dispatch<React.SetStateAction<string>>;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
   setIsError: React.Dispatch<React.SetStateAction<Error | null>>;
@@ -218,10 +219,14 @@ export interface LayerContextType {
   cities: City[];
   setCities: React.Dispatch<React.SetStateAction<City[]>>;
   citiesData: { [country: string]: City[] };
-  setCitiesData: React.Dispatch<React.SetStateAction<{ [country: string]: City[] }>>;
+  setCitiesData: React.Dispatch<
+    React.SetStateAction<{ [country: string]: City[] }>
+  >;
   categories: CategoryData;
   setCategories: React.Dispatch<React.SetStateAction<CategoryData>>;
-  handleCountryCitySelection: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+  handleCountryCitySelection: (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => void;
   handleTypeToggle: (type: string) => void;
   validateFetchDatasetForm: () => true | Error;
   resetFetchDatasetForm(): void;
@@ -334,9 +339,9 @@ export interface UserProfile {
   email: string;
 }
 export interface User {
-    id: string;
-    email: string;
-    name: string;
+  id: string;
+  email: string;
+  name: string;
 }
 
 export type AuthResponse = AuthSuccessResponse | AuthFailedResponse | null;
@@ -355,3 +360,4 @@ export interface CostEstimate {
   cost: number;
   api_calls: number;
 }
+

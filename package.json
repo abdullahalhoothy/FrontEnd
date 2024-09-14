@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@mapbox/mapbox-gl-draw": "^1.4.3",
+    "@turf/turf": "^7.1.0",
     "ag-grid-community": "31.3.2",
     "ag-grid-react": "31.3.2",
     "axios": "^1.7.4",
