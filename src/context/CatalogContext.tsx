@@ -32,12 +32,15 @@ export function CatalogProvider(props: { children: ReactNode }) {
   >("Home");
 
   const [geoPoints, setGeoPoints] = useState<MapFeatures[]>([]);
+  
   const [lastGeoIdRequest, setLastGeoIdRequest] = useState<
     string | undefined
   >();
+  
   const [lastGeoMessageRequest, setLastGeoMessageRequest] = useState<
     string | undefined
   >();
+
   const [lastGeoError, setLastGeoError] = useState<Error | null>(null);
 
   const [selectedColor, setSelectedColor] = useState<{
