@@ -361,18 +361,3 @@ export interface CostEstimate {
   api_calls: number;
 }
 
-export interface PolygonGeometry {
-  type: string; // e.g., "Polygon"
-  coordinates: number[][][]; // Array of arrays representing the polygon's coordinates
-}
-
-export interface PolygonFeatureProperties {
-  [key: string]: any;
-}
-
-export interface PolygonFeature {
-  id: string; // Unique identifier for the feature
-  type: "Feature"; // The type is always 'Feature' in GeoJSON
-  properties: PolygonFeatureProperties; // The properties object defined above
-  geometry: PolygonGeometry; // The geometry object defined above
-}

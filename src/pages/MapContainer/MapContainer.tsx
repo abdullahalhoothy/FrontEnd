@@ -7,12 +7,7 @@ import mapboxgl, { Map as MapboxMap, GeoJSONSource } from "mapbox-gl";
 import mapConfig from "../../mapConfig.json";
 import { useLayerContext } from "../../context/LayerContext";
 import { useCatalogContext } from "../../context/CatalogContext";
-import {
-  CustomProperties,
-  GeoPoint,
-  MapFeatures,
-} from "../../types/allTypesAndInterfaces";
-import styles from "./MapContainer.module.css";
+import { CustomProperties } from "../../types/allTypesAndInterfaces";
 import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import * as turf from "@turf/turf";
 import PolygonsProvider, {
@@ -26,13 +21,8 @@ import { generatePopupContent } from "./generatePopupContent";
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_KEY;
 
 function Container() {
-  const {
-    polygons,
-    setPolygons,
-    setSelectedPolygon,
-    selectedPolygon,
-    pointsInsidePolygon,
-  } = usePolygonsContext();
+  const { polygons, setPolygons, setSelectedPolygon, selectedPolygon } =
+    usePolygonsContext();
   const { geoPoints, setGeoPoints } = useCatalogContext();
   const { centralizeOnce, initialFlyToDone, setInitialFlyToDone } =
     useLayerContext();
@@ -332,7 +322,6 @@ function Container() {
                   // Create and add new popup
                   popup = new mapboxgl.Popup({
                     closeButton: false,
-                    className: styles.popup,
                   })
                     .setLngLat(coordinates)
                     .setHTML(loadingContent) // Initially show loading spinner
@@ -540,7 +529,7 @@ function Container() {
         // Create the legend container
         legendRef.current = document.createElement("div");
         legendRef.current.className =
-          "absolute bottom-[10px] right-[10px] z-10 bg-white border shadow h-48 min-w-40 rounded-md";
+          "absolute bottom-[10px] right-[10px] z-10 bg-white border shadow h-48 min-w-48 rounded-md";
         legendRef.current.innerHTML = `<h4 class="text-sm font-semibold text-gray-900 border-b p-2">Legend</h4>`;
         // Add more content here based on geoPoints
         geoPoints.forEach((point, index) => {

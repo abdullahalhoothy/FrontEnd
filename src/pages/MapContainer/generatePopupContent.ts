@@ -1,7 +1,6 @@
 import { CustomProperties } from "../../types/allTypesAndInterfaces";
 import urls from "../../urls.json";
 const googleStreetViewUrl = urls.street_view_link;
-import styles from "./MapContainer.module.css";
 
 export function generatePopupContent(
   properties: CustomProperties,
@@ -12,7 +11,7 @@ export function generatePopupContent(
   let content = `<div class="popup-content">`;
 
   // Always included fields at the top
-  content += `<strong class="${styles.popupContentStrong}">${properties.name}</strong>`;
+  content += `<strong class="popup-content-strong">${properties.name}</strong>`;
 
   // Dynamically included fields in the middle
   for (const key in properties) {
@@ -39,18 +38,16 @@ export function generatePopupContent(
       }
 
       if (Array.isArray(parsedValue)) {
-        content += `<div class="${
-          styles.popupContentDiv
-        }">${key}: ${parsedValue.join(", ")}</div>`;
+        content += `<div class="popup-content-div">${key}: ${parsedValue.join(", ")}</div>`;
       } else {
-        content += `<div class="${styles.popupContentDiv}">${key}: ${parsedValue}</div>`;
+        content += `<div class="popup-content-div">${key}: ${parsedValue}</div>`;
       }
     }
   }
 
   // Always included fields at the end
-  content += `<div class="${styles.popupContentDiv} ${styles.popupContentTotalRatings}">Total Ratings: ${properties.user_ratings_total}</div>`;
-  content += `<div class="${styles.popupContentDiv} ${styles.popupContentRating}">Rating: ${properties.rating}</div>`;
+  content += `<div class="popup-content-div popup-content-total-ratings">Total Ratings: ${properties.user_ratings_total}</div>`;
+  content += `<div class="popup-content-div popup-content-rating">Rating: ${properties.rating}</div>`;
 
   if (loading) {
     content += `<div class="flex items-center gap-2 text-sm font-semibold">
