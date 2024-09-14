@@ -589,7 +589,6 @@ function Container() {
         className="absolute w-full h-full"
         id="map-container"
         ref={mapContainerRef}
-        // style={{ width: "96%", height: "100vh", zIndex: 99 }}
       />
       <StatisticsPopup />
     </div>
