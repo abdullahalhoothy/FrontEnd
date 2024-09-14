@@ -34,7 +34,7 @@ export default function StatisticsPopup() {
         </div>
         <div className="flex-1 flex flex-col gap-0.5 text-sm">
           <div className="h-12 flex items-center justify-center bg-blue-500 text-white p-2 ">
-            Area {turf.area(selectedPolygon).toLocaleString()} KM²
+            Area {`${(turf.area(selectedPolygon) / 100000).toFixed(3)}`} km²
           </div>
           <div className="flex items-center justify-between gap-0.5">
             <div className="w-full bg-blue-500 text-white p-2 text-center">
