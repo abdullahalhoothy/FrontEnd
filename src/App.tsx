@@ -19,7 +19,7 @@ function App() {
           </CatalogProvider>
         </AuthProvider>
       </BrowserRouter>
-    </div >
+    </div>
   );
 }
 
