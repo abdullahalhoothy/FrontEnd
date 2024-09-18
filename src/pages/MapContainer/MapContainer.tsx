@@ -15,9 +15,10 @@ import PolygonsProvider, {
 } from "../../context/PolygonsContext";
 import axios from "axios";
 import { StylesControl } from "./StylesControl";
+import { CircleControl } from "./CircleControl";
+
 import { generatePopupContent } from "./generatePopupContent";
 import StatisticsPopups from "./StatisticsPopups";
-import CircleControl from "./CircleControl";
 import BenchmarkControl from "./BenchmarkControl";
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_KEY;
