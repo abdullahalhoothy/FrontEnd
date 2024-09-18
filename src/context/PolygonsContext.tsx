@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useCatalogContext } from "./CatalogContext";
 import * as turf from "@turf/turf";
 import { Feature } from "../types/allTypesAndInterfaces";
@@ -29,10 +29,6 @@ type PolygonFeature = {
 type PolygonContextType = {
   polygons: PolygonFeature[];
   setPolygons: React.Dispatch<React.SetStateAction<PolygonFeature[]>>;
-  selectedPolygon: PolygonFeature | null;
-  setSelectedPolygon: React.Dispatch<
-    React.SetStateAction<PolygonFeature | null>
-  >;
   sections: {
     title: string;
     points: {
@@ -42,6 +38,15 @@ type PolygonContextType = {
       avg: number;
     }[];
   }[];
+  benchmarks: Benchmark[];
+  setBenchmarks: React.Dispatch<React.SetStateAction<Benchmark[]>>;
+  isBenchmarkControlOpen: boolean;
+  setIsBenchmarkControlOpen: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
+type Benchmark = {
+  title: string;
+  value: number | "";
 };
 
 // Create the PolygonsContext with default value as empty object cast to PolygonContextType
@@ -62,147 +67,173 @@ export const usePolygonsContext = (): PolygonContextType => {
 const PolygonsProvider = ({ children }: ProviderProps) => {
   const { geoPoints } = useCatalogContext(); // Assuming geoPoints comes from CatalogContext
   const [polygons, setPolygons] = useState<PolygonFeature[]>([]);
+  const [benchmarks, setBenchmarks] = useState<Benchmark[]>([]);
+  const [isBenchmarkControlOpen, setIsBenchmarkControlOpen] = useState(false);
 
-  const [selectedPolygon, setSelectedPolygon] = useState<PolygonFeature | null>(
-    null
-  );
+  const sections = useMemo(() => {
+    if (!Array.isArray(polygons) || !Array.isArray(geoPoints)) {
+      return [];
+    }
 
-  const filteredGeoPointsOld = useMemo<GeoPoint[]>(() => {
-    if (!selectedPolygon || geoPoints.length === 0) return [];
-
-    const polygonCoordinates = turf.polygon(
-      selectedPolygon.geometry.coordinates
+    const excludedProperties = new Set(
+      excludedPropertiesJson?.excludedProperties || []
     );
 
-    return geoPoints.reduce<GeoPoint[]>((pointsInside, geoPoint) => {
-      const totalFeatures: number = geoPoint.features.length;
-      const matchingFeatures = geoPoint.features.filter((feature) => {
-        const featurePoint = turf.point(feature.geometry.coordinates);
-        return turf.booleanPointInPolygon(featurePoint, polygonCoordinates);
-      });
-
-      if (matchingFeatures.length > 0) {
-        const totalRating = matchingFeatures.reduce((sum, feature) => {
-          return sum + Number(feature.properties.rating || 0);
-        }, 0);
-
-        const avgRating = totalRating / matchingFeatures.length;
-
-        const totalUserRatings = matchingFeatures.reduce((total, feature) => {
-          return total + Number(feature.properties.user_ratings_total || 0);
-        }, 0);
-
-        // Calculate the percentage of features inside the polygon
-        const percentageInside =
-          (matchingFeatures.length / totalFeatures) * 100;
-
-        pointsInside.push({
-          ...geoPoint,
-          features: matchingFeatures,
-          avgRating: avgRating.toFixed(1) || 0,
-          totalUserRatings: totalUserRatings,
-          percentageInside: percentageInside,
-        });
-      }
-
-      return pointsInside;
-    }, []);
-  }, [selectedPolygon, geoPoints]);
-
-  const sections = useMemo<GeoPoint[]>(() => {
-    if (!selectedPolygon || geoPoints.length === 0) return [];
-
-    const excludedProperties: string[] =
-      excludedPropertiesJson.excludedProperties;
-    const polygonCoordinates = turf.polygon(
-      selectedPolygon.geometry.coordinates
-    );
-
-    // Initialize sections array to store different sections
-    const data: {
-      title: string;
-      points: {
-        prdcer_layer_name: string;
-        count: number;
-        percentage: number;
-        avg: number;
-      }[];
-    }[] = [];
-
-    geoPoints.reduce<GeoPoint[]>((pointsInside, geoPoint) => {
-      const totalFeatures: number = geoPoint.features.length;
-
-      // Filter features inside the polygon
-      const matchingFeatures = geoPoint.features.filter((feature) => {
-        const featurePoint = turf.point(feature.geometry.coordinates);
-        return turf.booleanPointInPolygon(featurePoint, polygonCoordinates);
-      });
-
-      if (matchingFeatures.length > 0) {
-        // Initialize objects to accumulate values for each numeric property
-        const propertySums: { [key: string]: number } = {};
-        const propertyCounts: { [key: string]: number } = {};
-
-        // Iterate over matching features to accumulate numeric values
-        matchingFeatures.forEach((feature) => {
-          for (const [key, val] of Object.entries(feature.properties)) {
-            if (excludedProperties.includes(key)) continue;
-            const numVal = Number(val);
-            // Check if the value is not an empty string and is a valid number
-            if (val !== "" && !isNaN(numVal)) {
-              if (!propertySums[key]) {
-                propertySums[key] = 0;
-                propertyCounts[key] = 0;
-              }
-
-              propertySums[key] += numVal;
-              propertyCounts[key] += 1;
-            }
+    const getPolygonShape = (coordinates, type) => {
+      if (type === "MultiPolygon") {
+        return coordinates.map((circle) => {
+          const ring = circle[0];
+          if (
+            ring.length < 4 ||
+            !turf.booleanEqual(
+              turf.point(ring[0]),
+              turf.point(ring[ring.length - 1])
+            )
+          ) {
+            ring.push(ring[0]); // Ensure closed ring
           }
+          return turf.polygon(circle);
         });
-
-        // Update or create sections for each numeric property
-        for (const [key, sum] of Object.entries(propertySums)) {
-          const avg = sum / propertyCounts[key];
-          const count = propertyCounts[key];
-          const percentage = (count / totalFeatures) * 100;
-
-          // Check if the section already exists
-          let section = data.find((s) => s.title === key);
-
-          if (!section) {
-            // If the section doesn't exist, create a new one
-            section = {
-              title: key,
-              points: [],
-            };
-            data.push(section);
-          }
-
-          // Add section for this geoPoint to the section
-          section.points.push({
-            prdcer_layer_name: geoPoint.prdcer_layer_name || "Unknown", // Layer name from geoPoint
-            count: count, // Number of matching features
-            percentage: percentage, // Percentage of features for this property
-            avg: avg.toFixed(1),
-          });
+      } else if (type === "Polygon") {
+        const ring = coordinates[0];
+        if (
+          ring.length < 4 ||
+          !turf.booleanEqual(
+            turf.point(ring[0]),
+            turf.point(ring[ring.length - 1])
+          )
+        ) {
+          ring.push(ring[0]); // Ensure closed ring
         }
+        return [turf.polygon([ring])];
+      }
+      return [];
+    };
+
+    return polygons.map((polygon) => {
+      if (!polygon.geometry?.coordinates) {
+        return { polygon, sections: [], areas: [] };
       }
 
-      return pointsInside;
-    }, []);
+      const polygonData = {
+        polygon,
+        sections: [],
+        areas:
+          polygon.properties.shape === "circle"
+            ? ["1KM", "3KM", "5KM"]
+            : ["Unknown"],
+      };
 
-    return data; // Return section if you need them elsewhere
-  }, [selectedPolygon, geoPoints]);
+      const polygonShapes = getPolygonShape(
+        polygon.geometry.coordinates,
+        polygon.geometry.type
+      );
+      const sectionsMap = new Map();
+      const previouslyMatchedPoints = new Set();
+
+      geoPoints.forEach((geoPoint) => {
+        const totalFeatures = geoPoint.features?.length || 0;
+
+        polygonShapes.forEach((polygonShape, index) => {
+          const areaName = polygonData.areas[index];
+          const matchingFeatures =
+            geoPoint.features?.filter((feature) => {
+              const featureCoords = JSON.stringify(
+                feature.geometry.coordinates
+              );
+              if (previouslyMatchedPoints.has(featureCoords)) return false;
+              if (
+                turf.booleanPointInPolygon(
+                  turf.point(feature.geometry.coordinates),
+                  polygonShape
+                )
+              ) {
+                previouslyMatchedPoints.add(featureCoords);
+                return true;
+              }
+              return false;
+            }) || [];
+
+          matchingFeatures.forEach((feature) => {
+            Object.entries(feature.properties).forEach(([key, val]) => {
+              if (!excludedProperties.has(key)) {
+                const numVal = Number(val);
+                if (val !== "" && !isNaN(numVal)) {
+                  if (!sectionsMap.has(key)) {
+                    sectionsMap.set(key, new Map());
+                  }
+                  const layerMap = sectionsMap.get(key);
+                  if (!layerMap.has(geoPoint.prdcer_layer_name)) {
+                    layerMap.set(geoPoint.prdcer_layer_name, new Map());
+                  }
+                  const areaMap = layerMap.get(geoPoint.prdcer_layer_name);
+                  if (!areaMap.has(areaName)) {
+                    areaMap.set(areaName, { sum: 0, count: 0 });
+                  }
+                  const areaData = areaMap.get(areaName);
+                  areaData.sum += numVal;
+                  areaData.count += 1;
+                }
+              }
+            });
+          });
+        });
+      });
+
+      polygonData.sections = Array.from(sectionsMap, ([title, layerMap]) => ({
+        title,
+        points: Array.from(layerMap, ([layer_name, areaMap]) => ({
+          layer_name,
+          data: polygonData.areas.map((area) => {
+            const areaData = areaMap.get(area) || { sum: 0, count: 0 };
+            const count = areaData.count;
+            const avg = count ? areaData.sum / count : 0;
+            return {
+              count,
+              percentage: parseFloat(
+                (
+                  (count /
+                    (geoPoints.find((gp) => gp.prdcer_layer_name === layer_name)
+                      ?.features?.length || 1)) *
+                  100
+                ).toFixed(1)
+              ),
+              avg: count ? parseFloat(avg.toFixed(1)) : "-",
+              area,
+            };
+          }),
+        })),
+      }));
+
+      return polygonData;
+    });
+  }, [polygons, geoPoints, excludedPropertiesJson?.excludedProperties]);
+
+  useEffect(() => {
+    const newBenchmarks: Benchmark[] = [...benchmarks];
+    sections.forEach((polygon) => {
+      polygon.sections.forEach((section) => {
+        const isSectionExists = newBenchmarks.some(
+          (benchmark) => benchmark.title === section.title
+        );
+        if (!isSectionExists) {
+          newBenchmarks.push({ title: section.title, value: "" });
+        }
+      });
+    });
+    setBenchmarks(newBenchmarks);
+  }, [sections]);
 
   return (
     <PolygonsContext.Provider
       value={{
         polygons,
         setPolygons,
-        selectedPolygon,
-        setSelectedPolygon,
         sections,
+        benchmarks,
+        setBenchmarks,
+        isBenchmarkControlOpen,
+        setIsBenchmarkControlOpen,
       }}
     >
       {children}

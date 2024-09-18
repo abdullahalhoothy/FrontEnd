@@ -7,37 +7,25 @@ import FetchDatasetForm from "../FetchDatasetForm/FetchDatasetForm";
 import SaveOptions from "../SaveOptions/SaveOptions";
 import { useUIContext } from "../../context/UIContext";
 
-
 function LayerFormLoader() {
-  const { createLayerformStage,
-    resetFormStage
-  } =
-    useLayerContext();
+  const { createLayerformStage, resetFormStage } = useLayerContext();
 
   const { sidebarMode, setSidebarMode } = useUIContext();
-
 
   // const [createLayerformStage, _] = useState('initial');
 
   useEffect(() => {
-    resetFormStage()
-    setSidebarMode('default')
-  }, [])
+    resetFormStage();
+    setSidebarMode("default");
+  }, []);
 
   return (
-    <div className='h-full w-96'>
-      {
-        createLayerformStage === 'initial' && <FetchDatasetForm />
-      }
+    <div className="h-full w-96">
+      {createLayerformStage === "initial" && <FetchDatasetForm />}
 
-      {
-        createLayerformStage === 'secondStep' && <CustomizeLayer />
-      }
+      {createLayerformStage === "secondStep" && <CustomizeLayer />}
 
-      {
-        createLayerformStage === 'thirdStep' && <SaveOptions />
-
-      }
+      {createLayerformStage === "thirdStep" && <SaveOptions />}
     </div>
   );
 }

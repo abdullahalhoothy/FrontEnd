@@ -1,7 +1,13 @@
 // src/context/LayerContext.tsx
 
-
-import React, { createContext, useContext, useState, ReactNode, useRef, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useRef,
+  useEffect,
+} from "react";
 import { HttpReq } from "../services/apiService";
 import {
   FetchDatasetResponse,
@@ -9,18 +15,16 @@ import {
   SaveResponse,
   ReqFetchDataset,
   City,
-  CategoryData
+  CategoryData,
 } from "../types/allTypesAndInterfaces";
 import urls from "../urls.json";
 import { useCatalogContext } from "./CatalogContext";
 import userIdData from "../currentUserId.json";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from 'react-router-dom';
-import { processCityData } from '../utils/helperFunctions';
-
+import { useNavigate } from "react-router-dom";
+import { processCityData } from "../utils/helperFunctions";
 
 const LayerContext = createContext<LayerContextType | undefined>(undefined);
-
 
 export function LayerProvider(props: { children: ReactNode }) {
   const navigate = useNavigate();
@@ -30,11 +34,13 @@ export function LayerProvider(props: { children: ReactNode }) {
   // State from useLocationAndCategories
   const [countries, setCountries] = useState<string[]>([]);
   const [cities, setCities] = useState<City[]>([]);
-  const [citiesData, setCitiesData] = useState<{ [country: string]: City[] }>({});
+  const [citiesData, setCitiesData] = useState<{ [country: string]: City[] }>(
+    {}
+  );
   const [categories, setCategories] = useState<CategoryData>({});
   const [reqFetchDataset, setReqFetchDataset] = useState<ReqFetchDataset>({
-    selectedCountry: '',
-    selectedCity: '',
+    selectedCountry: "",
+    selectedCity: "",
     includedTypes: [],
     excludedTypes: [],
   });
@@ -44,15 +50,15 @@ export function LayerProvider(props: { children: ReactNode }) {
     name: "",
   });
 
-  const [createLayerformStage, setCreateLayerformStage] = useState<string>("initial");
+  const [createLayerformStage, setCreateLayerformStage] =
+    useState<string>("initial");
   const [loading, setLoading] = useState<boolean>(false);
   const [isError, setIsError] = useState<Error | null>(null);
   const [manyFetchDatasetResp, setManyFetchDatasetResp] = useState<
     FetchDatasetResponse | undefined
   >(undefined);
-  const [FetchDatasetResp, setFetchDatasetResp] = useState<FetchDatasetResponse | null>(
-    null
-  );
+  const [FetchDatasetResp, setFetchDatasetResp] =
+    useState<FetchDatasetResponse | null>(null);
   const [saveMethod, setSaveMethod] = useState<string>("");
   const [datasetInfo, setDatasetInfo] = useState<{
     bknd_dataset_id: string;
@@ -74,7 +80,6 @@ export function LayerProvider(props: { children: ReactNode }) {
 
   const [showLoaderTopup, setShowLoaderTopup] = useState<boolean>(false);
 
-
   const [postResMessage, setPostResMessage] = useState<string>("");
   const [postResId, setPostResId] = useState<string>("");
 
@@ -86,8 +91,6 @@ export function LayerProvider(props: { children: ReactNode }) {
   const callCountRef = useRef<number>(0);
   const MAX_CALLS = 10;
 
-
-
   function incrementFormStage() {
     if (createLayerformStage === "initial") {
       setCreateLayerformStage("secondStep");
@@ -96,9 +99,9 @@ export function LayerProvider(props: { children: ReactNode }) {
     }
   }
 
-  function handleSaveLayer() {
-    if (!authResponse || !('idToken' in authResponse)) {
-      navigate('/auth');
+  function handleSaveLayer(reqSaveLayer) {
+    if (!authResponse || !("idToken" in authResponse)) {
+      navigate("/auth");
       setIsError(new Error("User is not authenticated!"));
       return;
     }
@@ -145,15 +148,13 @@ export function LayerProvider(props: { children: ReactNode }) {
       resetFormStage();
       setSaveResponse(null);
       resetFetchDatasetForm();
-    }, 1000)
-
+    }, 1000);
   }
 
   function resetFormStage() {
     setIsError(null);
     setCreateLayerformStage("initial");
   }
-
 
   function updateGeoJSONDataset(response: FetchDatasetResponse) {
     // Validate input to ensure it's a valid GeoJSON object
@@ -186,8 +187,13 @@ export function LayerProvider(props: { children: ReactNode }) {
           ...response,
           features: response.features,
           display: true,
+          points_color: "#28A745",
         },
       ];
+    });
+    setSelectedColor({
+      name: "Green",
+      hex: "#28A745",
     });
     // Update dataset info if backend IDs are provided
     if (response.bknd_dataset_id && response.prdcer_lyr_id) {
@@ -208,19 +214,18 @@ export function LayerProvider(props: { children: ReactNode }) {
 
   function handleFetchDataset(action: string, pageToken?: string) {
     let user_id: string;
-    let idToken: string
+    let idToken: string;
 
-    if (authResponse && ('idToken' in authResponse)) {
+    if (authResponse && "idToken" in authResponse) {
       user_id = authResponse.localId;
-      idToken = authResponse.idToken
+      idToken = authResponse.idToken;
     } else if (action == "full data") {
-      navigate('/auth');
+      navigate("/auth");
       setIsError(new Error("User is not authenticated!"));
-      return
+      return;
     } else {
       user_id = "0000";
       idToken = "";
-
     }
 
     const postData = {
@@ -235,7 +240,7 @@ export function LayerProvider(props: { children: ReactNode }) {
       }),
       ...(action === "full data" && { password: password }),
       ...(pageToken && { page_token: pageToken }),
-      user_id: user_id
+      user_id: user_id,
     };
 
     if (callCountRef.current >= MAX_CALLS) {
@@ -259,39 +264,39 @@ export function LayerProvider(props: { children: ReactNode }) {
     );
   }
 
-
-
   function handleGetCountryCityCategory() {
     HttpReq<string[]>(
       urls.country_city,
       (data) => setCountries(processCityData(data, setCitiesData)),
-      () => { },
-      () => { },
-      () => { },
+      () => {},
+      () => {},
+      () => {},
       setIsError
     );
 
     HttpReq<CategoryData>(
       urls.nearby_categories,
       setCategories,
-      () => { },
-      () => { },
-      () => { },
+      () => {},
+      () => {},
+      () => {},
       setIsError
     );
   }
 
-  function handleCountryCitySelection(event: React.ChangeEvent<HTMLSelectElement>) {
+  function handleCountryCitySelection(
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) {
     const { name: changed_select_element, value } = event.target;
 
     // Update the reqFetchDataset state using the functional update form
     setReqFetchDataset((prevData) => ({
-      ...prevData,  // Spread the previous state
-      [changed_select_element]: value,  // Update the field corresponding to the changed select element
+      ...prevData, // Spread the previous state
+      [changed_select_element]: value, // Update the field corresponding to the changed select element
     }));
 
     // Check if the changed select element is the country selector
-    if (changed_select_element === 'selectedCountry') {
+    if (changed_select_element === "selectedCountry") {
       // Get the cities for the selected country from the citiesData object
       // If the country has no cities, use an empty array
       const selectedCountryCities = citiesData[value] || [];
@@ -301,8 +306,8 @@ export function LayerProvider(props: { children: ReactNode }) {
 
       // Reset the selected city in the reqFetchDataset state
       setReqFetchDataset((prevData) => ({
-        ...prevData,  // Spread the previous state
-        selectedCity: '',  // Clear the selected city
+        ...prevData, // Spread the previous state
+        selectedCity: "", // Clear the selected city
       }));
     }
   }
@@ -331,13 +336,21 @@ export function LayerProvider(props: { children: ReactNode }) {
 
   function validateFetchDatasetForm() {
     if (!reqFetchDataset.selectedCountry || !reqFetchDataset.selectedCity) {
-      return new Error('Country and city are required.');
+      return new Error("Country and city are required.");
     }
-    if (reqFetchDataset.includedTypes.length === 0 && reqFetchDataset.excludedTypes.length === 0) {
-      return new Error('At least one category must be included or excluded.');
+    if (
+      reqFetchDataset.includedTypes.length === 0 &&
+      reqFetchDataset.excludedTypes.length === 0
+    ) {
+      return new Error("At least one category must be included or excluded.");
     }
-    if (reqFetchDataset.includedTypes.length > 50 || reqFetchDataset.excludedTypes.length > 50) {
-      return new Error('Up to 50 types can be specified in each type restriction category.');
+    if (
+      reqFetchDataset.includedTypes.length > 50 ||
+      reqFetchDataset.excludedTypes.length > 50
+    ) {
+      return new Error(
+        "Up to 50 types can be specified in each type restriction category."
+      );
     }
     return true;
   }
@@ -345,16 +358,16 @@ export function LayerProvider(props: { children: ReactNode }) {
   function resetFetchDatasetForm() {
     // Reset form data when component unmounts
     setReqFetchDataset({
-      selectedCountry: '',
-      selectedCity: '',
+      selectedCountry: "",
+      selectedCity: "",
       includedTypes: [],
       excludedTypes: [],
     });
-    setTextSearchInput('');
-    setSearchType('new nearby search');
-    setPassword('');
-    setGeoPoints([])
-  };
+    setTextSearchInput("");
+    setSearchType("new nearby search");
+    setPassword("");
+    setGeoPoints([]);
+  }
 
   useEffect(
     function () {
@@ -374,12 +387,9 @@ export function LayerProvider(props: { children: ReactNode }) {
     [FetchDatasetResp]
   );
 
-
   useEffect(() => {
     handleGetCountryCityCategory();
   }, []);
-
-
 
   return (
     <LayerContext.Provider
@@ -436,7 +446,7 @@ export function LayerProvider(props: { children: ReactNode }) {
         handleCountryCitySelection,
         handleTypeToggle,
         validateFetchDatasetForm,
-        resetFetchDatasetForm
+        resetFetchDatasetForm,
       }}
     >
       {children}

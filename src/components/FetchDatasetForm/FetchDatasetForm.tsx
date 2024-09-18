@@ -149,7 +149,6 @@ const FetchDatasetForm = () => {
             setIsError(result);
             return false
         }
-
     }
 
     return (
@@ -193,21 +192,6 @@ const FetchDatasetForm = () => {
                         />
                     </div>
                 }
-
-                <div className='pt-4'>
-                    <label className='block mb-2 text-md font-medium text-black' htmlFor="passwordKey">
-                        Password
-                    </label>
-                    <input
-                        id="passwordKey"
-                        type="password"
-                        name="passwordKey"
-                        className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Enter password for 'full data'"
-                    />
-                </div>
 
                 <div className='pt-4'>
                     <label className='block mb-2 text-md font-medium text-black' htmlFor="country">

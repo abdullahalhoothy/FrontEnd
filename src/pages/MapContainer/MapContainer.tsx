@@ -13,16 +13,17 @@ import * as turf from "@turf/turf";
 import PolygonsProvider, {
   usePolygonsContext,
 } from "../../context/PolygonsContext";
-import StatisticsPopup from "./StatisticsPopup";
 import axios from "axios";
 import { StylesControl } from "./StylesControl";
 import { generatePopupContent } from "./generatePopupContent";
+import StatisticsPopups from "./StatisticsPopups";
+import CircleControl from "./CircleControl";
+import BenchmarkControl from "./BenchmarkControl";
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_KEY;
 
 function Container() {
-  const { polygons, setPolygons, setSelectedPolygon, selectedPolygon } =
-    usePolygonsContext();
+  const { polygons, setPolygons } = usePolygonsContext();
   const { geoPoints, setGeoPoints } = useCatalogContext();
   const { centralizeOnce, initialFlyToDone, setInitialFlyToDone } =
     useLayerContext();
@@ -35,6 +36,32 @@ function Container() {
   const [currentStyle, setCurrentStyle] = useState(
     "mapbox://styles/mapbox/streets-v12"
   );
+  // This will store all the popups added
+  const [popups, setPopups] = useState([]);
+  const [circleSets, setCircleSets] = useState([
+    { id: 1, center: [39.6074258, 24.4738121] },
+    { id: 2, center: [39.7074258, 24.5738121] },
+    // Add more initial circle sets as needed
+  ]);
+  function updateCircleLayers() {
+    if (!mapRef.current) return;
+
+    circleSets.forEach((set) => {
+      const circle1km = turf.circle(set.center, 1, { units: "kilometers" });
+      const circle3km = turf.circle(set.center, 3, { units: "kilometers" });
+      const circle5km = turf.circle(set.center, 5, { units: "kilometers" });
+
+      ["1km", "3km", "5km"].forEach((size, index) => {
+        const layerId = `circle-${size}-${set.id}`;
+        const source = mapRef.current.getSource(layerId);
+        if (source) {
+          source.setData(
+            index === 0 ? circle1km : index === 1 ? circle3km : circle5km
+          );
+        }
+      });
+    });
+  }
 
   useEffect(function () {
     if (mapContainerRef.current && !mapRef.current) {
@@ -59,56 +86,73 @@ function Container() {
       const stylesControl = new StylesControl(currentStyle, setCurrentStyle);
       mapRef.current.addControl(stylesControl, "top-left");
 
+      let modes = MapboxDraw.modes;
+
       const draw = new MapboxDraw({
         displayControlsDefault: false,
         controls: {
+          point: false,
+          line_string: false,
           polygon: true,
           trash: true,
         },
         defaultMode: "simple_select",
+        modes: {
+          ...modes,
+          simple_select: { ...MapboxDraw.modes.simple_select, dragMove() {} },
+          direct_select: {
+            ...MapboxDraw.modes.direct_select,
+            dragVertex(state, e, delta) {
+              const feature = state.feature;
+              if (feature.properties?.shape !== "circle") {
+                // Call the original dragVertex function
+                MapboxDraw.modes.direct_select.dragVertex.call(
+                  this,
+                  state,
+                  e,
+                  delta
+                );
+              }
+            },
+          },
+        },
       });
 
+      const circleControl = new CircleControl(mapRef.current, draw);
+      mapRef.current.addControl(circleControl, "top-right");
       mapRef.current.addControl(draw);
 
       mapRef.current.on("draw.create", (e) => {
-        console.log(e.features[0]);
+        console.log(e);
+        const geojson = e.features[0];
+        geojson.isStatisticsPopupOpen = false;
         setPolygons((prev: any) => {
-          return [...prev, e.features[0]];
+          return [...prev, geojson];
         });
       });
 
       mapRef.current.on("draw.update", (e) => {
-        console.log(e, "update");
+        const geojson = e.features[0];
         const updatedPolygonsId = e.features[0].id;
+        geojson.isStatisticsPopupOpen = false;
         setPolygons((prev: any) => {
           return prev.map((polygon: any) => {
-            return polygon.id === updatedPolygonsId ? e.features[0] : polygon;
+            return polygon.id === updatedPolygonsId ? geojson : polygon;
           });
         });
-
-        setSelectedPolygon(null);
       });
 
       mapRef.current.on("draw.delete", (e) => {
-        console.log(e, "delete");
         const deletedPolygonsId = e.features[0].id;
         setPolygons((prev: any) => {
           return prev.filter((polygon: any) => {
             return polygon.id !== deletedPolygonsId;
           });
         });
-        if (selectedPolygon && selectedPolygon.id === deletedPolygonsId) {
-          setSelectedPolygon(null);
-        }
       });
 
       mapRef.current.on("draw.move", (e) => {
-        console.log(e, "move");
-        if (selectedPolygon && selectedPolygon.id === e.features[0].id) {
-          setSelectedPolygon(e.features[0]);
-        } else {
-          setSelectedPolygon(null);
-        }
+        const geojson = e.features[0];
       });
 
       mapRef.current.on("styledata", function () {
@@ -451,37 +495,56 @@ function Container() {
     };
   }, [geoPoints, initialFlyToDone, centralizeOnce]);
 
+  // Select polygons when clicked on the map
   useEffect(() => {
     const handleMapClick = (e) => {
       const coordinates = e.lngLat;
-      const { lng, lat } = coordinates;
-
-      console.log("Clicked coordinates:", lng, lat);
-
-      const point = [lng, lat];
+      const point = [coordinates.lng, coordinates.lat];
 
       const polygon = polygons.find((polygon) => {
-        // Make sure the polygon coordinates are in the correct format
-        const turfPolygon = turf.polygon(polygon.geometry.coordinates);
-        console.log("Polygon coordinates:", polygon.geometry.coordinates);
-        const isInside = turf.booleanPointInPolygon(point, turfPolygon);
-        console.log("Point inside polygon:", isInside);
-        return isInside;
+        try {
+          // Ensure polygon coordinates are in the correct format
+          let turfPolygon;
+          if (polygon.geometry.type === "Polygon") {
+            turfPolygon = turf.polygon(polygon.geometry.coordinates);
+          } else if (polygon.geometry.type === "MultiPolygon") {
+            turfPolygon = turf.multiPolygon(polygon.geometry.coordinates);
+          } else {
+            console.error("Unsupported geometry type:", polygon.geometry.type);
+            return false;
+          }
+
+          // Check if the point is inside the polygon
+          return turf.booleanPointInPolygon(point, turfPolygon);
+        } catch (error) {
+          console.error("Error processing polygon:", error);
+          return false;
+        }
       });
 
       if (polygon) {
-        setSelectedPolygon(polygon);
-      } else {
-        setSelectedPolygon(null);
+        const pixelPosition = mapRef.current.project(coordinates);
+        polygon.pixelPosition = pixelPosition;
+        setPolygons((prev) => {
+          return prev.map((prevPolygon) => {
+            if (prevPolygon.id === polygon.id) {
+              return {
+                ...prevPolygon,
+                isStatisticsPopupOpen: !prevPolygon.isStatisticsPopupOpen,
+                pixelPosition,
+              };
+            }
+            return prevPolygon;
+          });
+        });
       }
     };
 
     if (mapRef.current) {
-      mapRef.current.on("click", (e) => {
-        handleMapClick(e);
-      });
+      mapRef.current.on("click", handleMapClick);
     }
-    // Cleanup function
+
+    // Cleanup listener on unmount or polygon change
     return () => {
       if (mapRef.current) {
         mapRef.current.off("click", handleMapClick);
@@ -489,6 +552,12 @@ function Container() {
     };
   }, [polygons]);
 
+  useEffect(() => {
+    if (mapRef.current && styleLoadedRef.current) {
+      updateCircleLayers();
+    }
+  }, [circleSets]);
+  // Create or update the legend based on the geoPoints data
   useEffect(() => {
     if (mapRef.current && styleLoadedRef.current && geoPoints.length > 0) {
       const hasAtLeastOneValidName = geoPoints.some(
@@ -525,7 +594,6 @@ function Container() {
         // Update the legend position
         mapRef.current.getContainer().appendChild(legendRef.current);
       } else {
-        console.log("Creating legend");
         // Create the legend container
         legendRef.current = document.createElement("div");
         legendRef.current.className =
@@ -572,6 +640,7 @@ function Container() {
     };
   }, [geoPoints]);
 
+  // Update the geoPoints data when the style is loaded for the first time or changed
   useEffect(() => {
     if (mapRef.current && styleLoadedRef.current) {
       mapRef.current.once("styledata", () => {
@@ -583,6 +652,7 @@ function Container() {
       });
     }
   }, [currentStyle]);
+
   return (
     <div className="w-[80%] h-full relative overflow-hidden ">
       <div
@@ -590,7 +660,8 @@ function Container() {
         id="map-container"
         ref={mapContainerRef}
       />
-      <StatisticsPopup />
+      <StatisticsPopups />
+      {mapRef.current && styleLoadedRef.current && <BenchmarkControl />}
     </div>
   );
 }
