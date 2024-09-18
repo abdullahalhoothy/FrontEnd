@@ -13,6 +13,7 @@ RUN npm install
 # Copy the rest of the code
 COPY . .
 
+ENV NODE_ENV=development
 # Expose the port
 EXPOSE 3000
 

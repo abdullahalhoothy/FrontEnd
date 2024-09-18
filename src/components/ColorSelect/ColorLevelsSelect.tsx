@@ -13,7 +13,7 @@ interface ColorSelectProps {
   layerIndex?: number;
 }
 
-function ColorSelect({ layerIndex }: ColorSelectProps) {
+function ColorLevelsSelect({ layerIndex }: ColorSelectProps) {
   const { sidebarMode } = useUIContext();
   const catalogContext = useCatalogContext();
   const layerContext = useLayerContext();
@@ -114,50 +114,31 @@ function ColorSelect({ layerIndex }: ColorSelectProps) {
       );
     });
   }
+  const colorFamily = colorOptions.find(({ levels }) =>
+    levels.includes(colorHex)
+  ) || { name: "", levels: [] };
 
-  return (
-    <div
-      className={`${styles.customSelectContainer} ${
-        sidebarMode === "catalog" ? styles.selectContainerContext : ""
-      } ${showLoaderTopup ? styles.disabled : ""}`}
-    >
+  function handleColorClick(hex: string) {
+    updateLayerColor(layerIndex, hex);
+    setSelectedColor(hex);
+  }
+  function renderColorLevels() {
+    return colorFamily.levels.map((hex) => (
       <div
-        className={`${styles.customSelectValue} ${
-          sidebarMode === "catalog" ? styles.noBorder : ""
-        }`}
-        onClick={toggleDropdown}
-      >
-        {sidebarMode !== "catalog" ? (
-          <>
-            <span className={styles.selectedText}>
-              {colorName || "Select a color"}
-            </span>
-            <MdKeyboardArrowDown
-              className={`${styles.arrowIcon} ${isOpen ? styles.open : ""}`}
-            />
-          </>
-        ) : (
-          <>
-            <span
-              className={`${styles.colorCircle} ${
-                sidebarMode === "catalog" ? styles.colorCircleCatalog : ""
-              }`}
-              style={{ backgroundColor: colorHex }}
-            />
-          </>
-        )}
-      </div>
-      {isOpen && (
-        <div
-          className={`${styles.customSelectOptions} ${
-            sidebarMode === "catalog" ? styles.CatalogueSelectOptions : ""
-          }`}
-        >
-          {renderOptions()}
-        </div>
-      )}
+        key={hex}
+        className={styles.colorLevel}
+        style={{ backgroundColor: hex }}
+        onClick={() => handleColorClick(hex)}
+      />
+    ));
+  }
+  return (
+    <div className={styles.colorSelect}>
+      <span>{colorFamily.name || "Select a color"}</span>
+      <MdKeyboardArrowDown />
+      <div className={styles.colorLevels}>{renderColorLevels()}</div>
     </div>
   );
 }
 
-export default ColorSelect;
+export default ColorLevelsSelect;
