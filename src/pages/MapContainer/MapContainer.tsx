@@ -35,34 +35,8 @@ function Container() {
   const lastCoordinatesRef = useRef<[number, number] | null>(null);
   const legendRef = useRef<HTMLDivElement | null>(null);
   const [currentStyle, setCurrentStyle] = useState(
-    "mapbox://styles/mapbox/streets-v12"
+    "mapbox://styles/mapbox/streets-v11"
   );
-  // This will store all the popups added
-  const [popups, setPopups] = useState([]);
-  const [circleSets, setCircleSets] = useState([
-    { id: 1, center: [39.6074258, 24.4738121] },
-    { id: 2, center: [39.7074258, 24.5738121] },
-    // Add more initial circle sets as needed
-  ]);
-  function updateCircleLayers() {
-    if (!mapRef.current) return;
-
-    circleSets.forEach((set) => {
-      const circle1km = turf.circle(set.center, 1, { units: "kilometers" });
-      const circle3km = turf.circle(set.center, 3, { units: "kilometers" });
-      const circle5km = turf.circle(set.center, 5, { units: "kilometers" });
-
-      ["1km", "3km", "5km"].forEach((size, index) => {
-        const layerId = `circle-${size}-${set.id}`;
-        const source = mapRef.current.getSource(layerId);
-        if (source) {
-          source.setData(
-            index === 0 ? circle1km : index === 1 ? circle3km : circle5km
-          );
-        }
-      });
-    });
-  }
 
   useEffect(function () {
     if (mapContainerRef.current && !mapRef.current) {
@@ -76,7 +50,7 @@ function Container() {
 
       mapRef.current = new mapboxgl.Map({
         container: mapContainerRef.current,
-        style: "mapbox://styles/mapbox/streets-v12",
+        style: currentStyle,
         center: mapConfig.center as [number, number],
         attributionControl: true,
         zoom: mapConfig.zoom,
@@ -553,11 +527,6 @@ function Container() {
     };
   }, [polygons]);
 
-  useEffect(() => {
-    if (mapRef.current && styleLoadedRef.current) {
-      updateCircleLayers();
-    }
-  }, [circleSets]);
   // Create or update the legend based on the geoPoints data
   useEffect(() => {
     if (mapRef.current && styleLoadedRef.current && geoPoints.length > 0) {
@@ -570,8 +539,6 @@ function Container() {
       }
 
       if (legendRef.current) {
-        console.log("Updating legend");
-
         // Clear the legend container
         legendRef.current.innerHTML = `<h4 class="text-sm font-semibold text-gray-900 border-b p-2">Legend</h4>`;
 

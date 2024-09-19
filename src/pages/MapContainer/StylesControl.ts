@@ -12,12 +12,12 @@ function StylesControl(
   this.setCurrentStyle = setCurrentStyle;
 
   this.styles = [
-    { name: "Light", url: "mapbox://styles/mapbox/streets-v12" },
+    { name: "Light", url: "mapbox://styles/mapbox/streets-v11" },
     {
       name: "Satellite Streets",
-      url: "mapbox://styles/mapbox/satellite-streets-v12",
+      url: "mapbox://styles/mapbox/satellite-streets-v11",
     },
-    { name: "Dark", url: "mapbox://styles/mapbox/dark-v11" },
+    { name: "Dark", url: "mapbox://styles/mapbox/dark-v10" },
   ];
 }
 
