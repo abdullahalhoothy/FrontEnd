@@ -13,16 +13,15 @@ interface ColorSelectProps {
   layerIndex?: number;
 }
 
-function ColorSelect({ layerIndex }: ColorSelectProps) {
+function ColorLevelsSelect({ layerIndex }: ColorSelectProps) {
   const { sidebarMode } = useUIContext();
   const catalogContext = useCatalogContext();
   const layerContext = useLayerContext();
 
   const {
     geoPoints,
-    openDropdownIndices,
-    setOpenDropdownIndices,
-    updateDropdownIndex,
+    openDropdownIndex,
+    setOpenDropdownIndex,
     updateLayerColor,
   } = catalogContext;
 
@@ -37,7 +36,7 @@ function ColorSelect({ layerIndex }: ColorSelectProps) {
 
   const colorName = colorMap.get(colorHex) || ""; // Get the color name from the map
 
-  const isOpen = openDropdownIndices[0] === dropdownIndex;
+  const isOpen = openDropdownIndex === dropdownIndex;
 
   useEffect(() => {
     setSelectedColor(null);
@@ -55,7 +54,7 @@ function ColorSelect({ layerIndex }: ColorSelectProps) {
     }
     updateLayerColor(layerIndex ?? null, hex);
     setSelectedColor({ name: optionName, hex });
-    updateDropdownIndex(0, null);
+    setOpenDropdownIndex(null);
   }
 
   function toggleDropdown(event: ReactMouseEvent) {
@@ -65,9 +64,9 @@ function ColorSelect({ layerIndex }: ColorSelectProps) {
       return;
     }
     if (isOpen) {
-      updateDropdownIndex(0, null);
+      setOpenDropdownIndex(null);
     } else {
-      updateDropdownIndex(0, dropdownIndex);
+      setOpenDropdownIndex(dropdownIndex);
     }
   }
 
@@ -82,7 +81,7 @@ function ColorSelect({ layerIndex }: ColorSelectProps) {
       });
 
       if (clickedOutside) {
-        updateDropdownIndex(0, null);
+        setOpenDropdownIndex(null);
       }
     }
 
@@ -90,7 +89,7 @@ function ColorSelect({ layerIndex }: ColorSelectProps) {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [setOpenDropdownIndices[0]]);
+  }, [setOpenDropdownIndex]);
 
   function renderOptions() {
     return colorOptions.map(({ name, hex }) => {
@@ -115,50 +114,31 @@ function ColorSelect({ layerIndex }: ColorSelectProps) {
       );
     });
   }
+  const colorFamily = colorOptions.find(({ levels }) =>
+    levels.includes(colorHex)
+  ) || { name: "", levels: [] };
 
-  return (
-    <div
-      className={`${styles.customSelectContainer} ${
-        sidebarMode === "catalog" ? styles.selectContainerContext : ""
-      } ${showLoaderTopup ? styles.disabled : ""}`}
-    >
+  function handleColorClick(hex: string) {
+    updateLayerColor(layerIndex, hex);
+    setSelectedColor(hex);
+  }
+  function renderColorLevels() {
+    return colorFamily.levels.map((hex) => (
       <div
-        className={`${styles.customSelectValue} ${
-          sidebarMode === "catalog" ? styles.noBorder : ""
-        }`}
-        onClick={toggleDropdown}
-      >
-        {sidebarMode !== "catalog" ? (
-          <>
-            <span className={styles.selectedText}>
-              {colorName || "Select a color"}
-            </span>
-            <MdKeyboardArrowDown
-              className={`${styles.arrowIcon} ${isOpen ? styles.open : ""}`}
-            />
-          </>
-        ) : (
-          <>
-            <span
-              className={`${styles.colorCircle} ${
-                sidebarMode === "catalog" ? styles.colorCircleCatalog : ""
-              }`}
-              style={{ backgroundColor: colorHex }}
-            />
-          </>
-        )}
-      </div>
-      {isOpen && (
-        <div
-          className={`${styles.customSelectOptions} ${
-            sidebarMode === "catalog" ? styles.CatalogueSelectOptions : ""
-          }`}
-        >
-          {renderOptions()}
-        </div>
-      )}
+        key={hex}
+        className={styles.colorLevel}
+        style={{ backgroundColor: hex }}
+        onClick={() => handleColorClick(hex)}
+      />
+    ));
+  }
+  return (
+    <div className={styles.colorSelect}>
+      <span>{colorFamily.name || "Select a color"}</span>
+      <MdKeyboardArrowDown />
+      <div className={styles.colorLevels}>{renderColorLevels()}</div>
     </div>
   );
 }
 
-export default ColorSelect;
+export default ColorLevelsSelect;

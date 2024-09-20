@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import styles from "./UserLayerCard.module.css";
 import placeHolderImage from "../../placeholderImage/layer.png";
 import { UserLayerCardProps } from "../../types/allTypesAndInterfaces";
+import { useCatalogContext } from "../../context/CatalogContext";
 
 function UserLayerCard(props: UserLayerCardProps) {
+  const { geoPoints } = useCatalogContext();
 
   function handleMoreInfo() {
     props.onMoreInfo({
@@ -13,9 +15,8 @@ function UserLayerCard(props: UserLayerCardProps) {
     });
   }
 
-
   return (
-    <div className={styles.catalogueWrapper + ' transition-all'}>
+    <div className={styles.catalogueWrapper + " transition-all"}>
       <div className={styles.ribbonWrapper}></div>
       <div className={styles.card}>
         <div className={styles.cardCover}>
@@ -33,7 +34,9 @@ function UserLayerCard(props: UserLayerCardProps) {
           </div>
           <div className={styles.metaDataWrapper}>
             <span className={styles.catalogueRow}>Legend: {props.legend}</span>
-            <p className={styles.catalogueDesc}>Description: {props.description}</p>
+            <p className={styles.catalogueDesc}>
+              Description: {props.description}
+            </p>
           </div>
         </div>
         <ul className={styles.cardActions}>

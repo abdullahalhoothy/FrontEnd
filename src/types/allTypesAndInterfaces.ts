@@ -112,6 +112,7 @@ export interface CatalogContextType {
   ): void;
   handleSaveLayer(): void;
   resetFormStage(resetTo: string): void;
+
   geoPoints: MapFeatures[];
   setGeoPoints: React.Dispatch<React.SetStateAction<MapFeatures[]>>;
   selectedColor: Color | null;
@@ -126,8 +127,29 @@ export interface CatalogContextType {
   saveResponseMsg: string;
   saveReqId: string;
   setSaveResponse: React.Dispatch<React.SetStateAction<SaveResponse | null>>;
-  openDropdownIndex: number | null;
-  setOpenDropdownIndex: React.Dispatch<React.SetStateAction<number | null>>;
+  openDropdownIndices: (number | null)[];
+  setOpenDropdownIndices: React.Dispatch<
+    React.SetStateAction<(number | null)[]>
+  >;
+
+  isAdvanced: boolean;
+  setIsAdvanced: React.Dispatch<React.SetStateAction<boolean>>;
+  radiusInput: number | null;
+  setRadiusInput: React.Dispatch<React.SetStateAction<number | null>>;
+  setColors: React.Dispatch<React.SetStateAction<string[]>>;
+  colors: string[];
+  reqGradientColorBasedOnZone: ReqGradientColorBasedOnZone;
+  setReqGradientColorBasedOnZone: React.Dispatch<
+    React.SetStateAction<ReqGradientColorBasedOnZone>
+  >;
+  gradientColorBasedOnZone: GradientColorBasedOnZone[];
+  setGradientColorBasedOnZone: React.Dispatch<
+    React.Dispatch<React.SetStateAction<GradientColorBasedOnZone[]>>
+  >;
+  chosenPallet: number;
+  setChosenPallet: React.Dispatch<React.SetStateAction<number>>;
+  selectedBasedon: string;
+  setSelectedBasedon: React.Dispatch<React.SetStateAction<string>>;
 }
 
 interface Color {
@@ -361,3 +383,16 @@ export interface CostEstimate {
   api_calls: number;
 }
 
+export interface GradientColorBasedOnZone extends MapFeatures {
+  sub_lyr_id: string;
+  [key: string]: any;
+}
+export interface ReqGradientColorBasedOnZone {
+  prdcer_lyr_id: string;
+  user_id: string;
+  color_grid_choice: string[];
+  change_lyr_id: string;
+  based_on_lyr_id: string;
+  radius_offset: number;
+  color_based_on: string;
+}
