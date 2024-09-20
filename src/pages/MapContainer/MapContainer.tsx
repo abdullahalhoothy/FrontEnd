@@ -13,7 +13,7 @@ function MapContainer() {
   const {
     geoPoints,
     isAdvanced,
-    openDropdownIndex1,
+    openDropdownIndices,
     colors,
 
     gradientColorBasedOnZone,
@@ -64,12 +64,7 @@ function MapContainer() {
     const array = colors?.find((arr) => arr.includes(colorHex));
     return array[index];
   }
-  // Function to filter FeatureCollections by feature name
-  // const filterFeatureCollectionsByFeatureName = (targetName) => {
-  //   return gradientColorBasedOnZone?.filter((featureCollection) =>
-  //     featureCollection.features.some((f) => f.properties.name === targetName)
-  //   )?.points_color;
-  // };
+
   useEffect(
     function () {
       console.log("UseEffect MapContainer [GeoPoints]");
@@ -152,54 +147,7 @@ function MapContainer() {
                         "circle-color":
                           featureCollection.points_color ||
                           mapConfig.defaultColor,
-                        //     "circle-color": [
-                        //       "case",
-                        //       // Category 1: Rating <= 1
-                        //       ["<=", ["get", "rating"], 1],
-                        //       adjustColorBrightness(
-                        //         featureCollection.points_color ||
-                        //           mapConfig.defaultColor,
-                        //         -0.3
-                        //       ),
-                        //       // Category 2: Rating <= 2
-                        //       ["<=", ["get", "rating"], 2],
-                        //       adjustColorBrightness(
-                        //         featureCollection.points_color ||
-                        //           mapConfig.defaultColor,
-                        //         -0.2
-                        //       ),
-                        //       // Category 3: Rating <= 3
-                        //       ["<=", ["get", "rating"], 3],
-                        //       adjustColorBrightness(
-                        //         featureCollection.points_color ||
-                        //           mapConfig.defaultColor,
-                        //         -0.1
-                        //       ),
-                        //       // Category 4: Rating <= 4
-                        //       ["<=", ["get", "rating"], 4],
-                        //       adjustColorBrightness(
-                        //         featureCollection.points_color ||
-                        //           mapConfig.defaultColor,
-                        //         -0.3
-                        //       ),
-                        //       // Category 5: Rating <= 5
-                        //       ["<=", ["get", "rating"], 5],
-                        //       adjustColorBrightness(
-                        //         featureCollection.points_color ||
-                        //           mapConfig.defaultColor,
-                        //         0.3
-                        //       ),
-                        //       // Category 6: Rating = 6 (Highest)
-                        //       ["==", ["get", "rating"], 6],
-                        //       adjustColorBrightness(
-                        //         featureCollection.points_color ||
-                        //           mapConfig.defaultColor,
-                        //         0.3
-                        //       ),
-                        //       // default
-                        //       featureCollection.points_color ||
-                        //         mapConfig.defaultColor,
-                        //     ],
+
                         "circle-opacity": mapConfig.circleOpacity,
                         "circle-stroke-width": mapConfig.circleStrokeWidth,
                         "circle-stroke-color": mapConfig.circleStrokeColor,
@@ -207,7 +155,7 @@ function MapContainer() {
                     });
 
                     if (isAdvanced === true) {
-                      if (openDropdownIndex1 === index) {
+                      if (openDropdownIndices[1] === index) {
                         const newSettings = {
                           points_color: [
                             "case",
@@ -271,8 +219,8 @@ function MapContainer() {
                           newSettings.points_color
                         );
                       }
-                      // Persist previously applied colors when the dropdown is closed (openDropdownIndex1 !== index)
-                      if (openDropdownIndex1 !== index) {
+                      // Persist previously applied colors when the dropdown is closed (openDropdownIndices[1] !== index)
+                      if (openDropdownIndices[1] !== index) {
                         const lastSavedColors = layerColors[layerId];
 
                         // If last saved colors are available, apply them to the layer
@@ -352,7 +300,6 @@ function MapContainer() {
                         }
                       }
                     }
-                    /***************************** */
                   }
                 }
               } else {
@@ -404,54 +351,6 @@ function MapContainer() {
                         "circle-color":
                           featureCollection.points_color ||
                           mapConfig.defaultColor,
-                        // "circle-color": [
-                        //   "case",
-                        //   // Category 1: Rating <= 1
-                        //   ["<=", ["get", "rating"], 1],
-                        //   adjustColorBrightness(
-                        //     featureCollection.points_color ||
-                        //       mapConfig.defaultColor,
-                        //     -0.3
-                        //   ),
-                        //   // Category 2: Rating <= 2
-                        //   ["<=", ["get", "rating"], 2],
-                        //   adjustColorBrightness(
-                        //     featureCollection.points_color ||
-                        //       mapConfig.defaultColor,
-                        //     -0.2
-                        //   ),
-                        //   // Category 3: Rating <= 3
-                        //   ["<=", ["get", "rating"], 3],
-                        //   adjustColorBrightness(
-                        //     featureCollection.points_color ||
-                        //       mapConfig.defaultColor,
-                        //     -0.1
-                        //   ),
-                        //   // Category 4: Rating <= 4
-                        //   ["<=", ["get", "rating"], 4],
-                        //   adjustColorBrightness(
-                        //     featureCollection.points_color ||
-                        //       mapConfig.defaultColor,
-                        //     -0.3
-                        //   ),
-                        //   // Category 5: Rating <= 5
-                        //   ["<=", ["get", "rating"], 5],
-                        //   adjustColorBrightness(
-                        //     featureCollection.points_color ||
-                        //       mapConfig.defaultColor,
-                        //     0.3
-                        //   ),
-                        //   // Category 6: Rating = 6 (Highest)
-                        //   ["==", ["get", "rating"], 6],
-                        //   adjustColorBrightness(
-                        //     featureCollection.points_color ||
-                        //       mapConfig.defaultColor,
-                        //     0.3
-                        //   ),
-                        //   // Default color (if no rating)
-                        //   featureCollection.points_color ||
-                        //     mapConfig.defaultColor,
-                        // ],
                         "circle-opacity": mapConfig.circleOpacity,
                         "circle-stroke-width": mapConfig.circleStrokeWidth,
                         "circle-stroke-color": mapConfig.circleStrokeColor,
@@ -581,13 +480,7 @@ function MapContainer() {
         }
       };
     },
-    [
-      geoPoints,
-      initialFlyToDone,
-      centralizeOnce,
-      // radiusInput,
-      gradientColorBasedOnZone,
-    ]
+    [geoPoints, initialFlyToDone, centralizeOnce, gradientColorBasedOnZone]
   );
 
   return (
@@ -596,7 +489,6 @@ function MapContainer() {
         className="absolute w-full h-full"
         id="map-container"
         ref={mapContainerRef}
-        // style={{ width: "96%", height: "100vh", zIndex: 99 }}
       />
     </div>
   );

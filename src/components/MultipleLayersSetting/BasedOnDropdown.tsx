@@ -1,23 +1,21 @@
-import React, { Dispatch, SetStateAction, useState } from "react";
+import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import styles from "./MultipleLayersSetting.module.css";
 import { useCatalogContext } from "../../context/CatalogContext";
 // Destructure props as an object
 interface BasedOnDropdownProps {
   layerIndex?: number;
-  selectedBasedon: string;
-  setSelectedBasedon: Dispatch<SetStateAction<string>>;
 }
-export default function BasedOnDropdown({
-  layerIndex,
-  selectedBasedon,
-  setSelectedBasedon,
-}: BasedOnDropdownProps) {
+export default function BasedOnDropdown({ layerIndex }: BasedOnDropdownProps) {
   const catalogContext = useCatalogContext();
-  const { openDropdownIndex3, setOpenDropdownIndex3 } = catalogContext;
+  const { openDropdownIndices, selectedBasedon, setSelectedBasedon } =
+    catalogContext;
 
   const dropdownIndex = layerIndex ?? -1;
-  const isOpen = openDropdownIndex3 === dropdownIndex;
+  const isOpen = openDropdownIndices[3] === dropdownIndex;
 
+  useEffect(function () {
+    setSelectedBasedon("rating");
+  }, []);
   const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     event.stopPropagation();
 

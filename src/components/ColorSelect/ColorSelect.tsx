@@ -20,8 +20,9 @@ function ColorSelect({ layerIndex }: ColorSelectProps) {
 
   const {
     geoPoints,
-    openDropdownIndex,
-    setOpenDropdownIndex,
+    openDropdownIndices,
+    setOpenDropdownIndices,
+    updateDropdownIndex,
     updateLayerColor,
   } = catalogContext;
 
@@ -36,7 +37,7 @@ function ColorSelect({ layerIndex }: ColorSelectProps) {
 
   const colorName = colorMap.get(colorHex) || ""; // Get the color name from the map
 
-  const isOpen = openDropdownIndex === dropdownIndex;
+  const isOpen = openDropdownIndices[0] === dropdownIndex;
 
   useEffect(() => {
     setSelectedColor(null);
@@ -54,7 +55,7 @@ function ColorSelect({ layerIndex }: ColorSelectProps) {
     }
     updateLayerColor(layerIndex ?? null, hex);
     setSelectedColor({ name: optionName, hex });
-    setOpenDropdownIndex(null);
+    updateDropdownIndex(0, null);
   }
 
   function toggleDropdown(event: ReactMouseEvent) {
@@ -64,9 +65,9 @@ function ColorSelect({ layerIndex }: ColorSelectProps) {
       return;
     }
     if (isOpen) {
-      setOpenDropdownIndex(null);
+      updateDropdownIndex(0, null);
     } else {
-      setOpenDropdownIndex(dropdownIndex);
+      updateDropdownIndex(0, dropdownIndex);
     }
   }
 
@@ -81,7 +82,7 @@ function ColorSelect({ layerIndex }: ColorSelectProps) {
       });
 
       if (clickedOutside) {
-        setOpenDropdownIndex(null);
+        updateDropdownIndex(0, null);
       }
     }
 
@@ -89,7 +90,7 @@ function ColorSelect({ layerIndex }: ColorSelectProps) {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [setOpenDropdownIndex]);
+  }, [setOpenDropdownIndices[0]]);
 
   function renderOptions() {
     return colorOptions.map(({ name, hex }) => {

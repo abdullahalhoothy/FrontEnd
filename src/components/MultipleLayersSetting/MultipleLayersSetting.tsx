@@ -14,31 +14,23 @@ import urls from "../../urls.json";
 import { useAuth } from "../../context/AuthContext";
 import BasedOnDropdown from "./BasedOnDropdown";
 
-// const colorPalettes = [
-//   ["#FF0000", "#FF4D4D", "#FF9999", "#FFB3B3", "#FFCCCC", "#FFE6E6"],
-//   ["#00FF00", "#4DFF4D", "#99FF99", "#B3FFB3", "#CCFFCC", "#E6FFE6"],
-//   ["#0000FF", "#4D4DFF", "#9999FF", "#B3B3FF", "#CCCCFF", "#E6E6FF"],
-//   ["#FFFF00", "#FFFF4D", "#FFFF99", "#FFFFB3", "#FFFFCC", "#FFFFE6"],
-//   ["#FF00FF", "#FF4DFF", "#FF99FF", "#FFB3FF", "#FFCCFF", "#FFE6FF"],
-// ];
 function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   const { layerIndex } = props;
   const {
     geoPoints,
     updateLayerDisplay,
     updateLayerHeatmap,
-    // updateLayerZone,
     removeLayer,
     isAdvanced,
     setIsAdvanced,
-
-    openDropdownIndex1,
-    setOpenDropdownIndex1,
+    openDropdownIndices,
+    setOpenDropdownIndices,
+    updateDropdownIndex,
     setColors,
     setReqGradientColorBasedOnZone,
     colors,
     chosenPallet,
-    handleColorBasedZone,
+    selectedBasedon,
   } = useCatalogContext();
   const layer = geoPoints[layerIndex];
   console.log(layer);
@@ -47,18 +39,15 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   const [isZoneLayer, setIsZoneLayer] = useState(is_zone_lyr);
   const [isDisplay, setIsDisplay] = useState(display);
   const [isHeatmap, setIsHeatmap] = useState(is_heatmap);
-  const dropdownRef = useRef<HTMLDivElement>(null); // Add ref for the dropdown
-  const buttonRef = useRef<HTMLDivElement>(null); // Add ref for the button
-  const { authResponse } = useAuth(); // Add this line
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLDivElement>(null);
+  const { authResponse } = useAuth();
 
-  const [selectedPalette, setSelectedPalette] = useState<number | null>(null);
-  // const [isOpen, setIsOpen] = useState(false);
   const [isError, setIsError] = useState<Error | null>(null);
   const [radiusInput, setRadiusInput] = useState(0);
-  const [selectedBasedon, setSelectedBasedon] = useState<string>("rating");
 
   const dropdownIndex = layerIndex ?? -1;
-  const isOpen = openDropdownIndex1 === dropdownIndex;
+  const isOpen = openDropdownIndices[1] === dropdownIndex;
 
   useEffect(function () {
     handleGetGradientColors();
@@ -84,7 +73,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as Node;
 
-      // Make sure we aren't clicking on the button or inside the dropdown
       if (
         dropdownRef.current &&
         !dropdownRef.current.contains(target) &&
@@ -92,7 +80,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         !buttonRef.current.contains(target)
       ) {
         setIsAdvanced(false);
-        setOpenDropdownIndex1(null);
+        updateDropdownIndex(1, null);
       }
     }
 
@@ -100,12 +88,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [setOpenDropdownIndex1]);
-
-  // function handleZoneLayerChange() {
-  //   updateLayerZone(layerIndex, !isZoneLayer);
-  //    setIsZoneLayer(!isZoneLayer);
-  // }
+  }, [setOpenDropdownIndices[1]]);
 
   function handleDisplayChange() {
     updateLayerDisplay(layerIndex, !isDisplay);
@@ -125,9 +108,9 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     event.stopPropagation();
 
     if (isOpen) {
-      setOpenDropdownIndex1(null);
+      updateDropdownIndex(1, null);
     } else {
-      setOpenDropdownIndex1(dropdownIndex);
+      updateDropdownIndex(1, dropdownIndex);
     }
   }
   function handleGetGradientColors() {
@@ -195,7 +178,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
           <div
             onClick={(e) => {
-              // setIsOpen(!isOpen);
               setIsAdvanced(!isAdvanced);
               toggleDropdown(e);
             }}
@@ -204,16 +186,12 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
           >
             <IoIosArrowDropdown />
           </div>
-          {/* </button> */}
         </div>
       )}
 
       {isOpen && (
         <div className=" w-full">
-          <div
-            className="flex flex-col gap-2 mt-4   py-3 px-4 w-full bg-white border border-gray-300 rounded-lg shadow-lg z-50"
-            // ref={dropdownRef}
-          >
+          <div className="flex flex-col gap-2 mt-4   py-3 px-4 w-full bg-white border border-gray-300 rounded-lg shadow-lg z-50">
             <div className="flex justify-between items-center">
               <p className="text-base mb-0 capitalize font-medium">
                 {prdcer_layer_name}
@@ -222,7 +200,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                 <p className="text-xs mb-0 font-medium">Advanced</p>
                 <div
                   onClick={(e) => {
-                    // setIsOpen(!isOpen);
                     setIsAdvanced(!isAdvanced);
                     toggleDropdown(e);
                   }}
@@ -236,17 +213,9 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
             <p className="text-sm mb-0 font-medium">Recolor based on metric</p>
 
-            <DropdownColorSelect
-              selectedPalette={selectedPalette}
-              setSelectedPalette={setSelectedPalette}
-              layerIndex={layerIndex}
-            />
+            <DropdownColorSelect layerIndex={layerIndex} />
 
-            <BasedOnDropdown
-              layerIndex={layerIndex}
-              selectedBasedon={selectedBasedon}
-              setSelectedBasedon={setSelectedBasedon}
-            />
+            <BasedOnDropdown layerIndex={layerIndex} />
             <div className="ms-2.5">
               <label
                 className={`${styles.zl} block text-sm`}
@@ -260,9 +229,8 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                 name="radius"
                 className="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-sm focus:ring-grey-100 focus:border-grey-100 block w-full p-1"
                 value={radiusInput}
-                // onChange={(e) => handleRadiusChange(e)}
                 onChange={(e) => setRadiusInput(+e.target.value)}
-                onKeyDown={handleRadiusChange} // Detects key press
+                onKeyDown={handleRadiusChange}
                 placeholder="Type radius and press Enter"
               />
             </div>

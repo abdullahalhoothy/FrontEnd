@@ -127,14 +127,11 @@ export interface CatalogContextType {
   saveResponseMsg: string;
   saveReqId: string;
   setSaveResponse: React.Dispatch<React.SetStateAction<SaveResponse | null>>;
-  openDropdownIndex: number | null;
-  setOpenDropdownIndex: React.Dispatch<React.SetStateAction<number | null>>;
-  openDropdownIndex1: number | null;
-  setOpenDropdownIndex1: React.Dispatch<React.SetStateAction<number | null>>;
-  openDropdownIndex2: number | null;
-  setOpenDropdownIndex2: React.Dispatch<React.SetStateAction<number | null>>;
-  openDropdownIndex3: number | null;
-  setOpenDropdownIndex3: React.Dispatch<React.SetStateAction<number | null>>;
+  openDropdownIndices: (number | null)[];
+  setOpenDropdownIndices: React.Dispatch<
+    React.SetStateAction<(number | null)[]>
+  >;
+
   isAdvanced: boolean;
   setIsAdvanced: React.Dispatch<React.SetStateAction<boolean>>;
   radiusInput: number | null;
@@ -151,6 +148,8 @@ export interface CatalogContextType {
   >;
   chosenPallet: number;
   setChosenPallet: React.Dispatch<React.SetStateAction<number>>;
+  selectedBasedon: string;
+  setSelectedBasedon: React.Dispatch<React.SetStateAction<string>>;
 }
 
 interface Color {

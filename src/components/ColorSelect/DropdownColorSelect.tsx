@@ -7,37 +7,25 @@ import styles from "./ColorSelect.module.css";
 import { useCatalogContext } from "../../context/CatalogContext";
 import { useLayerContext } from "../../context/LayerContext";
 
-// Create a mapping from hex code to color name
-const colorPalettes = ["#FF5733", "#28A745", "#007BFF", "#FFC107", "#343A40"];
-
 interface ColorSelectProps {
   layerIndex?: number;
-  selectedPalette?: number | null;
-  setSelectedPalette?: React.Dispatch<React.SetStateAction<number | null>>;
 }
-function DropdownColorSelect({
-  layerIndex,
-  selectedPalette,
-  setSelectedPalette,
-}: ColorSelectProps) {
+function DropdownColorSelect({ layerIndex }: ColorSelectProps) {
   const catalogContext = useCatalogContext();
   const layerContext = useLayerContext();
-  // const [isOpen, setIsOpen] = useState(false);
 
   const {
     updateLayerColor,
     colors,
     chosenPallet,
     setChosenPallet,
-    openDropdownIndex2,
-    setOpenDropdownIndex2,
+    openDropdownIndices,
+    updateDropdownIndex,
   } = catalogContext;
-
-  // const { setSelectedColor, selectedColor } = layerContext;
 
   const showLoaderTopup = layerContext.showLoaderTopup || false;
   const dropdownIndex = layerIndex ?? -1;
-  const isOpen = openDropdownIndex2 === dropdownIndex;
+  const isOpen = openDropdownIndices[2] === dropdownIndex;
 
   useEffect(() => {
     setChosenPallet(chosenPallet);
@@ -56,9 +44,9 @@ function DropdownColorSelect({
       return;
     }
     if (isOpen) {
-      setOpenDropdownIndex2(null);
+      updateDropdownIndex(2, null);
     } else {
-      setOpenDropdownIndex2(dropdownIndex);
+      updateDropdownIndex(2, dropdownIndex);
     }
   }
   function handleOptionClick(optionIndex, event: ReactMouseEvent) {
@@ -68,7 +56,7 @@ function DropdownColorSelect({
       return;
     }
     setChosenPallet(optionIndex);
-    setOpenDropdownIndex2(null);
+    updateDropdownIndex(2, null);
   }
 
   return (

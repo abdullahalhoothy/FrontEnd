@@ -15,7 +15,7 @@ import {
   ReactNode,
   useEffect,
 } from "react";
-import { useAuth } from "../context/AuthContext"; // Add this import
+import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const CatalogContext = createContext<CatalogContextType | undefined>(undefined);
@@ -53,18 +53,21 @@ export function CatalogProvider(props: { children: ReactNode }) {
     hex: string;
   } | null>(null);
 
-  const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(
-    null
-  );
-  const [openDropdownIndex1, setOpenDropdownIndex1] = useState<number | null>(
-    null
-  );
-  const [openDropdownIndex2, setOpenDropdownIndex2] = useState<number | null>(
-    null
-  );
-  const [openDropdownIndex3, setOpenDropdownIndex3] = useState<number | null>(
-    null
-  );
+  // const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(
+  //   null
+  // );
+  // const [openDropdownIndex1, setOpenDropdownIndex1] = useState<number | null>(
+  //   null
+  // );
+  // const [openDropdownIndex2, setOpenDropdownIndex2] = useState<number | null>(
+  //   null
+  // );
+  // const [openDropdownIndex3, setOpenDropdownIndex3] = useState<number | null>(
+  //   null
+  // );
+  const [openDropdownIndices, setOpenDropdownIndices] = useState<
+    (number | null)[]
+  >([null, null, null, null]);
   const [saveResponse, setSaveResponse] = useState<SaveResponse | null>(null);
   const [saveResponseMsg, setSaveResponseMsg] = useState("");
   const [saveReqId, setSaveReqId] = useState("");
@@ -89,13 +92,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [postResMessage, setPostResMessage] = useState<string>("");
   const [postResId, setPostResId] = useState<string>("");
   const [chosenPallet, setChosenPallet] = useState(0);
-
-  // Save geoPoints to localStorage
-  // useEffect(() => {
-  //   if (geoPoints.length > 0) {
-  //     localStorage.setItem("unsavedGeoPoints", JSON.stringify(geoPoints));
-  //   }
-  // }, [geoPoints]);
+  const [selectedBasedon, setSelectedBasedon] = useState<string>("rating");
 
   useEffect(
     function () {
@@ -322,14 +319,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
     });
   }
 
-  // function updateLayerZone(layerIndex: number, isZoneLayer: boolean) {
-  //   setGeoPoints((prevGeoPoints) => {
-  //     const updatedGeoPoints = [...prevGeoPoints];
-  //     updatedGeoPoints[layerIndex].is_zone_lyr = isZoneLayer;
-  //     return updatedGeoPoints;
-  //   });
-  // }
-
   function removeLayer(layerIndex: number) {
     setGeoPoints(function (prevGeoPoints) {
       var updatedGeoPoints = prevGeoPoints.filter(function (_, index) {
@@ -367,9 +356,14 @@ export function CatalogProvider(props: { children: ReactNode }) {
       postData,
       idToken
     );
-
-    console.log(gradientColorBasedOnZone);
   }
+  const updateDropdownIndex = (index: number, value: number | null) => {
+    setOpenDropdownIndices((prev) => {
+      const updatedIndices = [...prev];
+      updatedIndices[index] = value;
+      return updatedIndices;
+    });
+  };
   return (
     <CatalogContext.Provider
       value={{
@@ -398,8 +392,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
         setGeoPoints,
         selectedColor,
         setSelectedColor,
-        openDropdownIndex,
-        setOpenDropdownIndex,
+
         resetState,
         saveResponse,
         saveResponseMsg,
@@ -413,12 +406,9 @@ export function CatalogProvider(props: { children: ReactNode }) {
         setIsAdvanced,
         setRadiusInput,
         radiusInput,
-        openDropdownIndex1,
-        setOpenDropdownIndex1,
-        openDropdownIndex2,
-        setOpenDropdownIndex2,
-        openDropdownIndex3,
-        setOpenDropdownIndex3,
+        openDropdownIndices,
+        setOpenDropdownIndices,
+        updateDropdownIndex,
         colors,
         setColors,
         chosenPallet,
@@ -427,6 +417,8 @@ export function CatalogProvider(props: { children: ReactNode }) {
         setReqGradientColorBasedOnZone,
         gradientColorBasedOnZone,
         handleColorBasedZone,
+        selectedBasedon,
+        setSelectedBasedon,
       }}
     >
       {children}

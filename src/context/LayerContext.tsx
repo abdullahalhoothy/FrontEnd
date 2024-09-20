@@ -28,10 +28,9 @@ const LayerContext = createContext<LayerContextType | undefined>(undefined);
 
 export function LayerProvider(props: { children: ReactNode }) {
   const navigate = useNavigate();
-  const { authResponse } = useAuth(); // Add this line
+  const { authResponse } = useAuth();
   const { children } = props;
   const { geoPoints, setGeoPoints } = useCatalogContext();
-  // State from useLocationAndCategories
   const [countries, setCountries] = useState<string[]>([]);
   const [cities, setCities] = useState<City[]>([]);
 
