@@ -4,18 +4,16 @@ import { CatalogueCardProps } from "../../types/allTypesAndInterfaces";
 import { useCatalogContext } from "../../context/CatalogContext";
 import placeholderImage from "../../placeholderImage/catalogue.png";
 
-function CatalogueCard(props: CatalogueCardProps) {
-  const {
-    id,
-    name,
-    description,
-    thumbnail_url,
-    records_number,
-    can_access,
-    onMoreInfo,
-    typeOfCard,
-  } = props;
-
+function Component({
+  id,
+  name,
+  description,
+  thumbnail_url,
+  records_number,
+  can_access,
+  onMoreInfo,
+  typeOfCard,
+}: CatalogueCardProps) {
   const { selectedContainerType: containerType } = useCatalogContext();
   const [isImageError, setIsImageError] = useState(false);
 
@@ -40,7 +38,7 @@ function CatalogueCard(props: CatalogueCardProps) {
         <>
           <li className={styles.actionItem}>
             <div onClick={onMoreInfo} className={styles.moreInfo}>
-              {can_access ? <>Load Data</> : <>Subscribe</> }
+              {can_access ? <>Load Data</> : <>Subscribe</>}
             </div>
             <span
               role="img"
@@ -92,7 +90,7 @@ function CatalogueCard(props: CatalogueCardProps) {
   }
 
   return (
-    <div className={styles.catalogueWrapper + ' transition-all'}>
+    <div className={styles.catalogueWrapper + " transition-all"}>
       <div className={styles.ribbonWrapper}>
         <span className={styles.ribbonChild}>
           <span>{can_access ? "Free" : "Paid"}</span>
@@ -100,14 +98,16 @@ function CatalogueCard(props: CatalogueCardProps) {
       </div>
       <div className={styles.card}>
         <div className={styles.cardCover}>
-          <img
+          {/* <img
             alt={name}
+            fetchpriority="low"
             src={isImageError ? placeholderImage : thumbnail_url}
             onError={handleImageError}
             className={`${styles.cardImage} ${
               isImageError ? styles.placeholderImage : ""
             }`}
-          />
+            loading="lazy"
+          /> */}
         </div>
         <div className={styles.cardBody}>
           <div className={styles.cardMeta}>
@@ -127,5 +127,7 @@ function CatalogueCard(props: CatalogueCardProps) {
     </div>
   );
 }
+
+const CatalogueCard = React.memo(Component);
 
 export default CatalogueCard;

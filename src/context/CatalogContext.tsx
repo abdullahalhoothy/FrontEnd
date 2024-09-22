@@ -1,27 +1,35 @@
 import {
   CatalogContextType,
+  GradientColorBasedOnZone,
   MapFeatures,
+  ReqGradientColorBasedOnZone,
   SaveResponse,
 } from "../types/allTypesAndInterfaces";
 import { HttpReq } from "../services/apiService";
 import urls from "../urls.json";
 import userIdData from "../currentUserId.json";
-import { createContext, useContext, useState, ReactNode } from "react";
-import { useAuth } from "../context/AuthContext"; // Add this import
-import { useNavigate } from 'react-router-dom';
+import {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+} from "react";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const CatalogContext = createContext<CatalogContextType | undefined>(undefined);
-
 
 export function CatalogProvider(props: { children: ReactNode }) {
   const { authResponse } = useAuth(); // Add this line
   const navigate = useNavigate();
   const { children } = props;
 
-  const [formStage, setFormStage] = useState<'catalog' | 'catalogDetails' | 'save'>('catalog');
+  const [formStage, setFormStage] = useState<
+    "catalog" | "catalogDetails" | "save"
+  >("catalog");
   const [saveMethod, setSaveMethod] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
   const [isError, setIsError] = useState<Error | null>(null);
   const [legendList, setLegendList] = useState<string[]>([]);
   const [subscriptionPrice, setSubscriptionPrice] = useState("");
@@ -32,15 +40,12 @@ export function CatalogProvider(props: { children: ReactNode }) {
   >("Home");
 
   const [geoPoints, setGeoPoints] = useState<MapFeatures[]>([]);
-  
   const [lastGeoIdRequest, setLastGeoIdRequest] = useState<
     string | undefined
   >();
-  
   const [lastGeoMessageRequest, setLastGeoMessageRequest] = useState<
     string | undefined
   >();
-
   const [lastGeoError, setLastGeoError] = useState<Error | null>(null);
 
   const [selectedColor, setSelectedColor] = useState<{
@@ -48,36 +53,86 @@ export function CatalogProvider(props: { children: ReactNode }) {
     hex: string;
   } | null>(null);
 
-  const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(
-    null
-  );
-
+  // const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(
+  //   null
+  // );
+  // const [openDropdownIndex1, setOpenDropdownIndex1] = useState<number | null>(
+  //   null
+  // );
+  // const [openDropdownIndex2, setOpenDropdownIndex2] = useState<number | null>(
+  //   null
+  // );
+  // const [openDropdownIndex3, setOpenDropdownIndex3] = useState<number | null>(
+  //   null
+  // );
+  const [openDropdownIndices, setOpenDropdownIndices] = useState<
+    (number | null)[]
+  >([null, null, null, null]);
   const [saveResponse, setSaveResponse] = useState<SaveResponse | null>(null);
   const [saveResponseMsg, setSaveResponseMsg] = useState("");
   const [saveReqId, setSaveReqId] = useState("");
+  const [isAdvanced, setIsAdvanced] = useState<boolean>(false);
+  const [radiusInput, setRadiusInput] = useState<number | null>(null);
+  const [colors, setColors] = useState<string[]>([]);
+
+  const [reqGradientColorBasedOnZone, setReqGradientColorBasedOnZone] =
+    useState<ReqGradientColorBasedOnZone>({
+      prdcer_lyr_id: "",
+      user_id: "",
+      color_grid_choice: [],
+      change_lyr_id: "",
+      based_on_lyr_id: "",
+      radius_offset: 0,
+      color_based_on: "",
+    });
+  const [gradientColorBasedOnZone, setGradientColorBasedOnZone] = useState<
+    GradientColorBasedOnZone[]
+  >([]);
+  const [localLoading, setLocalLoading] = useState<boolean>(false);
+  const [postResMessage, setPostResMessage] = useState<string>("");
+  const [postResId, setPostResId] = useState<string>("");
+  const [chosenPallet, setChosenPallet] = useState(0);
+  const [selectedBasedon, setSelectedBasedon] = useState<string>("rating");
+
+  useEffect(
+    function () {
+      handleColorBasedZone();
+    },
+    [reqGradientColorBasedOnZone]
+  );
+  // Restore geoPoints from localStorage
+  useEffect(() => {
+    const savedGeoPoints = localStorage.getItem("unsavedGeoPoints");
+    if (savedGeoPoints) {
+      const parsedGeoPoints = JSON.parse(savedGeoPoints);
+      if (parsedGeoPoints && parsedGeoPoints.length > 0) {
+        setGeoPoints(parsedGeoPoints);
+      }
+    }
+  }, []);
 
   async function fetchGeoPoints(id: string, typeOfCard: string) {
-    if (!authResponse || !('idToken' in authResponse)) {
+    if (!authResponse || !("idToken" in authResponse)) {
       setIsError(new Error("User is not authenticated!"));
-      navigate('/auth');
+      navigate("/auth");
       return;
     }
     const apiJsonRequest =
       typeOfCard === "layer"
         ? {
-          prdcer_lyr_id: id,
-          user_id: userIdData.user_id,
-        }
+            prdcer_lyr_id: id,
+            user_id: userIdData.user_id,
+          }
         : typeOfCard === "userCatalog"
-          ? { prdcer_ctlg_id: id, as_layers: true, user_id: authResponse.localId }
-          : { catalogue_dataset_id: id };
+        ? { prdcer_ctlg_id: id, as_layers: true, user_id: authResponse.localId }
+        : { catalogue_dataset_id: id };
 
     const url =
       typeOfCard === "layer"
         ? urls.prdcer_lyr_map_data
         : typeOfCard === "userCatalog"
-          ? urls.fetch_ctlg_lyrs
-          : urls.http_catlog_data;
+        ? urls.fetch_ctlg_lyrs
+        : urls.http_catlog_data;
 
     let unprocessedData: MapFeatures | MapFeatures[] | null = null;
 
@@ -96,7 +151,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
       apiJsonRequest,
       authResponse.idToken
     );
-
     if (isError) {
       console.error("An error occurred while fetching geo points.");
       return;
@@ -126,16 +180,16 @@ export function CatalogProvider(props: { children: ReactNode }) {
   }
 
   function handleSaveLayer() {
-    if (!authResponse || !('idToken' in authResponse)) {
+    if (!authResponse || !("idToken" in authResponse)) {
       setIsError(new Error("User is not authenticated!"));
-      navigate('/auth');
+      navigate("/auth");
       return;
     }
     const layersData = Array.isArray(geoPoints)
       ? geoPoints.map((layer) => ({
-        layer_id: layer.prdcer_lyr_id,
-        points_color: layer.points_color,
-      }))
+          layer_id: layer.prdcer_lyr_id,
+          points_color: layer.points_color,
+        }))
       : [];
 
     const requestBody = {
@@ -161,11 +215,11 @@ export function CatalogProvider(props: { children: ReactNode }) {
     );
 
     setTimeout(() => {
-      resetFormStage('catalog')
-    }, 1000)
+      resetFormStage("catalog");
+    }, 1000);
   }
 
-  function resetFormStage(resetTo: 'catalog') {
+  function resetFormStage(resetTo: "catalog") {
     setDescription("");
     setName("");
     setSubscriptionPrice(" ");
@@ -179,14 +233,68 @@ export function CatalogProvider(props: { children: ReactNode }) {
     setLastGeoIdRequest(undefined);
     setLastGeoMessageRequest(undefined);
     setLastGeoError(null);
+    localStorage.removeItem("unsavedGeoPoints");
   }
 
   function updateLayerColor(layerIndex: number | null, newColor: string) {
     setGeoPoints(function (prevGeoPoints) {
-      var updatedGeoPoints = prevGeoPoints.map(function (geoPoint, index) {
+      const updatedGeoPoints = prevGeoPoints.map(function (geoPoint, index) {
         if (layerIndex === null || layerIndex === index) {
+          // const ratingFeatures1 = geoPoint?.features?.filter(
+          //   (feature) => Number(feature?.properties?.rating) <= 1
+          // );
+          // const ratingFeatures2 = geoPoint?.features?.filter(
+          //   (feature) =>
+          //     Number(feature?.properties?.rating) <= 2 &&
+          //     Number(feature?.properties?.rating) > 1
+          // );
+          // const ratingFeatures3 = geoPoint?.features?.filter(
+          //   (feature) =>
+          //     Number(feature?.properties?.rating) <= 3 &&
+          //     Number(feature?.properties?.rating) > 2
+          // );
+          // const ratingFeatures4 = geoPoint?.features?.filter(
+          //   (feature) =>
+          //     Number(feature?.properties?.rating) <= 4 &&
+          //     Number(feature?.properties?.rating) > 3
+          // );
+          // const ratingFeatures5 = geoPoint?.features?.filter(
+          //   (feature) =>
+          //     Number(feature?.properties?.rating) <= 5 &&
+          //     Number(feature?.properties?.rating) > 4
+          // );
           return Object.assign({}, geoPoint, {
-            points_color: newColor.toLowerCase(),
+            // points_color:
+            //   typeof newColor === "string"
+            //     ? ratingFeatures1?.every(
+            //         (feature) => Number(feature?.properties?.rating) <= 1
+            //       )
+            //       ? adjustColorBrightness(newColor.toLowerCase(), -0.3)
+            //       : ratingFeatures2?.every(
+            //           (feature) =>
+            //             Number(feature?.properties?.rating) <= 2 &&
+            //             Number(feature?.properties?.rating) > 1
+            //         )
+            //       ? adjustColorBrightness(newColor.toLowerCase(), -0.2)
+            //       : ratingFeatures3?.every(
+            //           (feature) =>
+            //             Number(feature?.properties?.rating) <= 3 &&
+            //             Number(feature?.properties?.rating) > 2
+            //         )
+            //       ? adjustColorBrightness(newColor.toLowerCase(), -0.1)
+            //       : ratingFeatures4?.every(
+            //           (feature) =>
+            //             Number(feature?.properties?.rating) <= 4 &&
+            //             Number(feature?.properties?.rating) > 3
+            //         )
+            //       ? adjustColorBrightness(newColor.toLowerCase(), 0.0)
+            //       : adjustColorBrightness(newColor.toLowerCase(), 0.3)
+            //     : geoPoint.points_color,
+
+            points_color:
+              typeof newColor === "string"
+                ? newColor.toLowerCase()
+                : geoPoint.points_color,
           });
         }
         return geoPoint;
@@ -211,14 +319,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
     });
   }
 
-  // function updateLayerZone(layerIndex: number, isZoneLayer: boolean) {
-  //   setGeoPoints((prevGeoPoints) => {
-  //     const updatedGeoPoints = [...prevGeoPoints];
-  //     updatedGeoPoints[layerIndex].is_zone_lyr = isZoneLayer;
-  //     return updatedGeoPoints;
-  //   });
-  // }
-
   function removeLayer(layerIndex: number) {
     setGeoPoints(function (prevGeoPoints) {
       var updatedGeoPoints = prevGeoPoints.filter(function (_, index) {
@@ -227,6 +327,43 @@ export function CatalogProvider(props: { children: ReactNode }) {
       return updatedGeoPoints;
     });
   }
+
+  function handleColorBasedZone() {
+    let idToken: string;
+
+    if (authResponse && "idToken" in authResponse) {
+      idToken = authResponse.idToken;
+    } else {
+      idToken = "";
+    }
+    const postData = {
+      prdcer_lyr_id: reqGradientColorBasedOnZone.prdcer_lyr_id,
+      user_id: reqGradientColorBasedOnZone.user_id,
+      color_grid_choice: reqGradientColorBasedOnZone.color_grid_choice,
+      change_lyr_id: reqGradientColorBasedOnZone.change_lyr_id,
+      based_on_lyr_id: reqGradientColorBasedOnZone.based_on_lyr_id,
+      radius_offset: reqGradientColorBasedOnZone.radius_offset,
+      color_based_on: reqGradientColorBasedOnZone.color_based_on,
+    };
+    HttpReq<GradientColorBasedOnZone[]>(
+      urls.gradient_color_based_on_zone,
+      setGradientColorBasedOnZone,
+      setPostResMessage,
+      setPostResId,
+      setLocalLoading,
+      setIsError,
+      "post",
+      postData,
+      idToken
+    );
+  }
+  const updateDropdownIndex = (index: number, value: number | null) => {
+    setOpenDropdownIndices((prev) => {
+      const updatedIndices = [...prev];
+      updatedIndices[index] = value;
+      return updatedIndices;
+    });
+  };
   return (
     <CatalogContext.Provider
       value={{
@@ -255,8 +392,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
         setGeoPoints,
         selectedColor,
         setSelectedColor,
-        openDropdownIndex,
-        setOpenDropdownIndex,
+
         resetState,
         saveResponse,
         saveResponseMsg,
@@ -264,9 +400,25 @@ export function CatalogProvider(props: { children: ReactNode }) {
         setSaveResponse,
         updateLayerColor,
         updateLayerDisplay,
-        // updateLayerZone,
         updateLayerHeatmap,
         removeLayer,
+        isAdvanced,
+        setIsAdvanced,
+        setRadiusInput,
+        radiusInput,
+        openDropdownIndices,
+        setOpenDropdownIndices,
+        updateDropdownIndex,
+        colors,
+        setColors,
+        chosenPallet,
+        setChosenPallet,
+        reqGradientColorBasedOnZone,
+        setReqGradientColorBasedOnZone,
+        gradientColorBasedOnZone,
+        handleColorBasedZone,
+        selectedBasedon,
+        setSelectedBasedon,
       }}
     >
       {children}

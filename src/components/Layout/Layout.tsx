@@ -14,6 +14,10 @@ import BillingLayout from "../../pages/Billing/BillingLayout";
 import Billing from "../../pages/Billing/Billing";
 import ProfileMain from "../../pages/Profile/Routes/ProfileMain/ProfileMain";
 import InternalCostEstimator from "../../pages/Billing/Routes/InternalCostEstimator/InternalCostEstimator";
+import ChangeEmail from "../../pages/ChangeEmail/ChangeEmail";
+import ChangePassword from "../../pages/ChangePassword/ChangePassword";
+import PaymentMethods from "../../pages/PaymentMethods/PaymentMethods";
+import PaymentMethod from "../../pages/PaymentMethod/PaymentMethod";
 
 const Layout = () => {
   return (
@@ -38,18 +42,10 @@ const Layout = () => {
           <Route path={"/tabularView"} element={<></>} />
           <Route path={"/profile"} element={<ProfileLayout />}>
             <Route path="" element={<ProfileMain />} />
-            <Route
-              path="change-password"
-              element={<CommingSoon data={"Changing Password"} />}
-            />
-            <Route
-              path="change-email"
-              element={<CommingSoon data={"Changing Email"} />}
-            />
-            <Route
-              path="payment-option"
-              element={<CommingSoon data={"Payment Option"} />}
-            />
+            <Route path="change-password" element={<ChangePassword />} />
+            <Route path="change-email" element={<ChangeEmail />} />
+            <Route path="payment-methods" element={<PaymentMethods />} />
+            <Route path="payment-methods/add" element={<PaymentMethod />} />
           </Route>
           <Route path={"/organization"} element={<OrganizationLayout />}>
             <Route
@@ -71,8 +67,8 @@ export default Layout;
 
 const CommingSoon = ({ data }: { data: string }) => {
   return (
-    <div className="w-full h-full flex justify-center items-center text-4xl">
+    <p className="h-full flex justify-center items-center text-4xl">
       {data} Comming Soon...
-    </div>
+    </p>
   );
 };

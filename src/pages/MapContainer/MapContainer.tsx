@@ -25,7 +25,14 @@ mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_KEY;
 
 function Container() {
   const { polygons, setPolygons } = usePolygonsContext();
-  const { geoPoints, setGeoPoints } = useCatalogContext();
+  const {
+    geoPoints,
+    setGeoPoints,
+    isAdvanced,
+    openDropdownIndices,
+    colors,
+    gradientColorBasedOnZone,
+  } = useCatalogContext();
   const { centralizeOnce, initialFlyToDone, setInitialFlyToDone } =
     useLayerContext();
 
@@ -37,6 +44,7 @@ function Container() {
   const [currentStyle, setCurrentStyle] = useState(
     "mapbox://styles/mapbox/streets-v11"
   );
+  const [layerColors, setLayerColors] = useState({});
 
   useEffect(function () {
     if (mapContainerRef.current && !mapRef.current) {
@@ -146,6 +154,11 @@ function Container() {
     };
   }, []);
 
+  function getColorsArray(colorHex, index) {
+    const array = colors?.find((arr) => arr.includes(colorHex));
+    return array[index];
+  }
+
   useEffect(() => {
     function addGeoPoints() {
       if (mapRef.current && styleLoadedRef.current) {
@@ -223,16 +236,158 @@ function Container() {
                       "circle-color":
                         featureCollection.points_color ||
                         mapConfig.defaultColor,
+
                       "circle-opacity": mapConfig.circleOpacity,
                       "circle-stroke-width": mapConfig.circleStrokeWidth,
                       "circle-stroke-color": mapConfig.circleStrokeColor,
                     },
                   });
-                  mapRef.current.setPaintProperty(
-                    layerId,
-                    "circle-color",
-                    featureCollection.points_color || mapConfig.defaultColor
-                  );
+                  if (isAdvanced === true) {
+                    if (openDropdownIndices[1] === index) {
+                      const newSettings = {
+                        points_color: [
+                          "case",
+                          // Category 1: Rating <= 1
+                          ["<=", ["get", "rating"], 1],
+                          getColorsArray(
+                            featureCollection.points_color ||
+                              mapConfig.defaultColor,
+                            5
+                          ),
+                          // Category 2: Rating <= 2
+                          ["<=", ["get", "rating"], 2],
+                          getColorsArray(
+                            featureCollection.points_color ||
+                              mapConfig.defaultColor,
+                            4
+                          ),
+                          // Category 3: Rating <= 3
+                          ["<=", ["get", "rating"], 3],
+                          getColorsArray(
+                            featureCollection.points_color ||
+                              mapConfig.defaultColor,
+                            3
+                          ),
+                          // Category 4: Rating <= 4
+                          ["<=", ["get", "rating"], 4],
+                          getColorsArray(
+                            featureCollection.points_color ||
+                              mapConfig.defaultColor,
+                            2
+                          ),
+                          // Category 5: Rating <= 5
+                          ["<=", ["get", "rating"], 5],
+                          getColorsArray(
+                            featureCollection.points_color ||
+                              mapConfig.defaultColor,
+                            1
+                          ),
+                          ["==", ["get", "rating"], 6],
+                          getColorsArray(
+                            featureCollection.points_color ||
+                              mapConfig.defaultColor,
+                            0
+                          ),
+
+                          // default
+                          featureCollection.points_color ||
+                            mapConfig.defaultColor,
+                        ],
+                      };
+                      // Save the current color settings to persist them when the dropdown is closed
+                      setLayerColors((prevColors) => ({
+                        ...prevColors,
+                        [layerId]: newSettings?.points_color,
+                      }));
+
+                      // Apply the color settings
+                      mapRef.current.setPaintProperty(
+                        layerId,
+                        "circle-color",
+                        newSettings.points_color
+                      );
+                    }
+                    // Persist previously applied colors when the dropdown is closed (openDropdownIndices[1] !== index)
+                    if (openDropdownIndices[1] !== index) {
+                      const lastSavedColors = layerColors[layerId];
+
+                      // If last saved colors are available, apply them to the layer
+                      if (lastSavedColors) {
+                        mapRef.current.setPaintProperty(
+                          layerId,
+                          "circle-color",
+                          lastSavedColors
+                        );
+                      }
+                    }
+                    if (Array.isArray(gradientColorBasedOnZone)) {
+                      if (gradientColorBasedOnZone?.length !== 0) {
+                        if (
+                          geoPoints?.at(1)?.prdcer_lyr_id ==
+                          gradientColorBasedOnZone?.at(0)?.prdcer_lyr_id
+                        ) {
+                          console.log(gradientColorBasedOnZone);
+                          const circleColorArray = [
+                            "case",
+                            gradientColorBasedOnZone?.flatMap(function (
+                              layerColor
+                            ) {
+                              return layerColor?.features?.flatMap(
+                                (feature) => {
+                                  return [
+                                    [
+                                      "==",
+                                      ["get", "address"],
+                                      feature.properties?.address,
+                                    ], // Condition
+                                    layerColor?.points_color, // Corresponding color
+                                  ];
+                                }
+                              );
+                            }),
+                            "#FF0000",
+                          ];
+                          console.log(circleColorArray.flat());
+                          mapRef.current.setPaintProperty(
+                            "circle-layer-1",
+                            "circle-color",
+                            circleColorArray.flat()
+                          );
+                        } else if (
+                          geoPoints?.at(0)?.prdcer_lyr_id ==
+                          gradientColorBasedOnZone?.at(0)?.prdcer_lyr_id
+                        ) {
+                          console.log(gradientColorBasedOnZone);
+                          const circleColorArray = [
+                            "case",
+                            gradientColorBasedOnZone?.flatMap(function (
+                              layerColor
+                            ) {
+                              return layerColor?.features?.flatMap(
+                                (feature) => {
+                                  return [
+                                    [
+                                      "==",
+                                      ["get", "address"],
+                                      feature.properties?.address,
+                                    ], // Condition
+                                    layerColor?.points_color, // Corresponding color
+                                  ];
+                                }
+                              );
+                            }),
+                            "#FF0000",
+                          ];
+                          console.log(circleColorArray.flat());
+                          mapRef.current.setPaintProperty(
+                            "circle-layer-0",
+                            "circle-color",
+                            circleColorArray.flat()
+                          );
+                        }
+                      }
+                    }
+                  }
                 }
               }
             } else {

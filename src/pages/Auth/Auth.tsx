@@ -2,9 +2,9 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { HttpReq } from "../../services/apiService";
 import { useEffect, useState } from "react";
-import urls from '../../urls.json'
+import urls from "../../urls.json";
 import { AuthResponse } from "../../types/allTypesAndInterfaces";
-import styles from './Auth.module.css';
+import styles from "./Auth.module.css";
 import { FaEnvelope, FaLock, FaUser } from "react-icons/fa";
 
 const Auth = () => {
@@ -16,36 +16,35 @@ const Auth = () => {
   const [isPasswordReset, setIsPasswordReset] = useState(false);
 
   // INPUT
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [username, setName] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [username, setName] = useState("");
 
-  // MESSAGES 
+  // MESSAGES
   const [authMessage, setAuthMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [requestId, setRequestId] = useState<string>('');
+  const [requestId, setRequestId] = useState<string>("");
   const [error, setError] = useState<Error | null>(null);
 
   const [isRegistered, setIsRegistered] = useState(false);
-
 
   const handleLogin = async (email: string, password: string) => {
     await HttpReq(
       urls.login,
       (data) => {
-        console.log('Loged In');
+        console.log("Loged In");
         if (!("idToken" in (data as any))) {
-          setError(new Error('Login Error'))
-          return
+          setError(new Error("Login Error"));
+          return;
         }
         setAuthResponse(data as AuthResponse);
         setTimeout(() => {
-          nav('/')
-        }, 100)
+          nav("/");
+        }, 100);
       },
-      () => { },
-      () => { },
-      () => { },
+      () => {},
+      () => {},
+      () => {},
       (e) => {
         setError(e);
       },
@@ -54,28 +53,30 @@ const Auth = () => {
     );
   };
 
-
-  const handleRegistration = async (email: string, password: string, username: string) => {
+  const handleRegistration = async (
+    email: string,
+    password: string,
+    username: string
+  ) => {
     await HttpReq(
       urls.create_user_profile,
       (data) => {
         if (!("idToken" in (data as any))) {
-          setError(new Error('Registeration Error'))
-          return
+          setError(new Error("Registeration Error"));
+          return;
         }
 
         setAuthResponse(data as AuthResponse);
         setIsRegistered(true);
-        console.log('registered');
+        console.log("registered");
       },
       setAuthMessage,
       setRequestId,
       setIsLoading,
       setError,
-      'post',
+      "post",
       { email, password, username }
     );
-
   };
 
   useEffect(() => {
@@ -84,8 +85,7 @@ const Auth = () => {
     if (!error && isRegistered) {
       handleLogin(email, password);
     }
-
-  }, [isRegistered])
+  }, [isRegistered]);
 
   const handlePasswordReset = async (email: string) => {
     await HttpReq(
@@ -95,12 +95,12 @@ const Auth = () => {
       setRequestId,
       setIsLoading,
       setError,
-      'post',
+      "post",
       { email }
     );
 
     if (!error) {
-      setAuthMessage('Password reset email sent. Please check your inbox.');
+      setAuthMessage("Password reset email sent. Please check your inbox.");
       setIsPasswordReset(false);
     }
   };
@@ -120,9 +120,8 @@ const Auth = () => {
   };
 
   useEffect(() => {
-    if (isAuthenticated) nav('/')
-  }, [])
-
+    if (isAuthenticated) nav("/");
+  }, []);
 
   const renderForm = () => {
     if (isPasswordReset) {
@@ -139,7 +138,11 @@ const Auth = () => {
               className={styles.authInput}
             />
           </div>
-          <button type="submit" className={styles.authButton} disabled={isLoading}>
+          <button
+            type="submit"
+            className={styles.authButton}
+            disabled={isLoading}
+          >
             Reset Password
           </button>
         </form>
@@ -183,8 +186,12 @@ const Auth = () => {
             className={styles.authInput}
           />
         </div>
-        <button type="submit" className={styles.authButton} disabled={isLoading}>
-          {isLogin ? 'Login' : 'Register'}
+        <button
+          type="submit"
+          className={styles.authButton}
+          disabled={isLoading}
+        >
+          {isLogin ? "Login" : "Register"}
         </button>
       </form>
     );
@@ -195,7 +202,11 @@ const Auth = () => {
       <div className={styles.authContainer}>
         <div className={styles.authCard}>
           <h2 className={styles.authTitle}>
-            {isPasswordReset ? 'Reset Password' : isLogin ? 'Login' : 'Register'}
+            {isPasswordReset
+              ? "Reset Password"
+              : isLogin
+              ? "Login"
+              : "Register"}
           </h2>
           <div className="text-red-500 mb-2">{error?.message}</div>
           {authMessage && <p className={styles.authMessage}>{authMessage}</p>}
@@ -208,14 +219,14 @@ const Auth = () => {
               }}
               className={styles.authToggle}
             >
-              {isLogin ? 'Need to register?' : 'Already have an account?'}
+              {isLogin ? "Need to register?" : "Already have an account?"}
             </button>
             {isLogin && (
               <button
                 onClick={() => setIsPasswordReset(!isPasswordReset)}
                 className={styles.authToggle}
               >
-                {isPasswordReset ? 'Back to Login' : 'Forgot Password?'}
+                {isPasswordReset ? "Back to Login" : "Forgot Password?"}
               </button>
             )}
           </div>
@@ -223,7 +234,6 @@ const Auth = () => {
       </div>
     </div>
   );
-
 };
 
 export default Auth;

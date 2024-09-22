@@ -21,5 +21,11 @@
   "create_user_profile":"create_user_profile",
   "user_profile":"user_profile",
   "cost_calculator": "cost_calculator",
-  "street_view_link": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint="
+  "street_view_link": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=",
+  "fetch_gradient_colors": "fetch_gradient_colors",
+  "gradient_color_based_on_zone": "gradient_color_based_on_zone",
+  "change_password": "change-password",
+  "change_email": "change_email",
+  "get_payment_methods": "get_payment_methods"
+
 }

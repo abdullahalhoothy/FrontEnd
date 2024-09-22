@@ -1,5 +1,5 @@
-import axios, { AxiosInstance } from "axios";
-import urls from '../urls.json'
+import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
+import urls from "../urls.json";
 const baseUrl = urls.REACT_APP_API_URL;
 
 export const apiClient: AxiosInstance = axios.create({
@@ -8,8 +8,6 @@ export const apiClient: AxiosInstance = axios.create({
     "Content-Type": "application/json",
   },
 });
-
-
 
 export async function HttpReq<T>(
   end_point: string,
@@ -33,11 +31,11 @@ export async function HttpReq<T>(
           }
         : undefined;
 
-    const headers = token
-      ? { Authorization: `Bearer ${token}` }
-      : {};
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-    const response = await apiClient[method](end_point, wrappedBody, { headers });
+    const response = await apiClient[method](end_point, wrappedBody, {
+      headers,
+    });
 
     const message: string = response.data.message;
     const request_id: string = response.data.request_id;
@@ -56,5 +54,3 @@ export async function HttpReq<T>(
     setError(fetchError);
   }
 }
-
-
