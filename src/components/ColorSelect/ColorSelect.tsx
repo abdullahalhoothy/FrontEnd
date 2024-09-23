@@ -24,6 +24,9 @@ function ColorSelect({ layerIndex }: ColorSelectProps) {
     setOpenDropdownIndices,
     updateDropdownIndex,
     updateLayerColor,
+    setIsAdvancedMode,
+    setIsRadiusMode,
+    isAdvancedMode,
   } = catalogContext;
 
   const { setSelectedColor, selectedColor } = layerContext;
@@ -32,7 +35,9 @@ function ColorSelect({ layerIndex }: ColorSelectProps) {
   const dropdownIndex = layerIndex ?? -1;
   const colorHex =
     layerIndex !== undefined
-      ? geoPoints[layerIndex]?.points_color || ""
+      ? isAdvancedMode[`circle-layer-${layerIndex}`] != true
+        ? geoPoints[layerIndex]?.points_color
+        : colorOptions[0]?.hex
       : selectedColor?.hex || "";
 
   const colorName = colorMap.get(colorHex) || ""; // Get the color name from the map
@@ -53,6 +58,13 @@ function ColorSelect({ layerIndex }: ColorSelectProps) {
       console.log("Cannot change colors while loading.");
       return;
     }
+    if (layerIndex != undefined) {
+      setIsAdvancedMode((prevState) => ({
+        ...prevState,
+        [`circle-layer-${layerIndex}`]: false, // Toggle the advanced mode for the card with the specific ID
+      }));
+    }
+    setIsRadiusMode(false);
     updateLayerColor(layerIndex ?? null, hex);
     setSelectedColor({ name: optionName, hex });
     updateDropdownIndex(0, null);

@@ -27,15 +27,25 @@ function DropdownColorSelect({ layerIndex }: ColorSelectProps) {
   const dropdownIndex = layerIndex ?? -1;
   const isOpen = openDropdownIndices[2] === dropdownIndex;
 
-  useEffect(() => {
-    setChosenPallet(chosenPallet);
-  }, [chosenPallet]);
+  // useEffect(() => {
+  //   setChosenPallet(chosenPallet);
+  // }, [chosenPallet]);
   useEffect(() => {
     // Only update the layer color if layerIndex is provided
     if (layerIndex !== undefined && layerIndex !== null) {
       updateLayerColor(layerIndex, colors[chosenPallet][0]);
     }
   }, [chosenPallet, colors]);
+
+  function handleOptionClick(optionIndex, event: ReactMouseEvent) {
+    event.stopPropagation();
+    if (showLoaderTopup) {
+      console.log("Cannot change colors while loading.");
+      return;
+    }
+    setChosenPallet(optionIndex);
+    updateDropdownIndex(2, null);
+  }
 
   function toggleDropdown(event: ReactMouseEvent) {
     event.stopPropagation();
@@ -49,16 +59,6 @@ function DropdownColorSelect({ layerIndex }: ColorSelectProps) {
       updateDropdownIndex(2, dropdownIndex);
     }
   }
-  function handleOptionClick(optionIndex, event: ReactMouseEvent) {
-    event.stopPropagation();
-    if (showLoaderTopup) {
-      console.log("Cannot change colors while loading.");
-      return;
-    }
-    setChosenPallet(optionIndex);
-    updateDropdownIndex(2, null);
-  }
-
   return (
     <div className="relative inline-block ms-2.5">
       {/* Selected option display (button to toggle dropdown) */}

@@ -5,6 +5,7 @@ import DataContainer from "../DataContainer/DataContainer";
 import { useCatalogContext } from "../../context/CatalogContext";
 import MultipleLayersSetting from "../MultipleLayersSetting/MultipleLayersSetting";
 import { useUIContext } from "../../context/UIContext";
+import { GradientColorBasedOnZone } from "../../types/allTypesAndInterfaces";
 
 function CatalogMenu() {
   const { openModal, setSidebarMode } = useUIContext();
@@ -17,6 +18,10 @@ function CatalogMenu() {
     geoPoints,
     setGeoPoints,
     resetFormStage,
+    setLayerColors,
+    setIsAdvancedMode,
+    setGradientColorBasedOnZone,
+    setIsRadiusMode,
   } = useCatalogContext();
   const [showRestorePrompt, setShowRestorePrompt] = useState(false);
 
@@ -60,7 +65,12 @@ function CatalogMenu() {
   }
 
   function handleDiscardClick(event: MouseEvent) {
+    setIsAdvancedMode({});
+    setGradientColorBasedOnZone([] as GradientColorBasedOnZone[]);
+    setIsRadiusMode(false);
+
     resetState();
+    setLayerColors({});
   }
 
   const safeGeoPoints = Array.isArray(geoPoints) ? geoPoints : [];

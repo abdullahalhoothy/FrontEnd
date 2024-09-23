@@ -112,6 +112,7 @@ export interface CatalogContextType {
   ): void;
   handleSaveLayer(): void;
   resetFormStage(resetTo: string): void;
+
   geoPoints: MapFeatures[];
   setGeoPoints: React.Dispatch<React.SetStateAction<MapFeatures[]>>;
   selectedColor: Color | null;
@@ -133,8 +134,7 @@ export interface CatalogContextType {
 
   isAdvanced: boolean;
   setIsAdvanced: React.Dispatch<React.SetStateAction<boolean>>;
-  radiusInput: number | null;
-  setRadiusInput: React.Dispatch<React.SetStateAction<number | null>>;
+
   setColors: React.Dispatch<React.SetStateAction<string[]>>;
   colors: string[];
   reqGradientColorBasedOnZone: ReqGradientColorBasedOnZone;
@@ -149,21 +149,11 @@ export interface CatalogContextType {
   setChosenPallet: React.Dispatch<React.SetStateAction<number>>;
   selectedBasedon: string;
   setSelectedBasedon: React.Dispatch<React.SetStateAction<string>>;
-}
 
-export interface GradientColorBasedOnZone extends MapFeatures {
-  sub_lyr_id: string;
-  [key: string]: any;
-}
-
-export interface ReqGradientColorBasedOnZone {
-  prdcer_lyr_id: string;
-  user_id: string;
-  color_grid_choice: string[];
-  change_lyr_id: string;
-  based_on_lyr_id: string;
-  radius_offset: number;
-  color_based_on: string;
+  layersColor: {};
+  setLayersColor: React.Dispatch<React.SetStateAction<{}>>;
+  isAdvancedMode: {};
+  setIsAdvancedMode: React.Dispatch<React.SetStateAction<{}>>;
 }
 
 interface Color {
@@ -380,18 +370,13 @@ export interface User {
   name: string;
 }
 
-export type AuthResponse =
-  | AuthSuccessResponse
-  | AuthFailedResponse
-  | object
-  | null;
+export type AuthResponse = AuthSuccessResponse | AuthFailedResponse | null;
 
 export interface AuthContextType {
   authResponse: AuthResponse;
   setAuthResponse: (response: AuthResponse) => void;
   isAuthenticated: boolean;
   logout: () => void;
-  authLoading: boolean;
 }
 export interface CategoryData {
   [category: string]: string[];
@@ -400,4 +385,18 @@ export interface CategoryData {
 export interface CostEstimate {
   cost: number;
   api_calls: number;
+}
+
+export interface GradientColorBasedOnZone extends MapFeatures {
+  sub_lyr_id: string;
+  [key: string]: any;
+}
+export interface ReqGradientColorBasedOnZone {
+  prdcer_lyr_id: string;
+  user_id: string;
+  color_grid_choice: string[];
+  change_lyr_id: string;
+  based_on_lyr_id: string;
+  radius_offset: number;
+  color_based_on: string;
 }
