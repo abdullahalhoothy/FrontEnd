@@ -134,8 +134,7 @@ export interface CatalogContextType {
 
   isAdvanced: boolean;
   setIsAdvanced: React.Dispatch<React.SetStateAction<boolean>>;
-  radiusInput: number | null;
-  setRadiusInput: React.Dispatch<React.SetStateAction<number | null>>;
+
   setColors: React.Dispatch<React.SetStateAction<string[]>>;
   colors: string[];
   reqGradientColorBasedOnZone: ReqGradientColorBasedOnZone;
@@ -150,6 +149,11 @@ export interface CatalogContextType {
   setChosenPallet: React.Dispatch<React.SetStateAction<number>>;
   selectedBasedon: string;
   setSelectedBasedon: React.Dispatch<React.SetStateAction<string>>;
+
+  layersColor: {};
+  setLayersColor: React.Dispatch<React.SetStateAction<{}>>;
+  isAdvancedMode: {};
+  setIsAdvancedMode: React.Dispatch<React.SetStateAction<{}>>;
 }
 
 interface Color {
