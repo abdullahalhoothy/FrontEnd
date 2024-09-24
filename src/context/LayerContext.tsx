@@ -28,12 +28,12 @@ const LayerContext = createContext<LayerContextType | undefined>(undefined);
 
 export function LayerProvider(props: { children: ReactNode }) {
   const navigate = useNavigate();
-  const { authResponse } = useAuth(); // Add this line
+  const { authResponse } = useAuth();
   const { children } = props;
   const { geoPoints, setGeoPoints } = useCatalogContext();
-  // State from useLocationAndCategories
   const [countries, setCountries] = useState<string[]>([]);
   const [cities, setCities] = useState<City[]>([]);
+
   const [citiesData, setCitiesData] = useState<{ [country: string]: City[] }>(
     {}
   );
@@ -99,7 +99,7 @@ export function LayerProvider(props: { children: ReactNode }) {
     }
   }
 
-  function handleSaveLayer(reqSaveLayer) {
+  function handleSaveLayer() {
     if (!authResponse || !("idToken" in authResponse)) {
       navigate("/auth");
       setIsError(new Error("User is not authenticated!"));
@@ -187,13 +187,8 @@ export function LayerProvider(props: { children: ReactNode }) {
           ...response,
           features: response.features,
           display: true,
-          points_color: "#28A745",
         },
       ];
-    });
-    setSelectedColor({
-      name: "Green",
-      hex: "#28A745",
     });
     // Update dataset info if backend IDs are provided
     if (response.bknd_dataset_id && response.prdcer_lyr_id) {
@@ -263,7 +258,6 @@ export function LayerProvider(props: { children: ReactNode }) {
       idToken
     );
   }
-
   function handleGetCountryCityCategory() {
     HttpReq<string[]>(
       urls.country_city,
