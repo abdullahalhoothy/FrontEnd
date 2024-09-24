@@ -52,19 +52,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
     name: string;
     hex: string;
   } | null>(null);
-
-  // const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(
-  //   null
-  // );
-  // const [openDropdownIndex1, setOpenDropdownIndex1] = useState<number | null>(
-  //   null
-  // );
-  // const [openDropdownIndex2, setOpenDropdownIndex2] = useState<number | null>(
-  //   null
-  // );
-  // const [openDropdownIndex3, setOpenDropdownIndex3] = useState<number | null>(
-  //   null
-  // );
   const [openDropdownIndices, setOpenDropdownIndices] = useState<
     (number | null)[]
   >([null, null, null, null]);
@@ -72,7 +59,11 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [saveResponseMsg, setSaveResponseMsg] = useState("");
   const [saveReqId, setSaveReqId] = useState("");
   const [isAdvanced, setIsAdvanced] = useState<boolean>(false);
+  // const [isAdvancedMode, setIsAdvancedMode] = useState<boolean>(false);
+  const [isAdvancedMode, setIsAdvancedMode] = useState({});
   const [radiusInput, setRadiusInput] = useState<number | null>(null);
+  const [isRadiusMode, setIsRadiusMode] = useState(false);
+
   const [colors, setColors] = useState<string[]>([]);
 
   const [reqGradientColorBasedOnZone, setReqGradientColorBasedOnZone] =
@@ -93,6 +84,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [postResId, setPostResId] = useState<string>("");
   const [chosenPallet, setChosenPallet] = useState(0);
   const [selectedBasedon, setSelectedBasedon] = useState<string>("rating");
+  const [layerColors, setLayerColors] = useState({});
 
   useEffect(
     function () {
@@ -110,6 +102,13 @@ export function CatalogProvider(props: { children: ReactNode }) {
       }
     }
   }, []);
+
+  // // Save geoPoints to localStorage on change
+  // useEffect(() => {
+  //   if (geoPoints.length > 0) {
+  //     localStorage.setItem("unsavedGeoPoints", JSON.stringify(geoPoints));
+  //   }
+  // }, [geoPoints]);
 
   async function fetchGeoPoints(id: string, typeOfCard: string) {
     if (!authResponse || !("idToken" in authResponse)) {
@@ -345,17 +344,19 @@ export function CatalogProvider(props: { children: ReactNode }) {
       radius_offset: reqGradientColorBasedOnZone.radius_offset,
       color_based_on: reqGradientColorBasedOnZone.color_based_on,
     };
-    HttpReq<GradientColorBasedOnZone[]>(
-      urls.gradient_color_based_on_zone,
-      setGradientColorBasedOnZone,
-      setPostResMessage,
-      setPostResId,
-      setLocalLoading,
-      setIsError,
-      "post",
-      postData,
-      idToken
-    );
+    if (reqGradientColorBasedOnZone.prdcer_lyr_id.length > 0) {
+      HttpReq<GradientColorBasedOnZone[]>(
+        urls.gradient_color_based_on_zone,
+        setGradientColorBasedOnZone,
+        setPostResMessage,
+        setPostResId,
+        setLocalLoading,
+        setIsError,
+        "post",
+        postData,
+        idToken
+      );
+    }
   }
   const updateDropdownIndex = (index: number, value: number | null) => {
     setOpenDropdownIndices((prev) => {
@@ -404,6 +405,8 @@ export function CatalogProvider(props: { children: ReactNode }) {
         removeLayer,
         isAdvanced,
         setIsAdvanced,
+        isAdvancedMode,
+        setIsAdvancedMode,
         setRadiusInput,
         radiusInput,
         openDropdownIndices,
@@ -416,9 +419,14 @@ export function CatalogProvider(props: { children: ReactNode }) {
         reqGradientColorBasedOnZone,
         setReqGradientColorBasedOnZone,
         gradientColorBasedOnZone,
+        setGradientColorBasedOnZone,
         handleColorBasedZone,
         selectedBasedon,
         setSelectedBasedon,
+        layerColors,
+        setLayerColors,
+        isRadiusMode,
+        setIsRadiusMode,
       }}
     >
       {children}
