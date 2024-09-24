@@ -344,17 +344,19 @@ export function CatalogProvider(props: { children: ReactNode }) {
       radius_offset: reqGradientColorBasedOnZone.radius_offset,
       color_based_on: reqGradientColorBasedOnZone.color_based_on,
     };
-    HttpReq<GradientColorBasedOnZone[]>(
-      urls.gradient_color_based_on_zone,
-      setGradientColorBasedOnZone,
-      setPostResMessage,
-      setPostResId,
-      setLocalLoading,
-      setIsError,
-      "post",
-      postData,
-      idToken
-    );
+    if (reqGradientColorBasedOnZone.prdcer_lyr_id.length > 0) {
+      HttpReq<GradientColorBasedOnZone[]>(
+        urls.gradient_color_based_on_zone,
+        setGradientColorBasedOnZone,
+        setPostResMessage,
+        setPostResId,
+        setLocalLoading,
+        setIsError,
+        "post",
+        postData,
+        idToken
+      );
+    }
   }
   const updateDropdownIndex = (index: number, value: number | null) => {
     setOpenDropdownIndices((prev) => {

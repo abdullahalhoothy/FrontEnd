@@ -161,6 +161,8 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     if (openDropdownIndices[1] >= geoPoints.length - 1) {
       updateDropdownIndex(1, geoPoints.length - 2);
     }
+
+    setRadiusInput(undefined);
   }
 
   function toggleDropdown(event: ReactMouseEvent) {
