@@ -53,18 +53,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
     hex: string;
   } | null>(null);
 
-  // const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(
-  //   null
-  // );
-  // const [openDropdownIndex1, setOpenDropdownIndex1] = useState<number | null>(
-  //   null
-  // );
-  // const [openDropdownIndex2, setOpenDropdownIndex2] = useState<number | null>(
-  //   null
-  // );
-  // const [openDropdownIndex3, setOpenDropdownIndex3] = useState<number | null>(
-  //   null
-  // );
   const [openDropdownIndices, setOpenDropdownIndices] = useState<
     (number | null)[]
   >([null, null, null, null]);
@@ -72,9 +60,11 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [saveResponseMsg, setSaveResponseMsg] = useState("");
   const [saveReqId, setSaveReqId] = useState("");
   const [isAdvanced, setIsAdvanced] = useState<boolean>(false);
+  const [isAdvancedMode, setIsAdvancedMode] = useState({});
   const [radiusInput, setRadiusInput] = useState<number | null>(null);
-  const [colors, setColors] = useState<string[]>([]);
+  const [isRadiusMode, setIsRadiusMode] = useState(false);
 
+  const [colors, setColors] = useState<string[]>([]);
   const [reqGradientColorBasedOnZone, setReqGradientColorBasedOnZone] =
     useState<ReqGradientColorBasedOnZone>({
       prdcer_lyr_id: "",
@@ -91,8 +81,9 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [localLoading, setLocalLoading] = useState<boolean>(false);
   const [postResMessage, setPostResMessage] = useState<string>("");
   const [postResId, setPostResId] = useState<string>("");
-  const [chosenPallet, setChosenPallet] = useState(0);
+  const [chosenPallet, setChosenPallet] = useState(null);
   const [selectedBasedon, setSelectedBasedon] = useState<string>("rating");
+  const [layerColors, setLayerColors] = useState({});
 
   useEffect(
     function () {
@@ -240,57 +231,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
     setGeoPoints(function (prevGeoPoints) {
       const updatedGeoPoints = prevGeoPoints.map(function (geoPoint, index) {
         if (layerIndex === null || layerIndex === index) {
-          // const ratingFeatures1 = geoPoint?.features?.filter(
-          //   (feature) => Number(feature?.properties?.rating) <= 1
-          // );
-          // const ratingFeatures2 = geoPoint?.features?.filter(
-          //   (feature) =>
-          //     Number(feature?.properties?.rating) <= 2 &&
-          //     Number(feature?.properties?.rating) > 1
-          // );
-          // const ratingFeatures3 = geoPoint?.features?.filter(
-          //   (feature) =>
-          //     Number(feature?.properties?.rating) <= 3 &&
-          //     Number(feature?.properties?.rating) > 2
-          // );
-          // const ratingFeatures4 = geoPoint?.features?.filter(
-          //   (feature) =>
-          //     Number(feature?.properties?.rating) <= 4 &&
-          //     Number(feature?.properties?.rating) > 3
-          // );
-          // const ratingFeatures5 = geoPoint?.features?.filter(
-          //   (feature) =>
-          //     Number(feature?.properties?.rating) <= 5 &&
-          //     Number(feature?.properties?.rating) > 4
-          // );
           return Object.assign({}, geoPoint, {
-            // points_color:
-            //   typeof newColor === "string"
-            //     ? ratingFeatures1?.every(
-            //         (feature) => Number(feature?.properties?.rating) <= 1
-            //       )
-            //       ? adjustColorBrightness(newColor.toLowerCase(), -0.3)
-            //       : ratingFeatures2?.every(
-            //           (feature) =>
-            //             Number(feature?.properties?.rating) <= 2 &&
-            //             Number(feature?.properties?.rating) > 1
-            //         )
-            //       ? adjustColorBrightness(newColor.toLowerCase(), -0.2)
-            //       : ratingFeatures3?.every(
-            //           (feature) =>
-            //             Number(feature?.properties?.rating) <= 3 &&
-            //             Number(feature?.properties?.rating) > 2
-            //         )
-            //       ? adjustColorBrightness(newColor.toLowerCase(), -0.1)
-            //       : ratingFeatures4?.every(
-            //           (feature) =>
-            //             Number(feature?.properties?.rating) <= 4 &&
-            //             Number(feature?.properties?.rating) > 3
-            //         )
-            //       ? adjustColorBrightness(newColor.toLowerCase(), 0.0)
-            //       : adjustColorBrightness(newColor.toLowerCase(), 0.3)
-            //     : geoPoint.points_color,
-
             points_color:
               typeof newColor === "string"
                 ? newColor.toLowerCase()
@@ -345,17 +286,19 @@ export function CatalogProvider(props: { children: ReactNode }) {
       radius_offset: reqGradientColorBasedOnZone.radius_offset,
       color_based_on: reqGradientColorBasedOnZone.color_based_on,
     };
-    HttpReq<GradientColorBasedOnZone[]>(
-      urls.gradient_color_based_on_zone,
-      setGradientColorBasedOnZone,
-      setPostResMessage,
-      setPostResId,
-      setLocalLoading,
-      setIsError,
-      "post",
-      postData,
-      idToken
-    );
+    if (reqGradientColorBasedOnZone.prdcer_lyr_id.length > 0) {
+      HttpReq<GradientColorBasedOnZone[]>(
+        urls.gradient_color_based_on_zone,
+        setGradientColorBasedOnZone,
+        setPostResMessage,
+        setPostResId,
+        setLocalLoading,
+        setIsError,
+        "post",
+        postData,
+        idToken
+      );
+    }
   }
   const updateDropdownIndex = (index: number, value: number | null) => {
     setOpenDropdownIndices((prev) => {
@@ -404,6 +347,8 @@ export function CatalogProvider(props: { children: ReactNode }) {
         removeLayer,
         isAdvanced,
         setIsAdvanced,
+        isAdvancedMode,
+        setIsAdvancedMode,
         setRadiusInput,
         radiusInput,
         openDropdownIndices,
@@ -416,9 +361,14 @@ export function CatalogProvider(props: { children: ReactNode }) {
         reqGradientColorBasedOnZone,
         setReqGradientColorBasedOnZone,
         gradientColorBasedOnZone,
+        setGradientColorBasedOnZone,
         handleColorBasedZone,
         selectedBasedon,
         setSelectedBasedon,
+        layerColors,
+        setLayerColors,
+        isRadiusMode,
+        setIsRadiusMode,
       }}
     >
       {children}

@@ -2,11 +2,8 @@ import React, { useEffect } from "react";
 import styles from "./UserLayerCard.module.css";
 import placeHolderImage from "../../placeholderImage/layer.png";
 import { UserLayerCardProps } from "../../types/allTypesAndInterfaces";
-import { useCatalogContext } from "../../context/CatalogContext";
 
 function UserLayerCard(props: UserLayerCardProps) {
-  const { geoPoints } = useCatalogContext();
-
   function handleMoreInfo() {
     props.onMoreInfo({
       id: props.id,
