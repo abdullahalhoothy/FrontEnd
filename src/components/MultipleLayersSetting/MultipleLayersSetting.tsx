@@ -291,7 +291,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                 placeholder="Type radius and press Enter"
               />
             </div>
-            <div>
+            <div clasName="ms-2.5">
               <button
                 onClick={handleApplyRadius}
                 className="w-full h-7 text-sm bg-[#115740] text-white  font-semibold rounded-md hover:bg-[#123f30] transition-all cursor-pointer"
