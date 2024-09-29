@@ -70,9 +70,9 @@ function DropdownColorSelect({ layerIndex }: ColorSelectProps) {
         onClick={toggleDropdown}
         className=" cursor-pointer appearance-none w-full h-5 bg-gradient-to-r border border-gray-200 rounded-lg focus:outline-none"
         style={{
-          backgroundImage: `linear-gradient(to right, ${colors[
-            chosenPallet || 0
-          ].join(", ")})`,
+          backgroundImage: `linear-gradient(to right, ${
+            colors[chosenPallet || 0]?.join(", ") || ""
+          })`,
         }}
       ></button>
       <div className="flex justify-between text-sm text-slate-500">
@@ -88,9 +88,9 @@ function DropdownColorSelect({ layerIndex }: ColorSelectProps) {
               onClick={(e) => handleOptionClick(index, e)}
               className="cursor-pointer h-5 border border-gray-200"
               style={{
-                backgroundImage: `linear-gradient(to right, ${colorsPallet.join(
-                  ", "
-                )})`,
+                backgroundImage: `linear-gradient(to right, ${
+                  colorsPallet?.join(", ") || ""
+                })`,
               }}
             />
           ))}

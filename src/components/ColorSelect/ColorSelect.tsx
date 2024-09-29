@@ -27,6 +27,7 @@ function ColorSelect({ layerIndex }: ColorSelectProps) {
     setIsAdvancedMode,
     setIsRadiusMode,
     isAdvancedMode,
+    setChosenPallet,
   } = catalogContext;
 
   const { setSelectedColor, selectedColor } = layerContext;
@@ -68,6 +69,7 @@ function ColorSelect({ layerIndex }: ColorSelectProps) {
     updateLayerColor(layerIndex ?? null, hex);
     setSelectedColor({ name: optionName, hex });
     updateDropdownIndex(0, null);
+    setChosenPallet(null);
   }
 
   function toggleDropdown(event: ReactMouseEvent) {
