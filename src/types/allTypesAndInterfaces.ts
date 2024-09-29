@@ -133,8 +133,7 @@ export interface CatalogContextType {
 
   isAdvanced: boolean;
   setIsAdvanced: React.Dispatch<React.SetStateAction<boolean>>;
-  radiusInput: number | null;
-  setRadiusInput: React.Dispatch<React.SetStateAction<number | null>>;
+
   setColors: React.Dispatch<React.SetStateAction<string[]>>;
   colors: string[];
   reqGradientColorBasedOnZone: ReqGradientColorBasedOnZone;
@@ -145,10 +144,15 @@ export interface CatalogContextType {
   setGradientColorBasedOnZone: React.Dispatch<
     React.Dispatch<React.SetStateAction<GradientColorBasedOnZone[]>>
   >;
-  chosenPallet: number;
-  setChosenPallet: React.Dispatch<React.SetStateAction<number>>;
+  chosenPallet: number | null;
+  setChosenPallet: React.Dispatch<React.SetStateAction<number | null>>;
   selectedBasedon: string;
   setSelectedBasedon: React.Dispatch<React.SetStateAction<string>>;
+
+  layersColor: {};
+  setLayersColor: React.Dispatch<React.SetStateAction<{}>>;
+  isAdvancedMode: {};
+  setIsAdvancedMode: React.Dispatch<React.SetStateAction<{}>>;
 }
 
 export interface GradientColorBasedOnZone extends MapFeatures {
