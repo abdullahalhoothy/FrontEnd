@@ -98,7 +98,7 @@ function Component({
       </div>
       <div className={styles.card}>
         <div className={styles.cardCover}>
-          {/* <img
+          <img
             alt={name}
             fetchpriority="low"
             src={isImageError ? placeholderImage : thumbnail_url}
@@ -107,7 +107,7 @@ function Component({
               isImageError ? styles.placeholderImage : ""
             }`}
             loading="lazy"
-          /> */}
+          />
         </div>
         <div className={styles.cardBody}>
           <div className={styles.cardMeta}>

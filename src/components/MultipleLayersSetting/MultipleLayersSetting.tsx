@@ -3,7 +3,10 @@ import { FaChevronDown, FaTrash } from "react-icons/fa";
 import styles from "./MultipleLayersSetting.module.css";
 import ColorSelect from "../ColorSelect/ColorSelect";
 import { useCatalogContext } from "../../context/CatalogContext";
-import { MultipleLayersSettingProps } from "../../types/allTypesAndInterfaces";
+import {
+  GradientColorBasedOnZone,
+  MultipleLayersSettingProps,
+} from "../../types/allTypesAndInterfaces";
 import DropdownColorSelect from "../ColorSelect/DropdownColorSelect";
 import { MdArrowDropDown } from "react-icons/md";
 import { BiExit } from "react-icons/bi";
@@ -30,7 +33,13 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     setReqGradientColorBasedOnZone,
     colors,
     chosenPallet,
+    setChosenPallet,
     selectedBasedon,
+    layerColors,
+    setLayerColors,
+    setGradientColorBasedOnZone,
+    setIsAdvancedMode,
+    setIsRadiusMode,
   } = useCatalogContext();
   const layer = geoPoints[layerIndex];
   console.log(layer);
@@ -45,6 +54,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
   const [isError, setIsError] = useState<Error | null>(null);
   const [radiusInput, setRadiusInput] = useState(0);
+  const isFirstRender = useRef(true);
 
   const dropdownIndex = layerIndex ?? -1;
   const isOpen = openDropdownIndices[1] === dropdownIndex;
@@ -60,14 +70,18 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     },
     [layer.is_zone_lyr, layer.display, layer.is_heatmap]
   );
-  useEffect(
-    function () {
-      if (geoPoints.length >= 0) {
-        localStorage.setItem("unsavedGeoPoints", JSON.stringify(geoPoints));
-      }
-    },
-    [geoPoints]
-  );
+  useEffect(() => {
+    // Skip the effect on the first render (e.g., page refresh)
+    if (isFirstRender.current) {
+      isFirstRender.current = false; // Set to false after the first render
+      return;
+    }
+
+    // If not the first render and geoPoints has items, store them
+    if (geoPoints.length > 0) {
+      localStorage.setItem("unsavedGeoPoints", JSON.stringify(geoPoints));
+    }
+  }, [geoPoints]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -101,7 +115,47 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   }
 
   function handleRemoveLayer() {
+    const { [`circle-layer-${layerIndex}`]: _, ...remainingLayers } =
+      layerColors;
+    setGradientColorBasedOnZone([] as GradientColorBasedOnZone[]);
+    if (openDropdownIndices[1] == geoPoints.length - 1) {
+      updateDropdownIndex(1, null);
+    }
+    setIsRadiusMode(false);
     removeLayer(layerIndex);
+    // Re-index the remaining layers (e.g., rename `circle-layer-x` to reflect new indices)
+    const reindexedLayers = Object.keys(remainingLayers).reduce(
+      (acc, key, index) => {
+        acc[`circle-layer-${index}`] = remainingLayers[key];
+        return acc;
+      },
+      {}
+    );
+    console.log(reindexedLayers);
+    setLayerColors(reindexedLayers);
+    // Re-index the `isAdvancedMode` state to reflect updated layer indices
+    if (layerIndex != undefined) {
+      setIsAdvancedMode((prevState) => {
+        const { [`circle-layer-${layerIndex}`]: _, ...remainingModes } =
+          prevState;
+
+        // Create a new re-indexed state for `isAdvancedMode`
+        const reindexedAdvancedMode = Object.keys(remainingModes).reduce(
+          (acc, key, index) => {
+            acc[`circle-layer-${index}`] = remainingModes[key];
+            return acc;
+          },
+          {}
+        );
+
+        return reindexedAdvancedMode;
+      });
+    }
+    if (openDropdownIndices[1] >= geoPoints.length - 1) {
+      updateDropdownIndex(1, geoPoints.length - 2);
+    }
+    setChosenPallet(null);
+    setRadiusInput(undefined);
   }
 
   function toggleDropdown(event: ReactMouseEvent) {
@@ -113,22 +167,32 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       updateDropdownIndex(1, dropdownIndex);
     }
   }
-  function handleGetGradientColors() {
-    HttpReq<string[]>(
-      urls.fetch_gradient_colors,
-      setColors,
-      () => {},
-      () => {},
-      () => {},
-      setIsError
-    );
+
+  async function handleGetGradientColors() {
+    // HttpReq<string[]>(
+    //   urls.fetch_gradient_colors,
+    //   setColors,
+    //   () => {},
+    //   () => {},
+    //   () => {},
+    //   setIsError
+    // );
+    try {
+      const res = await apiRequest({
+        url: urls.fetch_gradient_colors,
+        method: "get",
+      });
+      setColors(res.data.data);
+    } catch (error) {
+      setIsError(error);
+    }
   }
 
-  function handleRadiusChange(event: React.KeyboardEvent<HTMLInputElement>) {
-    console.log("Key pressed:", event.key);
-    if (event.key === "Enter") {
-      event.preventDefault();
-      console.log("Key pressed");
+  function handleApplyRadius() {
+    if (!radiusInput) {
+      return null;
+    } else {
+      setIsRadiusMode(true);
       const prdcer_lyr_id =
         layerIndex == 0
           ? geoPoints[0]?.prdcer_lyr_id
@@ -144,14 +208,14 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       setReqGradientColorBasedOnZone({
         prdcer_lyr_id,
         user_id: authResponse?.localId,
-        color_grid_choice: colors[chosenPallet],
+        color_grid_choice: colors[chosenPallet || 0],
         change_lyr_id,
         based_on_lyr_id: prdcer_lyr_id,
         radius_offset: radiusInput || 1000,
         color_based_on: selectedBasedon,
       });
 
-      setRadiusInput(0);
+      setRadiusInput(undefined);
     }
   }
   return (
@@ -179,6 +243,12 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
           <div
             onClick={(e) => {
               setIsAdvanced(!isAdvanced);
+              if (layerIndex != undefined) {
+                setIsAdvancedMode((prev) => ({
+                  ...prev,
+                  [`circle-layer-${layerIndex}`]: true,
+                }));
+              }
               toggleDropdown(e);
             }}
             ref={buttonRef}
@@ -201,6 +271,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                 <div
                   onClick={(e) => {
                     setIsAdvanced(!isAdvanced);
+
                     toggleDropdown(e);
                   }}
                   className="text-lg cursor-pointer"
@@ -217,22 +288,26 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
             <BasedOnDropdown layerIndex={layerIndex} />
             <div className="ms-2.5">
-              <label
-                className={`${styles.zl} block text-sm`}
-                htmlFor="passwordKey"
-              >
+              <label className={`${styles.zl} block text-sm`} htmlFor="radius">
                 radius
               </label>
               <input
                 id="radius"
                 type="text"
                 name="radius"
-                className="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-sm focus:ring-grey-100 focus:border-grey-100 block w-full p-1"
+                className="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-md focus:ring-grey-100 focus:border-grey-100 block w-full p-1"
                 value={radiusInput}
                 onChange={(e) => setRadiusInput(+e.target.value)}
-                onKeyDown={handleRadiusChange}
                 placeholder="Type radius and press Enter"
               />
+            </div>
+            <div>
+              <button
+                onClick={handleApplyRadius}
+                className="w-full h-7 text-sm bg-[#115740] text-white  font-semibold rounded-md hover:bg-[#123f30] transition-all cursor-pointer"
+              >
+                Apply
+              </button>
             </div>
             <div className="flex items-center gap-1 ms-2.5">
               <input

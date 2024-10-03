@@ -13,6 +13,7 @@ import { useNavigate } from "react-router";
 import urls from "../../../../urls.json";
 import { useAuth } from "../../../../context/AuthContext";
 import { HttpReq } from "../../../../services/apiService";
+import apiRequest from "../../../../services/apiRequest";
 
 interface UserProfile {
   user_id: string;
@@ -48,7 +49,6 @@ const ProfileMain: React.FC = () => {
     }
 
     const fetchProfile = async () => {
-      
       if (!authResponse || !("idToken" in authResponse)) {
         setError(new Error("Authentication information is missing."));
         setIsLoading(false);
@@ -57,17 +57,24 @@ const ProfileMain: React.FC = () => {
       }
 
       try {
-        await HttpReq<UserProfile>(
-          urls.user_profile,
-          setProfile,
-          setResponseMessage,
-          setRequestId,
-          setIsLoading,
-          setError,
-          "post",
-          { user_id: authResponse.localId },
-          authResponse.idToken
-        );
+        // await HttpReq<UserProfile>(
+        //   urls.user_profile,
+        //   setProfile,
+        //   setResponseMessage,
+        //   setRequestId,
+        //   setIsLoading,
+        //   setError,
+        //   "post",
+        //   { user_id: authResponse.localId },
+        //   authResponse.idToken
+        // );
+        const res = await apiRequest({
+          url: urls.user_profile,
+          method: "POST",
+          isAuthRequest: true,
+          body: { user_id: authResponse.localId },
+        });
+        setProfile(res.data.data);
       } catch (err) {
         console.error("Unexpected error:", err);
         setError(new Error("An unexpected error occurred. Please try again."));

@@ -16,6 +16,7 @@ import { isValidColor } from "../../utils/helperFunctions";
 import { useAuth } from "../../context/AuthContext"; // Add this import
 import { useNavigate } from "react-router-dom";
 import { useUIContext } from "../../context/UIContext";
+import apiRequest from "../../services/apiRequest";
 
 function DataContainer() {
   const { selectedContainerType, handleAddClick, setGeoPoints } =
@@ -43,69 +44,115 @@ function DataContainer() {
 
   useEffect(() => {
     // Fetch catalog collection data
-    function fetchCatalogCollection() {
-      HttpReq<Catalog[]>(
-        urls.catlog_collection,
-        setCatalogCollectionData,
-        setResMessage,
-        setResId,
-        setLoading,
-        setError
-      );
+    async function fetchCatalogCollection() {
+      setLoading(true);
+      // HttpReq<Catalog[]>(
+      //   urls.catlog_collection,
+      //   setCatalogCollectionData,
+      //   setResMessage,
+      //   setResId,
+      //   setLoading,
+      //   setError
+      // );
+      try {
+        const res = await apiRequest({
+          url: urls.catlog_collection,
+          method: "get",
+        });
+        setCatalogCollectionData(res.data.data);
+        setResMessage(res.data.message);
+        setResId(res.data.request_id);
+      } catch (error) {
+        setError(error);
+      } finally {
+        setLoading(false);
+      }
     }
 
-    function fetchUserLayers() {
+    async function fetchUserLayers() {
+      setLoading(true);
       if (!authResponse || !("idToken" in authResponse)) {
         navigate("/auth");
         return;
       }
 
       const body = { user_id: authResponse.localId };
-      HttpReq<UserLayer[]>(
-        urls.user_layers,
-        setUserLayersData,
-        setResMessage,
-        setResId,
-        setLoading,
-        setError,
-        "post",
-        body,
-        authResponse.idToken // Add this line
-      );
+      // HttpReq<UserLayer[]>(
+      //   urls.user_layers,
+      //   setUserLayersData,
+      //   setResMessage,
+      //   setResId,
+      //   setLoading,
+      //   setError,
+      //   "post",
+      //   body,
+      //   authResponse.idToken // Add this line
+      // );
+      try {
+        const res = await apiRequest({
+          url: urls.user_layers,
+          method: "post",
+          isAuthRequest: true,
+          body: body,
+        });
+        setUserLayersData(res.data.data);
+        setResMessage(res.data.message);
+        setResId(res.data.request_id);
+      } catch (error) {
+        setError(error);
+      } finally {
+        setLoading(false);
+      }
     }
 
-    function fetchUserCatalogs() {
+    async function fetchUserCatalogs() {
+      setLoading(true);
       if (!authResponse || !("idToken" in authResponse)) {
         navigate("/auth");
         return;
       }
 
       const body = { user_id: authResponse.localId };
-      HttpReq<Catalog[]>(
-        urls.user_catalogs,
-        setUserCatalogsData,
-        setResMessage,
-        setResId,
-        setLoading,
-        setError,
-        "post",
-        body,
-        authResponse.idToken // Add this line
-      );
+      // HttpReq<Catalog[]>(
+      //   urls.user_catalogs,
+      //   setUserCatalogsData,
+      //   setResMessage,
+      //   setResId,
+      //   setLoading,
+      //   setError,
+      //   "post",
+      //   body,
+      //   authResponse.idToken // Add this line
+      // );
+      try {
+        const res = await apiRequest({
+          url: urls.user_catalogs,
+          method: "post",
+          isAuthRequest: true,
+          body: body,
+        });
+        setUserCatalogsData(res.data.data);
+        setResMessage(res.data.message);
+        setResId(res.data.request_id);
+      } catch (error) {
+        setError(error);
+      } finally {
+        setLoading(false);
+      }
     }
 
     // Determine which data to fetch based on selected container type
-    function fetchData() {
+    async function fetchData() {
       setLoading(true);
       setError(null);
 
       if (selectedContainerType === "Layer") {
-        fetchUserLayers();
+        await fetchUserLayers();
       } else if (selectedContainerType === "Catalogue") {
-        fetchCatalogCollection();
-        fetchUserCatalogs();
+        await fetchCatalogCollection();
+        await fetchUserCatalogs();
       } else if (selectedContainerType === "Home") {
-        fetchCatalogCollection();
+        await fetchCatalogCollection();
       }
 
       setLoading(false);
@@ -141,18 +188,33 @@ function DataContainer() {
   );
 
   // Handle click event on catalog card
-  function handleCatalogCardClick(selectedItem: CardItem) {
+  async function handleCatalogCardClick(selectedItem: CardItem) {
     if (selectedContainerType === "Home") {
-      HttpReq<MapFeatures[]>(
-        urls.http_catlog_data,
-        setGeoPoints,
-        setWsResMessage,
-        setWsResId,
-        setWsResLoading,
-        setWsResError,
-        "post",
-        { catalogue_dataset_id: selectedItem.id }
-      );
+      // HttpReq<MapFeatures[]>(
+      //   urls.http_catlog_data,
+      //   setGeoPoints,
+      //   setWsResMessage,
+      //   setWsResId,
+      //   setWsResLoading,
+      //   setWsResError,
+      //   "post",
+      //   { catalogue_dataset_id: selectedItem.id }
+      // );
+      setWsResLoading(true);
+      try {
+        const res = await apiRequest({
+          url: urls.http_catlog_data,
+          method: "post",
+          body: { catalogue_dataset_id: selectedItem.id },
+        });
+        setGeoPoints(res.data.data);
+        setWsResMessage(res.data.message);
+        setWsResId(res.data.request_id);
+      } catch (error) {
+        setWsResError(error);
+      } finally {
+        setWsResLoading(false);
+      }
     }
 
     if (selectedContainerType !== "Home") {
