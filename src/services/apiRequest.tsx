@@ -18,8 +18,19 @@ interface ApiRequestOptions extends AxiosRequestConfig {
 }
 
 // move this to auth module
-export const addAuthTokenToLocalStorage = (token: string) => {
-  localStorage.setItem("token", token); // Store the new token
+export const addAuthTokenToLocalStorage = (token: object) => {
+  const authResponse = getAuthResponse();
+
+  if (authResponse) {
+    const newAuthResponse = {
+      ...authResponse,
+      idToken: token.idToken,
+      refreshToken: token.refreshToken,
+    };
+    localStorage.setItem("authResponse", JSON.stringify(newAuthResponse));
+  } else {
+    console.error("Auth response not found in local storage");
+  }
 };
 
 const getAuthResponse = (): AuthResponse | null => {
@@ -34,13 +45,17 @@ const setAuthorizationHeader = (options: AxiosRequestConfig, token: string) => {
   };
 };
 
-
 const refreshAuthToken = async (refreshToken: string): Promise<string> => {
-  const res = await axiosInstance.post("/refresh-token", {
-    refresh_token: refreshToken,
-  });
-  const newToken = res.data.token; // Assuming the new token is here
-  return newToken;
+  const res = await makeApiCall({
+    url: "/refresh-token",
+    method: "POST",
+    body: {
+      refresh_token: refreshToken,
+      grant_type: "refresh_token",
+    },
+  }); // Make a request to refresh the token
+  const data = res.data.data; // Assuming the new token is here
+  return data;
 };
 
 const makeApiCall = async ({
@@ -98,7 +113,7 @@ const apiRequest = async ({
         addAuthTokenToLocalStorage(newToken);
 
         // Retry the original request with the new token
-        setAuthorizationHeader(options, newToken);
+        setAuthorizationHeader(options, newToken.idToken);
         const retryResponse = await makeApiCall({ url, method, body, options });
         return retryResponse;
       } catch (tokenErr) {
@@ -107,7 +122,7 @@ const apiRequest = async ({
       }
     }
     console.error("API request error:", err);
-    throw new Error("API request failed. Please try again.");
+    throw err;
   }
 };
 

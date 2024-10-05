@@ -58,7 +58,7 @@ const Auth = () => {
         method: "post",
         body: { email, password },
       });
-      
+
       if (!("idToken" in res.data.data)) {
         throw new Error("Login Error");
       }
@@ -66,9 +66,12 @@ const Auth = () => {
       setTimeout(() => {
         nav("/");
       }, 100);
-
     } catch (error) {
-      setError(error);
+      console.log(error);
+      setError({
+        name: "Login Error",
+        message: error.response.data.detail || "Login Error",
+      });
     }
   };
 
@@ -103,15 +106,16 @@ const Auth = () => {
         method: "post",
         body: { email, password, username },
       });
-      if (!("idToken" in res.data.data)) {
-        throw new Error("Registeration Error");
-      }
       setAuthResponse(res.data.data);
       setIsRegistered(true);
-      setAuthMessage(res.data.message);
+      // setAuthMessage(res.data.message);
       setRequestId(res.data.request_id);
+      nav(0);
     } catch (error) {
-      setError(error);
+      setError({
+        name: "Registration Error",
+        message: error.response.data.detail || "Registration Error",
+      });
     } finally {
       setIsLoading(false);
     }

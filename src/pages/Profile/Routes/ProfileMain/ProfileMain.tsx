@@ -77,6 +77,7 @@ const ProfileMain: React.FC = () => {
         setProfile(res.data.data);
       } catch (err) {
         console.error("Unexpected error:", err);
+        logout();
         setError(new Error("An unexpected error occurred. Please try again."));
         navigate("/auth");
       } finally {
@@ -188,10 +189,12 @@ const ProfileMain: React.FC = () => {
   }
   if (isLoading)
     return <div className={styles.loading}>Loading profile...</div>;
+
   if (error) {
     setTimeout(() => navigate("/auth"), 500);
     return null;
   }
+
   if (!profile) {
     setTimeout(() => navigate("/auth"), 500);
     return null;
