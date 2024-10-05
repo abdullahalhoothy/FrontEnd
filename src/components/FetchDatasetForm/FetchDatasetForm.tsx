@@ -11,6 +11,7 @@ import styles from "./FetchDatasetForm.module.css";
 import { FaCaretDown, FaCaretRight } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router";
+import apiRequest from "../../services/apiRequest";
 
 const FetchDatasetForm = () => {
   const nav = useNavigate();
@@ -75,24 +76,43 @@ const FetchDatasetForm = () => {
     {} as CategoryData
   );
 
-  function handleGetCountryCityCategory() {
-    HttpReq<string[]>(
-      urls.country_city,
-      (data) => setCountries(processCityData(data, setCitiesData)),
-      () => {},
-      () => {},
-      () => {},
-      setIsError
-    );
+  async function handleGetCountryCityCategory() {
+    // HttpReq<string[]>(
+    //   urls.country_city,
+    //   (data) => setCountries(processCityData(data, setCitiesData)),
+    //   () => {},
+    //   () => {},
+    //   () => {},
+    //   setIsError
+    // );
+    try {
+      const res = await apiRequest({
+        url: urls.country_city,
+        method: "get",
+      });
+      setCountries(processCityData(res.data.data, setCitiesData));
+    } catch (error) {
+      setIsError(error);
+    }
 
-    HttpReq<CategoryData>(
-      urls.nearby_categories,
-      setCategories,
-      () => {},
-      () => {},
-      () => {},
-      setIsError
-    );
+    try {
+      const res = await apiRequest({
+        url: urls.nearby_categories,
+        method: "get",
+      });
+      setCategories(res.data.data);
+    } catch (error) {
+      setIsError(error);
+    }
+
+    // HttpReq<CategoryData>(
+    //   urls.nearby_categories,
+    //   setCategories,
+    //   () => {},
+    //   () => {},
+    //   () => {},
+    //   setIsError
+    // );
   }
 
   function handleCountryCitySelection(
@@ -378,10 +398,6 @@ const FetchDatasetForm = () => {
             className="w-full h-full bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer"
             onClick={(e) => {
               if (!isAuthenticated) nav("/auth");
-              if (password !== "1235") {
-                setIsError(new Error("Wrong Password"));
-                return;
-              }
               handleButtonClick("full data", e);
             }}
           >

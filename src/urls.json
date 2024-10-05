@@ -26,6 +26,6 @@
   "gradient_color_based_on_zone": "gradient_color_based_on_zone",
   "change_password": "change-password",
   "change_email": "change_email",
-  "get_payment_methods": "get_payment_methods"
-
+  "get_payment_methods": "get_payment_methods",
+  "check_street_view": "/check_street_view"
 }

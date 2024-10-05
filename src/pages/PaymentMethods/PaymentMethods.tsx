@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { HttpReq } from "../../services/apiService";
 import urls from "../../urls.json";
+import apiRequest from "../../services/apiRequest";
 
 // Mock data for demonstration
 const mockCards = Array(20)
@@ -22,18 +23,29 @@ export default function PaymentMethods() {
   const navigate = useNavigate();
   useEffect(() => {
     const fetchPaymentMethods = async () => {
+      // try {
+      //   await HttpReq(
+      //     urls.get_payment_methods,
+      //     setMethods,
+      //     () => {},
+      //     () => {},
+      //     () => {},
+      //     () => {},
+      //     "post",
+      //     { user_id: authResponse?.localId },
+      //     authResponse?.idToken
+      //   );
+      // } catch (error) {
+      //   console.error("Failed to fetch payment methods", error);
+      // }
       try {
-        await HttpReq(
-          urls.get_payment_methods,
-          setMethods,
-          () => {},
-          () => {},
-          () => {},
-          () => {},
-          "post",
-          { user_id: authResponse?.localId },
-          authResponse?.idToken
-        );
+        const res = await apiRequest({
+          url: urls.get_payment_methods,
+          method: "post",
+          body: { user_id: authResponse?.localId },
+          isAuthRequest: true,
+        });
+        setMethods(res.data.data);
       } catch (error) {
         console.error("Failed to fetch payment methods", error);
       }

@@ -23,6 +23,7 @@ import userIdData from "../currentUserId.json";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { processCityData } from "../utils/helperFunctions";
+import apiRequest from "../services/apiRequest";
 
 const LayerContext = createContext<LayerContextType | undefined>(undefined);
 
@@ -99,7 +100,7 @@ export function LayerProvider(props: { children: ReactNode }) {
     }
   }
 
-  function handleSaveLayer(reqSaveLayer) {
+  async function handleSaveLayer(reqSaveLayer) {
     if (!authResponse || !("idToken" in authResponse)) {
       navigate("/auth");
       setIsError(new Error("User is not authenticated!"));
@@ -132,17 +133,33 @@ export function LayerProvider(props: { children: ReactNode }) {
 
     setLoading(true);
 
-    HttpReq<SaveResponse>(
-      urls.save_layer,
-      setSaveResponse,
-      setSaveResponseMsg,
-      setSaveReqId,
-      setLoading,
-      setIsError,
-      "post",
-      postData,
-      authResponse.idToken
-    );
+    // HttpReq<SaveResponse>(
+    //   urls.save_layer,
+    //   setSaveResponse,
+    //   setSaveResponseMsg,
+    //   setSaveReqId,
+    //   setLoading,
+    //   setIsError,
+    //   "post",
+    //   postData,
+    //   authResponse.idToken
+    // );
+
+    try {
+      const res = await apiRequest({
+        url: urls.save_layer,
+        method: "post",
+        body: postData,
+        isAuthRequest: true,
+      });
+      setSaveResponse(res.data.data);
+      setSaveResponseMsg(res.data.message);
+      setSaveReqId(res.data.id);
+    } catch (error) {
+      setIsError(error);
+    } finally {
+      setLoading(false);
+    }
 
     setTimeout(() => {
       resetFormStage();
@@ -212,7 +229,7 @@ export function LayerProvider(props: { children: ReactNode }) {
     }
   }
 
-  function handleFetchDataset(action: string, pageToken?: string) {
+  async function handleFetchDataset(action: string, pageToken?: string) {
     let user_id: string;
     let idToken: string;
 
@@ -251,37 +268,71 @@ export function LayerProvider(props: { children: ReactNode }) {
 
     callCountRef.current++;
 
-    HttpReq<FetchDatasetResponse>(
-      urls.fetch_dataset,
-      setFetchDatasetResp,
-      setPostResMessage,
-      setPostResId,
-      setLocalLoading,
-      setIsError,
-      "post",
-      postData,
-      idToken
-    );
+    // HttpReq<FetchDatasetResponse>(
+    //   urls.fetch_dataset,
+    //   setFetchDatasetResp,
+    //   setPostResMessage,
+    //   setPostResId,
+    //   setLocalLoading,
+    //   setIsError,
+    //   "post",
+    //   postData,
+    //   idToken
+    // );
+    setLocalLoading(true);
+    try {
+      const res = await apiRequest({
+        url: urls.fetch_dataset,
+        method: "post",
+        body: postData,
+        isAuthRequest: true,
+      });
+      setFetchDatasetResp(res.data.data);
+      setPostResMessage(res.data.message);
+      setPostResId(res.data.id);
+    } catch (error) {
+      setIsError(error);
+    } finally {
+      setLocalLoading(false);
+    }
   }
 
-  function handleGetCountryCityCategory() {
-    HttpReq<string[]>(
-      urls.country_city,
-      (data) => setCountries(processCityData(data, setCitiesData)),
-      () => {},
-      () => {},
-      () => {},
-      setIsError
-    );
+  async function handleGetCountryCityCategory() {
+    // HttpReq<string[]>(
+    //   urls.country_city,
+    //   (data) => setCountries(processCityData(data, setCitiesData)),
+    //   () => {},
+    //   () => {},
+    //   () => {},
+    //   setIsError
+    // );
+    try {
+      const res = await apiRequest({
+        url: urls.country_city,
+        method: "get",
+      });
+      setCountries(processCityData(res.data.data, setCitiesData));
+    } catch (error) {
+      setIsError(error);
+    }
 
-    HttpReq<CategoryData>(
-      urls.nearby_categories,
-      setCategories,
-      () => {},
-      () => {},
-      () => {},
-      setIsError
-    );
+    try {
+      const res = await apiRequest({
+        url: urls.nearby_categories,
+        method: "get",
+      });
+      setCategories(res.data.data);
+    } catch (error) {
+      setIsError(error);
+    }
+    // HttpReq<CategoryData>(
+    //   urls.nearby_categories,
+    //   setCategories,
+    //   () => {},
+    //   () => {},
+    //   () => {},
+    //   setIsError
+    // );
   }
 
   function handleCountryCitySelection(

@@ -20,6 +20,8 @@ import { CircleControl } from "./CircleControl";
 import { generatePopupContent } from "./generatePopupContent";
 import StatisticsPopups from "./StatisticsPopups";
 import BenchmarkControl from "./BenchmarkControl";
+import apiRequest from "../../services/apiRequest";
+import urls from "../../urls.json";
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_KEY;
 
@@ -450,12 +452,13 @@ function Container() {
               let hoveredStateId: number | null = null;
               let popup: mapboxgl.Popup | null = null;
               let isOverPopup = false;
+              let isOverPoint = false;
 
               const handleMouseOver = async (
                 e: mapboxgl.MapMouseEvent & mapboxgl.EventData
               ) => {
                 if (!mapRef.current) return;
-
+                isOverPoint = true;
                 // Update cursor style
                 mapRef.current.getCanvas().style.cursor = "";
 
@@ -501,11 +504,18 @@ function Container() {
                     .setHTML(loadingContent) // Initially show loading spinner
                     .addTo(mapRef.current!);
                   const [lng, lat] = coordinates;
-                  const url = `https://maps.googleapis.com/maps/api/streetview?return_error_code=true&size=600x300&location=${lat},${lng}&heading=151.78&pitch=-0.76&key=${
-                    import.meta.env.VITE_GOOGLE_MAPS_API_KEY
-                  }`;
+                  // const url = `https://maps.googleapis.com/maps/api/streetview?return_error_code=true&size=600x300&location=${lat},${lng}&heading=151.78&pitch=-0.76&key=${
+                  //   import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+                  // }`;
                   try {
-                    const response = await axios.get(url);
+                    const response = await apiRequest({
+                      url: urls.check_street_view,
+                      method: "POST",
+                      body: {
+                        lat: lat,
+                        lng: lng,
+                      },
+                    });
                     // Once data is fetched, update the popup with the actual content
                     const updatedContent = generatePopupContent(
                       properties,
@@ -542,17 +552,17 @@ function Container() {
 
               const handleMouseLeave = () => {
                 if (!mapRef.current) return;
-
+                isOverPoint = false;
                 // Reset cursor style
                 mapRef.current.getCanvas().style.cursor = "";
 
                 // Use setTimeout to check if the mouse is over the popup before closing
                 setTimeout(() => {
-                  if (!isOverPopup && popup) {
+                  if (!isOverPopup && !isOverPoint && popup) {
                     popup.remove();
                     popup = null;
                   }
-                }, 200);
+                }, 500);
 
                 if (hoveredStateId !== null) {
                   mapRef.current.setFeatureState(
@@ -565,7 +575,7 @@ function Container() {
               };
 
               if (mapRef.current) {
-                mapRef.current.on("mouseover", layerId, handleMouseOver);
+                mapRef.current.on("mouseenter", layerId, handleMouseOver);
                 mapRef.current.on("mouseleave", layerId, handleMouseLeave);
               }
             }
@@ -621,6 +631,16 @@ function Container() {
     return () => {
       if (mapRef.current) {
         mapRef.current.off("styledata", addGeoPoints);
+
+        geoPoints.forEach(function (featureCollection, index) {
+          const sourceId = "circle-source-" + index;
+          const layerId = "circle-layer-" + index;
+
+          if (mapRef.current) {
+            mapRef.current.removeLayer(layerId);
+            mapRef.current.removeSource(sourceId);
+          }
+        });
       }
     };
   }, [geoPoints, initialFlyToDone, centralizeOnce]);

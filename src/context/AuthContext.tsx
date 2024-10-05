@@ -19,38 +19,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       : null
   );
 
-  const refreshToken = async (expiredAuthResponse: AuthSuccessResponse) => {
-    try {
-      await HttpReq<AuthSuccessResponse>(
-        "/refresh_token",
-        setAuthResponse,
-        () => {}, // setResMessage (not used here)
-        () => {}, // setResId (not used here)
-        () => {}, // setLoading (not used here)
-        (error) => console.error("Failed to refresh token:", error),
-        "post",
-        expiredAuthResponse
-      );
-    } catch (error) {
-      console.error("Failed to refresh token:", error);
-      // logout();
-    }
-  };
-
   const logout = () => {
     setAuthResponse(null);
     localStorage.removeItem("authResponse");
   };
-
-  // useEffect(() => {
-
-  //   const refreshTokenInterval = setInterval(() => {
-  //     if (!isAuthenticated) return
-  //     refreshToken(authResponse)
-  //   }, 60_000) //Refresh every minute
-
-  //   return () => clearInterval(refreshTokenInterval)
-  // }, []);
 
   useEffect(() => {
     if (authResponse && "idToken" in authResponse) {

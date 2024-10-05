@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { useAuth } from "../../context/AuthContext";
 import { HttpReq } from "../../services/apiService";
 import urls from "./../../urls.json";
+import apiRequest from "../../services/apiRequest";
 
 const ChangeEmail: React.FC = () => {
   const { isAuthenticated, authResponse } = useAuth();
@@ -39,17 +40,31 @@ const ChangeEmail: React.FC = () => {
     data.user_id = authResponse?.localId;
     data.current_email = authResponse?.email;
 
-    await HttpReq(
-      urls.change_email,
-      () => {},
-      () => {},
-      () => {},
-      setLoading,
-      setError,
-      "post",
-      data,
-      authResponse?.idToken
-    );
+    // await HttpReq(
+    //   urls.change_email,
+    //   () => {},
+    //   () => {},
+    //   () => {},
+    //   setLoading,
+    //   setError,
+    //   "post",
+    //   data,
+    //   authResponse?.idToken
+    // );
+
+    setLoading(true);
+    try {
+      const res = await apiRequest({
+        url: urls.change_email,
+        method: "post",
+        body: data,
+        isAuthRequest: true,
+      });
+    } catch (error) {
+      setError(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!isAuthenticated) {

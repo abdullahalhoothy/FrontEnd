@@ -6,6 +6,7 @@ import urls from "../../urls.json";
 import { AuthResponse } from "../../types/allTypesAndInterfaces";
 import styles from "./Auth.module.css";
 import { FaEnvelope, FaLock, FaUser } from "react-icons/fa";
+import apiRequest from "../../services/apiRequest";
 
 const Auth = () => {
   const nav = useNavigate();
@@ -29,28 +30,49 @@ const Auth = () => {
   const [isRegistered, setIsRegistered] = useState(false);
 
   const handleLogin = async (email: string, password: string) => {
-    await HttpReq(
-      urls.login,
-      (data) => {
-        console.log("Loged In");
-        if (!("idToken" in (data as any))) {
-          setError(new Error("Login Error"));
-          return;
-        }
-        setAuthResponse(data as AuthResponse);
-        setTimeout(() => {
-          nav("/");
-        }, 100);
-      },
-      () => {},
-      () => {},
-      () => {},
-      (e) => {
-        setError(e);
-      },
-      "post",
-      { email, password }
-    );
+    // await HttpReq(
+    //   urls.login,
+    //   (data) => {
+    //     console.log("Loged In");
+    //     if (!("idToken" in (data as any))) {
+    //       setError(new Error("Login Error"));
+    //       return;
+    //     }
+    //     setAuthResponse(data as AuthResponse);
+    //     setTimeout(() => {
+    //       nav("/");
+    //     }, 100);
+    //   },
+    //   () => {},
+    //   () => {},
+    //   () => {},
+    //   (e) => {
+    //     setError(e);
+    //   },
+    //   "post",
+    //   { email, password }
+    // );
+    try {
+      const res = await apiRequest({
+        url: urls.login,
+        method: "post",
+        body: { email, password },
+      });
+
+      if (!("idToken" in res.data.data)) {
+        throw new Error("Login Error");
+      }
+      setAuthResponse(res.data.data);
+      setTimeout(() => {
+        nav("/");
+      }, 100);
+    } catch (error) {
+      console.log(error);
+      setError({
+        name: "Login Error",
+        message: error.response.data.detail || "Login Error",
+      });
+    }
   };
 
   const handleRegistration = async (
@@ -58,25 +80,45 @@ const Auth = () => {
     password: string,
     username: string
   ) => {
-    await HttpReq(
-      urls.create_user_profile,
-      (data) => {
-        if (!("idToken" in (data as any))) {
-          setError(new Error("Registeration Error"));
-          return;
-        }
+    // await HttpReq(
+    //   urls.create_user_profile,
+    //   (data) => {
+    //     if (!("idToken" in (data as any))) {
+    //       setError(new Error("Registeration Error"));
+    //       return;
+    //     }
 
-        setAuthResponse(data as AuthResponse);
-        setIsRegistered(true);
-        console.log("registered");
-      },
-      setAuthMessage,
-      setRequestId,
-      setIsLoading,
-      setError,
-      "post",
-      { email, password, username }
-    );
+    //     setAuthResponse(data as AuthResponse);
+    //     setIsRegistered(true);
+    //     console.log("registered");
+    //   },
+    //   setAuthMessage,
+    //   setRequestId,
+    //   setIsLoading,
+    //   setError,
+    //   "post",
+    //   { email, password, username }
+    // );
+    setIsLoading(true);
+    try {
+      const res = await apiRequest({
+        url: urls.create_user_profile,
+        method: "post",
+        body: { email, password, username },
+      });
+      setAuthResponse(res.data.data);
+      setIsRegistered(true);
+      // setAuthMessage(res.data.message);
+      setRequestId(res.data.request_id);
+      nav(0);
+    } catch (error) {
+      setError({
+        name: "Registration Error",
+        message: error.response.data.detail || "Registration Error",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -88,17 +130,31 @@ const Auth = () => {
   }, [isRegistered]);
 
   const handlePasswordReset = async (email: string) => {
-    await HttpReq(
-      urls.reset_password,
-      setAuthResponse,
-      setAuthMessage,
-      setRequestId,
-      setIsLoading,
-      setError,
-      "post",
-      { email }
-    );
-
+    // await HttpReq(
+    //   urls.reset_password,
+    //   setAuthResponse,
+    //   setAuthMessage,
+    //   setRequestId,
+    //   setIsLoading,
+    //   setError,
+    //   "post",
+    //   { email }
+    // );
+    setIsLoading(true);
+    try {
+      const res = await apiRequest({
+        url: urls.reset_password,
+        method: "post",
+        body: { email },
+      });
+      setAuthResponse(res.data.data);
+      setAuthMessage(res.data.message);
+      setRequestId(res.data.request_id);
+    } catch (error) {
+      setError(error);
+    } finally {
+      setIsLoading(false);
+    }
     if (!error) {
       setAuthMessage("Password reset email sent. Please check your inbox.");
       setIsPasswordReset(false);
