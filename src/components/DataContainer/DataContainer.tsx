@@ -360,7 +360,7 @@ function DataContainer() {
         </button>
       </div>
       {activeTab === "Data Catalogue" || activeTab === "Data Layer" ? (
-        <div className="flex flex-wrap gap-x-1 gap-y-3 overflow-y-auto h-[35rem] w-full">
+        <div className="flex flex-wrap gap-x-1 gap-y-3 overflow-y-auto w-full">
           {renderCards()}
         </div>
       ) : activeTab === "Load Files" ? (

@@ -23,7 +23,7 @@ function Modal(props: ModalProps) {
       }}
     >
       <div
-        className={`${styles.modalContent} rounded-lg border shadow ${isSmaller ? styles.smallerContainer : ""
+        className={`${styles.modalContent} rounded-lg border shadow overflow-y-auto ${isSmaller ? styles.smallerContainer : ""
           } ${styles.pointerEventsAll}`}
       >
         <button

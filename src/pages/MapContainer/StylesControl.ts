@@ -27,6 +27,7 @@ StylesControl.prototype.onAdd = function (map) {
   this._container = document.createElement("div");
   this._container.className =
     "mapboxgl-ctrl mapboxgl-ctrl-group bg-transparent  !border-none !shadow-none";
+  this._container.id = "styles-control";
 
   // Create toggle button with SVG
   const toggleButton = document.createElement("button");

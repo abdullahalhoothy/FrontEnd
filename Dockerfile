@@ -13,8 +13,11 @@ RUN npm install
 # Copy the rest of the code
 COPY . .
 
-# Expose the port
+# Run the build command to generate the production build in the 'dist' folder
+RUN npm run build
+
+# Expose the port for Vite's preview server (default is 3000)
 EXPOSE 3000
 
-# Run the command to start the development server
-CMD ["npm", "start", "--", "--host", "0.0.0.0"]
+# Run Vite's preview server in production mode
+CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0"]

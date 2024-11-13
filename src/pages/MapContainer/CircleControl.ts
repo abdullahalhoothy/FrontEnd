@@ -85,6 +85,7 @@ CircleControl.prototype.onAdd = function (map) {
   this._map = map;
   this._container = document.createElement("div");
   this._container.className = "mapboxgl-ctrl mapboxgl-ctrl-group";
+  this._container.id = "circle-control";
 
   const drawCirclesButton = this._createButton(
     "",

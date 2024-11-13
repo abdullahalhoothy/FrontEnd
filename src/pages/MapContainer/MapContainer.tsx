@@ -66,7 +66,15 @@ function Container() {
         zoom: mapConfig.zoom,
       });
 
+      // Add Navigation Control
       mapRef.current.addControl(new mapboxgl.NavigationControl(), "top-right");
+      // Set an id for the navigation control
+      const navControlContainer = mapRef.current
+        .getContainer()
+        .querySelector(".mapboxgl-ctrl-top-right .mapboxgl-ctrl-group");
+      if (navControlContainer) {
+        navControlContainer.setAttribute("id", "navigation-control");
+      }
 
       const stylesControl = new StylesControl(currentStyle, setCurrentStyle);
       mapRef.current.addControl(stylesControl, "top-left");
@@ -106,6 +114,20 @@ function Container() {
       const circleControl = new CircleControl(mapRef.current, draw);
       mapRef.current.addControl(circleControl, "top-right");
       mapRef.current.addControl(draw);
+
+      const drawButton = mapRef.current
+        .getContainer()
+        .querySelector(".mapbox-gl-draw_polygon");
+      if (drawButton) {
+        drawButton.setAttribute("id", "draw-button");
+      }
+
+      const drawTrashButton = mapRef.current
+        .getContainer()
+        .querySelector(".mapbox-gl-draw_trash");
+      if (drawTrashButton) {
+        drawTrashButton.setAttribute("id", "draw-trash");
+      }
 
       mapRef.current.on("draw.create", (e) => {
         console.log(e);
@@ -797,7 +819,7 @@ function Container() {
   }, [currentStyle]);
 
   return (
-    <div className="w-[80%] h-full relative overflow-hidden ">
+    <div className="w-[80%] h-full relative overflow-hidden" id="map-container">
       <div
         className="absolute w-full h-full"
         id="map-container"

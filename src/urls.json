@@ -27,5 +27,10 @@
   "change_password": "change-password",
   "change_email": "change_email",
   "get_payment_methods": "get_payment_methods",
-  "check_street_view": "/check_street_view"
+  "check_street_view": "/check_street_view",
+  "attach_stripe_payment_method": "/attach_stripe_payment_method",
+  "set_default_stripe_payment_method": "/set_default_stripe_payment_method",
+  "list_stripe_payment_methods": "/list_stripe_payment_methods",
+  "detach_stripe_payment_method": "/detach_stripe_payment_method",
+  "get_stripe_customer": "/fetch_stripe_customer"
 }

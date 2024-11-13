@@ -1,61 +1,154 @@
-import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { HttpReq } from "../../services/apiService";
 import urls from "../../urls.json";
 import apiRequest from "../../services/apiRequest";
+import { PiX } from "react-icons/pi";
 
-// Mock data for demonstration
-const mockCards = Array(20)
-  .fill(null)
-  .map((_, index) => ({
-    id: index + 1,
-    type: "VISA",
-    number: `****${1000 + index}`,
-    name: `Card Holder ${index + 1}`,
-    expires: "3/2023",
-  }));
+interface PaymentMethod {
+  id: number;
+  type: string;
+  lastFour: string;
+  expiry: string;
+  isDefault?: boolean;
+}
+
+const paymentBrandIcons = {
+  visa: "/card-brands/visa.svg",
+  mastercard: "/card-brands/mastercard.svg",
+  amex: "/card-brands/amex.svg",
+  discover: "/card-brands/discover.svg",
+  unknown: "/card-brands/credit-card.svg",
+};
+
 export default function PaymentMethods() {
   const { isAuthenticated, authResponse } = useAuth();
-  const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
-  const [methods, setMethods] = useState(mockCards);
-  const currentItems = mockCards.slice(0, 9);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [defaultPaymentMethodId, setDefaultPaymentMethodId] = useState<
+    string | null
+  >(null);
+  const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+  const location = useLocation();
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [methodToRemove, setMethodToRemove] = useState<string | null>(null);
+
+  // Check for success query parameter
   useEffect(() => {
-    const fetchPaymentMethods = async () => {
-      // try {
-      //   await HttpReq(
-      //     urls.get_payment_methods,
-      //     setMethods,
-      //     () => {},
-      //     () => {},
-      //     () => {},
-      //     () => {},
-      //     "post",
-      //     { user_id: authResponse?.localId },
-      //     authResponse?.idToken
-      //   );
-      // } catch (error) {
-      //   console.error("Failed to fetch payment methods", error);
-      // }
+    const queryParams = new URLSearchParams(location.search);
+    if (queryParams.get("success") === "true") {
+      setShowSuccessMessage(true);
+    }
+  }, [location.search]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/auth");
+    }
+  }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
       try {
-        const res = await apiRequest({
-          url: urls.get_payment_methods,
-          method: "post",
-          body: { user_id: authResponse?.localId },
-          isAuthRequest: true,
-        });
-        setMethods(res.data.data);
+        const customer = await fetchDefaultPaymentMethodId();
+        const defaultId = customer?.invoice_settings?.default_payment_method;
+        if (customer) {
+          setDefaultPaymentMethodId(defaultId || null);
+          await fetchPaymentMethods(defaultId || "");
+        }
       } catch (error) {
-        console.error("Failed to fetch payment methods", error);
+        console.error("Error fetching data", error);
+      } finally {
+        setIsLoading(false);
       }
     };
-    fetchPaymentMethods();
-  }, []);
-  if (!isAuthenticated) {
-    navigate("/auth");
-    return null;
-  }
+    fetchData();
+  }, [authResponse]);
+
+  const fetchDefaultPaymentMethodId = async (): Promise<string | null> => {
+    try {
+      const res = await apiRequest({
+        url: urls.get_stripe_customer,
+        method: "post",
+        isAuthRequest: true,
+        body: { user_id: authResponse?.localId },
+      });
+      return res.data.data || null;
+    } catch (error) {
+      console.error(
+        "Failed to fetch Stripe customer default payment method ID",
+        error
+      );
+      return null;
+    }
+  };
+
+  const fetchPaymentMethods = async (defaultId: string) => {
+    try {
+      const res = await apiRequest({
+        url: `${urls.list_stripe_payment_methods}?user_id=${authResponse?.localId}`,
+        method: "get",
+        isAuthRequest: true,
+      });
+      setPaymentMethods(res.data.data);
+      setDefaultPaymentMethodId(defaultId);
+    } catch (error) {
+      console.error("Failed to fetch payment methods", error);
+    }
+  };
+
+  const handleRemove = async () => {
+    if (!methodToRemove) return;
+    setSubmitting(true);
+    try {
+      await apiRequest({
+        url: `${urls.detach_stripe_payment_method}?payment_method_id=${methodToRemove}`,
+        method: "delete",
+        isAuthRequest: true,
+      });
+      setPaymentMethods((methods) =>
+        methods.filter((method) => method.id !== methodToRemove)
+      );
+      setDialogOpen(false);
+    } catch (error) {
+      console.error("Failed to remove payment method", error);
+    } finally {
+      setSubmitting(false);
+      setMethodToRemove(null);
+    }
+  };
+
+  const handleSetDefault = async (id: string) => {
+    setSubmitting(true);
+    try {
+      await apiRequest({
+        url: `${urls.set_default_stripe_payment_method}?user_id=${authResponse?.localId}&payment_method_id=${id}`,
+        method: "put",
+        isAuthRequest: true,
+      });
+      setDefaultPaymentMethodId(id);
+    } catch (error) {
+      console.error("Failed to set default payment method", error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const defaultPaymentMethod = paymentMethods.find(
+    (method) => method.id === defaultPaymentMethodId
+  );
+
+  if (isLoading)
+    return (
+      <div className="text-lg text-primary text-center mt-14 font-semibold">
+        <h1>Loading Payment Methods...</h1>
+      </div>
+    );
+
   return (
     <div className="mx-32 p-6 font-sans">
       <div className="flex items-center mb-6">
@@ -64,14 +157,11 @@ export default function PaymentMethods() {
           className="flex items-center text-blue-600 mr-4 text-sm font-medium"
         >
           <svg
-            xmlns="http://www.w3.org/2000/svg"
+            className="w-4 h-4 mr-2"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="w-4 h-4 mr-2"
           >
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="12" y1="8" x2="12" y2="16"></line>
@@ -79,133 +169,330 @@ export default function PaymentMethods() {
           </svg>
           Add payment method
         </Link>
-        <button className="text-gray-400">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="w-4 h-4"
-          >
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="16" x2="12" y2="12"></line>
-            <line x1="12" y1="8" x2="12.01" y2="8"></line>
-          </svg>
-        </button>
       </div>
+      {/* Success message */}
+      {showSuccessMessage && (
+        <div className="flex items-center justify-between mb-4 p-2 text-green-800 bg-green-100 border border-green-200 rounded relative">
+          <p>Payment method added successfully!</p>
+          <button
+            onClick={() => {
+              setShowSuccessMessage(false);
+              navigate(location.pathname, { replace: true }); // Remove query parameter
+            }}
+            className="text-2xl text-green-800 hover:text-green-600 focus:outline-none"
+          >
+            <PiX className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       <h2 className="text-xl font-semibold mb-6">Payment methods</h2>
 
-      <div className="mb-8">
-        <h3 className="font-semibold mb-2">Default payment method</h3>
-        <p className="text-sm text-gray-600 mb-4">
-          Your default payment method will be automatically charged each month.
-        </p>
-        <div className="flex flex-col justify-between border rounded-lg p-4 max-w-sm">
-          <div className="flex items-start">
-            <div className="bg-blue-600 text-white font-bold rounded px-2 py-1 text-xs mr-3">
-              VISA
-            </div>
-            <div>
-              <p className="font-semibold">Visa ****2142</p>
-              <p className="text-sm text-gray-600">Expires on 3/2023</p>
-
-              <div>
-                <button className="text-blue-600 text-sm font-medium mr-4">
-                  Replace
-                </button>
-                <button className="text-blue-600 text-sm font-medium">
-                  Detach
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Default Payment Method Component */}
+      <DefaultPaymentMethod
+        paymentMethod={defaultPaymentMethod}
+        onRemove={() => {
+          setMethodToRemove(defaultPaymentMethodId);
+          setDialogOpen(true);
+        }}
+      />
 
       <h3 className="font-semibold mb-2">Your credit and debit cards</h3>
       <p className="text-sm text-gray-600 mb-4">
         Here's a list of your personal credit and debit cards. Select the
-        ellipsis (...) to edit or delete a card or make it the default payment
-        method of this billing profile.
+        ellipsis (...) to delete a card or make it the default payment method.
       </p>
-
-      <table className="w-full">
-        <thead>
-          <tr className="text-left text-sm text-gray-600 border-b">
-            <th className="pb-2">No.</th>
-            <th className="pb-2">Name on card</th>
-            <th className="pb-2">Expires on</th>
-            <th className="pb-2"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {currentItems.map((card) => (
-            <tr key={card.id} className="border-b text-sm">
-              <td className="py-2 flex items-center">
-                <div className="bg-blue-600 text-white font-semibold rounded px-1 py-0.5 text-xs mr-2">
-                  {card.type}
-                </div>
-                <span>
-                  {card.type} {card.number}
-                </span>
-              </td>
-              <td className="py-2">{card.name}</td>
-              <td className="py-2">{card.expires}</td>
-              <td className="py-2 text-right relative">
-                <button
-                  onClick={() =>
-                    setDropdownOpen(dropdownOpen === card.id ? null : card.id)
-                  }
-                  className="focus:outline-none"
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M11.9959 12H12.0049"
-                      stroke="#141B34"
-                      strokeWidth="2.5"
-                      strokeLinecap="square"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M17.9998 12H18.0088"
-                      stroke="#141B34"
-                      strokeWidth="2.5"
-                      strokeLinecap="square"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M5.99981 12H6.00879"
-                      stroke="#141B34"
-                      strokeWidth="2.5"
-                      strokeLinecap="square"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-                {dropdownOpen === card.id && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md border shadow-lg z-10">
-                    <div className="py-1">
-                      <button className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left">
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </td>
+      <div className="rounded-md shadow-sm border">
+        <table className="w-full">
+          <thead>
+            <tr className="text-left text-sm text-gray-600 border-b">
+              <th className="p-2">No.</th>
+              <th className="p-2">Name on Card</th>
+              <th className="p-2">Expires on</th>
+              <th className="p-2 text-right ">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {paymentMethods.map((method, index) => (
+              <tr key={method.id} className="border-b last:border-none text-sm">
+                <td className="p-2 flex items-center gap-2">
+                  <img
+                    src={
+                      paymentBrandIcons[method.card.brand] ||
+                      paymentBrandIcons.unknown
+                    }
+                    alt={`${method.card.brand} logo`}
+                    className="w-8 h-8"
+                  />
+                  {method.card.brand.toUpperCase()} ****{method.card.last4}
+                </td>
+                <td className="p-2">
+                  {method.billing_details.name || "Unknown"}
+                </td>
+                <td className="p-2">
+                  {method.card.exp_month}/{method.card.exp_year}
+                </td>
+                <td className="p-2 text-right relative">
+                  <ActionDropdown
+                    isOpen={dropdownOpen === method.id}
+                    setDropdownOpen={() =>
+                      setDropdownOpen(
+                        dropdownOpen === method.id ? null : method.id
+                      )
+                    }
+                    onRemove={() => {
+                      setMethodToRemove(method.id);
+                      setDialogOpen(true);
+                    }}
+                    onSetDefault={() => handleSetDefault(method.id)}
+                    submitting={submitting}
+                    defaultPaymentMethodId={defaultPaymentMethodId}
+                    paymentMethodId={method.id}
+                  />
+                </td>
+              </tr>
+            ))}
+            {paymentMethods.length === 0 && (
+              <tr>
+                <td
+                  colSpan={4}
+                  className="h-36 text-center text-sm font-semibold py-4"
+                >
+                  No payment methods available
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <Dialog
+        isOpen={dialogOpen}
+        title="Confirm Remove Payment Method"
+        message="Are you sure you want to remove this payment method? This action cannot be undone."
+        confirmText="Remove"
+        cancelText="Cancel"
+        submitting={submitting}
+        onConfirm={handleRemove}
+        onCancel={() => setDialogOpen(false)}
+      />
+    </div>
+  );
+}
+
+function DefaultPaymentMethod({
+  paymentMethod,
+  onRemove,
+}: {
+  paymentMethod?: PaymentMethod;
+  onRemove: () => void;
+}) {
+  const renderPaymentBrandIcon = (type: string) => (
+    <img
+      src={paymentBrandIcons[type] || paymentBrandIcons.unknown}
+      alt={`${type} logo`}
+      className="w-8 h-8"
+    />
+  );
+
+  return paymentMethod ? (
+    <div className="flex flex-col justify-between border rounded shadow-sm p-4 max-w-sm mb-4">
+      <div className="flex items-start">
+        <div className="mr-3 ">
+          {renderPaymentBrandIcon(paymentMethod.card.brand)}
+        </div>
+        <div className="uppercase">
+          <p className="font-semibold">
+            {paymentMethod.card.brand} ****{paymentMethod.card.last4}
+          </p>
+          <p className="text-sm text-gray-600">
+            Expires on {paymentMethod.card.exp_month}/
+            {paymentMethod.card.exp_year}
+          </p>
+          <button
+            className="text-blue-600 text-sm font-medium"
+            onClick={onRemove}
+          >
+            Remove
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : (
+    <div className="flex flex-col justify-between border rounded shadow-sm p-4 max-w-sm mb-4">
+      <p className="text-sm text-gray-500">No default payment method set.</p>
+    </div>
+  );
+}
+
+function Spinner() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={14}
+      height={14}
+      className={`animate-spin duration-700 `}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3a9 9 0 1 0 9 9" />
+    </svg>
+  );
+}
+
+function ActionDropdown({
+  isOpen,
+  setDropdownOpen,
+  onRemove,
+  onSetDefault,
+  defaultPaymentMethodId,
+  paymentMethodId,
+  submitting,
+}: {
+  isOpen: boolean;
+  setDropdownOpen: () => void;
+  onRemove: () => void;
+  onSetDefault: () => void;
+  submitting: boolean;
+}) {
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+
+      // Skip if clicking on a button or interactive element
+      if (target.tagName === "BUTTON" || target.closest("button")) {
+        return;
+      }
+
+      if (dropdownRef.current && !dropdownRef.current.contains(target)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mouseup", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mouseup", handleClickOutside);
+    };
+  }, [isOpen, setDropdownOpen]);
+  const isDefault = defaultPaymentMethodId === paymentMethodId;
+
+  return (
+    <div ref={dropdownRef} className="relative">
+      <button onClick={setDropdownOpen} className="focus:outline-none">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M11.9959 12H12.0049"
+            stroke="#141B34"
+            stroke-width="2.5"
+            stroke-linecap="square"
+            stroke-linejoin="round"
+          ></path>
+          <path
+            d="M17.9998 12H18.0088"
+            stroke="#141B34"
+            stroke-width="2.5"
+            stroke-linecap="square"
+            stroke-linejoin="round"
+          ></path>
+          <path
+            d="M5.99981 12H6.00879"
+            stroke="#141B34"
+            stroke-width="2.5"
+            stroke-linecap="square"
+            stroke-linejoin="round"
+          ></path>
+        </svg>
+      </button>
+      {isOpen && (
+        <div
+          className={`absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-sm z-10 transition-all duration-300 transform ${
+            isOpen ? "opacity-100 scale-100" : "opacity-0 scale-95"
+          }`}
+          style={{ display: isOpen ? "block" : "none" }}
+        >
+          {!isDefault && (
+            <button
+              className="flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-gray-100 w-full text-left disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={onSetDefault}
+              disabled={submitting}
+            >
+              {submitting && <Spinner />}
+              Set as Default
+            </button>
+          )}
+          <button
+            className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={onRemove}
+          >
+            Remove
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface DialogProps {
+  isOpen: boolean;
+  title: string;
+  message: string;
+  confirmText?: string;
+  cancelText?: string;
+  submitting?: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+function Dialog({
+  isOpen,
+  title,
+  message,
+  confirmText = "Confirm",
+  cancelText = "Cancel",
+  submitting = false,
+  onConfirm,
+  onCancel,
+}: DialogProps) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="text-left fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div className="bg-white rounded-md shadow-lg max-w-lg w-full p-4 mx-4">
+        <h3 className="text-lg font-semibold mb-1">{title}</h3>
+        <p className="text-gray-600 mb-6">{message}</p>
+        <div className="flex justify-end space-x-2">
+          <button
+            onClick={onCancel}
+            className="h-9 flex items-center px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+          >
+            {cancelText}
+          </button>
+          <button
+            onClick={onConfirm}
+            className="h-9 flex items-center gap-2 px-4 py-2 text-white bg-red-600 rounded-md hover:bg-red-700 
+            disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={submitting}
+          >
+            {submitting && <Spinner />}
+            {confirmText}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
