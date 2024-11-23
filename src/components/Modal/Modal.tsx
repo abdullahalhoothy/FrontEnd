@@ -14,20 +14,24 @@ function Modal(props: ModalProps) {
 
   return ReactDOM.createPortal(
     <div
-      id={'overlay'}
-      className={`${styles.modalOverlay} ${darkBackground ? styles.darkBackground : ""
-        } ${isSmaller ? styles.pointerEventsNone : ""}`}
+      id={"overlay"}
+      className={`z-20 fixed top-0 left-0 right-0 bottom-0 flex justify-center items-center ${
+        darkBackground ? "bg-black/50" : ""
+      } ${isSmaller ? "pointer-events-none" : ""}`}
       onClick={(e) => {
         e.stopPropagation();
         if (e.target.id) closeModal();
       }}
     >
       <div
-        className={`${styles.modalContent} rounded-lg border shadow overflow-y-auto ${isSmaller ? styles.smallerContainer : ""
-          } ${styles.pointerEventsAll}`}
+        className={`bg-white p-5 w-full max-w-[950px] relative lg:h-5/6 lg:rounded-lg h-full border shadow overflow-y-auto ${
+          isSmaller
+            ? "flex justify-center items-center max-w-[400px] absolute left-[120px]"
+            : ""
+        } pointer-events-auto`}
       >
         <button
-          className='transition-all text-xl w-10 h-10 hover:text-white font-bold hover:bg-red-600 absolute top-0 right-0 rounded-tr-lg'
+          className="transition-all text-xl w-10 h-10 hover:text-white font-bold hover:bg-red-600 absolute top-0 right-0 rounded-tr-lg"
           onClick={closeModal}
           aria-label="Close modal"
         >

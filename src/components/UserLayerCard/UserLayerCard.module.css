@@ -93,8 +93,6 @@
   background: #f0f2f5;
   border-top: 1px solid #dbdbdb;
   column-gap: 10px;
-  position: absolute;
-  bottom: 0;
   width: 100%;
 }
 

@@ -24,10 +24,10 @@ function Component({
   function renderActionItems() {
     if (containerType !== "Home") {
       return (
-        <li className={styles.actionItem}>
+        <li className="flex items-center justify-center gap-x-[5px] font-medium text-[#1677ff]">
           <div
             onClick={onMoreInfo}
-            className={`${styles.moreInfo} ${styles.add}`}
+            className="cursor-pointer inline-flex items-center text-[#1890ff] hover:text-[#40a9ff]"
           >
             + Add
           </div>
@@ -36,8 +36,11 @@ function Component({
     } else {
       return (
         <>
-          <li className={styles.actionItem}>
-            <div onClick={onMoreInfo} className={styles.moreInfo}>
+          <li className="flex items-center justify-center gap-x-[5px] font-medium text-[#1677ff]">
+            <div
+              onClick={onMoreInfo}
+              className="cursor-pointer inline-flex items-center text-[#1890ff]"
+            >
               {can_access ? <>Load Data</> : <>Subscribe</>}
             </div>
             <span
@@ -60,8 +63,11 @@ function Component({
             </span>
           </li>
           {!can_access && (
-            <li className={styles.actionItem}>
-              <div onClick={onMoreInfo} className={styles.moreInfo}>
+            <li className="flex items-center justify-center gap-x-[5px] font-medium text-[#1677ff]">
+              <div
+                onClick={onMoreInfo}
+                className="cursor-pointer inline-flex items-center text-[#1890ff] hover:text-[#40a9ff]"
+              >
                 Request Access
               </div>
               <span
@@ -90,39 +96,39 @@ function Component({
   }
 
   return (
-    <div className={styles.catalogueWrapper + " transition-all"}>
-      <div className={styles.ribbonWrapper}>
-        <span className={styles.ribbonChild}>
-          <span>{can_access ? "Free" : "Paid"}</span>
-        </span>
+    <div className="relative transition-all">
+      <div className="absolute top-0 left-0 z-10 bg-[#ff0000] text-white py-1.5 px-3 rounded-tl rounded-br">
+        <span>{can_access ? "Free" : "Paid"}</span>
       </div>
-      <div className={styles.card}>
-        <div className={styles.cardCover}>
+      <div className="border border-[#f0f0f0] rounded overflow-hidden bg-white flex flex-col h-full">
+        <div className="overflow-hidden flex justify-center items-center h-[200px]">
           <img
             alt={name}
             fetchpriority="low"
             src={isImageError ? placeholderImage : thumbnail_url}
             onError={handleImageError}
-            className={`${styles.cardImage} ${
-              isImageError ? styles.placeholderImage : ""
+            className={`w-full h-full object-cover ${
+              isImageError ? "w-full h-[200px] object-contain scale-[0.8]" : ""
             }`}
             loading="lazy"
           />
         </div>
-        <div className={styles.cardBody}>
-          <div className={styles.cardMeta}>
-            <div className={styles.cardMetaDetail}>
-              <div className={styles.cardMetaTitle}>{name}</div>
+        <div className="p-4 flex flex-col justify-between flex-grow">
+          <div className="mb-4">
+            <div className="flex flex-col">
+              <div className="text-base font-bold">{name}</div>
             </div>
           </div>
-          <div className={styles.metaDataWrapper}>
-            <span className={styles.catalogueRow}>
+          <div className="mt-2 flex-grow">
+            <span className="block text-sm text-[#888]">
               {records_number || 0} points
             </span>
-            <p className={styles.catalogueDesc}>{description}</p>
+            <p className="m-0 text-sm text-[#555]">{description}</p>
           </div>
         </div>
-        <ul className={styles.cardActions}>{renderActionItems()}</ul>
+        <ul className="list-none py-[10px] px-[5px] m-0 flex justify-around bg-[#f0f2f5] border-t border-[#dbdbdb] gap-x-[10px]">
+          {renderActionItems()}
+        </ul>
       </div>
     </div>
   );

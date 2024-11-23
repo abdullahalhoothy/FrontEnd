@@ -93,7 +93,7 @@ function CatalogMenu() {
   }
 
   return (
-    <div className="flex flex-col justify-between h-full w-full pr-1.5">
+    <div className="flex flex-col justify-between h-full w-full lg:pr-1.5">
       <div className="flex flex-col justify-start mt-7 ">
         <div className="flex justify-between items-center mx-8 my-2">
           <p className={"text-lg font-semibold"}>Datasets</p>
@@ -158,7 +158,7 @@ function CatalogMenu() {
           <button
             disabled={!(safeGeoPoints.length > 0)}
             onClick={handleDiscardClick}
-            className="w-full h-full bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
+            className="w-full h-10  bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
                  hover:bg-white transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-slate-100 disabled:cursor-not-allowed"
           >
             Discard
@@ -167,7 +167,7 @@ function CatalogMenu() {
           <button
             onClick={handleSaveClick}
             disabled={!(safeGeoPoints.length > 0)}
-            className="w-full h-full bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] 
+            className="w-full h-10  bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] 
             transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-[#115740] disabled:cursor-not-allowed"
           >
             Save

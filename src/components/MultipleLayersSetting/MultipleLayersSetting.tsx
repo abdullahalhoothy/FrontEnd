@@ -221,13 +221,20 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   return (
     <div className="w-full">
       {!isOpen && (
-        <div className={styles.container + " h-20 w-full"}>
-          <button className={styles.closeButton} onClick={handleRemoveLayer}>
+        <div
+          className={
+            "flex justify-between items-center gap-2.5 py-6 px-3.5 border border-[#ddd] rounded-lg mt-5 bg-white shadow relative transition-all duration-300 h-20 w-full"
+          }
+        >
+          <button
+            className="bg-transparent border-none text-[#ff4d4f] text-base cursor-pointer absolute top-[2px] right-[2px] rounded-full h-5 w-5 flex justify-center items-center transition-colors duration-300 hover:bg-[#ff4d4f] hover:text-white"
+            onClick={handleRemoveLayer}
+          >
             <FaTrash />
           </button>
 
-          <div className={styles.label}>
-            <span className={styles.text}>{prdcer_layer_name}</span>
+          <div className="font-bold text-[#333] w-[105px]">
+            <span className="text-sm text-[#333]">{prdcer_layer_name}</span>
           </div>
 
           <div className={"flex"}>
@@ -236,7 +243,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
               type="checkbox"
               checked={isDisplay}
               onChange={handleDisplayChange}
-              className={styles.checkbox}
+              className="appearance-none w-[11px] h-[11px] cursor-pointer border border-[#28a745] rounded-sm relative"
             />
           </div>
 
@@ -288,7 +295,10 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
             <BasedOnDropdown layerIndex={layerIndex} />
             <div className="ms-2.5">
-              <label className={`${styles.zl} block text-sm`} htmlFor="radius">
+              <label
+                className={`text-[11px] my-[2px] text-[#555] whitespace-nowrap block text-sm`}
+                htmlFor="radius"
+              >
                 radius
               </label>
               <input
@@ -314,9 +324,11 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                 type="checkbox"
                 checked={isHeatmap}
                 onChange={handleHeatMapChange}
-                className={`${styles.checkbox} text-sm`}
+                className={`appearance-none w-[11px] h-[11px] cursor-pointer border border-[#28a745] rounded-sm relative text-sm`}
               />
-              <p className={styles.zl}>Heatmap</p>
+              <p className="text-[11px] my-[2px] text-[#555] whitespace-nowrap">
+                Heatmap
+              </p>
             </div>
           </div>
         </div>

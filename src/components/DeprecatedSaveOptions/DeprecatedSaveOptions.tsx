@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import styles from "./SaveOptions.module.css";
+import styles from "./DeprecatedSaveOptions.module.css";
 import { useLayerContext } from "../../context/LayerContext";
 import { useCatalogContext } from "../../context/CatalogContext";
 import { useNavigate } from "react-router";

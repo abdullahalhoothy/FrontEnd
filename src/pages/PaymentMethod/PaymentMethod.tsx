@@ -9,20 +9,22 @@ import {
 } from "@stripe/react-stripe-js";
 
 import { loadStripe } from "@stripe/stripe-js";
-import React, { useState, FormEvent } from "react";
+import React, { useState, FormEvent, useLayoutEffect } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../../context/AuthContext";
 import apiRequest from "../../services/apiRequest";
 import urls from "../../urls.json";
+import { Drawer } from "vaul";
+import clsx from "clsx";
 
 const PaymentMethodForm: React.FC = () => {
   const { authResponse } = useAuth();
   const navigate = useNavigate();
   const stripe = useStripe();
   const elements = useElements();
+
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [cardBrand, setCardBrand] = useState<string>("unknown");
-
   // State for individual card field errors
   const [cardNumberError, setCardNumberError] = useState<string | null>(null);
   const [cardExpiryError, setCardExpiryError] = useState<string | null>(null);
@@ -207,7 +209,6 @@ const PaymentMethodForm: React.FC = () => {
               type="submit"
               disabled={!stripe || !elements || submitting}
               className="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-wait transition duration-200 ease-in-out flex items-center justify-center"
-              
             >
               {/* <CreditCard className="inline-block mr-2 h-5 w-5" /> */}
               <svg
@@ -261,18 +262,36 @@ const stripePromise = loadStripe(
   "pk_test_51PligvRtvvmhTtnG3whjRPyT3Aclju9ajcwzp9ZCy6ZbOe037NOEzfvih4GdWnJwBYh5UrqDRIE3Eq41OpNEBskQ00C1G2ZjUe"
 );
 
+// const stripePromise = null;
+
 const PaymentMethod: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const snapPoints = ["256", 1];
+  const [isMobile, setIsMobile] = useState(false);
+  const [snap, setSnap] = useState<number | string | null>(snapPoints[0]);
+
+  useLayoutEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   if (!isAuthenticated) {
     navigate("/auth");
     return null;
   }
+
   return (
-    <Elements stripe={stripePromise}>
-      <PaymentMethodForm />
-    </Elements>
+    <>
+      <Elements stripe={stripePromise}>
+        <PaymentMethodForm />
+      </Elements>
+    </>
   );
 };
 

@@ -29,7 +29,7 @@
   display: flex;
   justify-content: center;
   gap: 10px;
-  margin-top: 40px; 
+  margin-top: 40px;
 }
 
 .button {
@@ -44,7 +44,7 @@
 }
 
 .button:hover {
-  background-color: rgb(14, 70, 52); 
+  background-color: rgb(14, 70, 52);
 }
 
 .error {
@@ -62,6 +62,7 @@
 .categoryGroup {
   flex: 1;
   min-width: 200px;
+  text-wrap: nowrap;
 }
 
 .categoryTitle {

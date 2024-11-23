@@ -182,21 +182,21 @@ const Auth = () => {
   const renderForm = () => {
     if (isPasswordReset) {
       return (
-        <form onSubmit={handleSubmit} className={styles.authForm}>
-          <div className={styles.inputGroup}>
-            <FaEnvelope className={styles.icon} />
+        <form onSubmit={handleSubmit} className="flex flex-col">
+          <div className="flex items-center mb-[15px] bg-[#f0f8f0] rounded">
+            <FaEnvelope className="text-[#006400] ml-2.5" />
             <input
               type="email"
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className={styles.authInput}
+              className="flex-1 p-2.5 text-base border-none bg-transparent outline-none"
             />
           </div>
           <button
             type="submit"
-            className={styles.authButton}
+            className="flex-1 p-2.5 text-base border-none bg-transparent outline-none"
             disabled={isLoading}
           >
             Reset Password
@@ -206,45 +206,45 @@ const Auth = () => {
     }
 
     return (
-      <form onSubmit={handleSubmit} className={styles.authForm}>
+      <form onSubmit={handleSubmit} className="flex flex-col">
         {!isLogin && (
-          <div className={styles.inputGroup}>
-            <FaUser className={styles.icon} />
+          <div className="flex items-center mb-[15px] bg-[#f0f8f0] rounded">
+            <FaUser className="text-[#006400] ml-2.5" />
             <input
               type="text"
               placeholder="Name"
               value={username}
               onChange={(e) => setName(e.target.value)}
               required
-              className={styles.authInput}
+              className="flex-1 p-2.5 text-base border-none bg-transparent outline-none"
             />
           </div>
         )}
-        <div className={styles.inputGroup}>
-          <FaEnvelope className={styles.icon} />
+        <div className="flex items-center mb-[15px] bg-[#f0f8f0] rounded">
+          <FaEnvelope className="text-[#006400] ml-2.5" />
           <input
             type="email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className={styles.authInput}
+            className="flex-1 p-2.5 text-base border-none bg-transparent outline-none"
           />
         </div>
-        <div className={styles.inputGroup}>
-          <FaLock className={styles.icon} />
+        <div className="flex items-center mb-[15px] bg-[#f0f8f0] rounded">
+          <FaLock className="text-[#006400] ml-2.5" />
           <input
             type="password"
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className={styles.authInput}
+            className="flex-1 p-2.5 text-base border-none bg-transparent outline-none"
           />
         </div>
         <button
           type="submit"
-          className={styles.authButton}
+          className="flex-1 p-2.5 text-base border-none bg-transparent outline-none"
           disabled={isLoading}
         >
           {isLogin ? "Login" : "Register"}
@@ -254,10 +254,10 @@ const Auth = () => {
   };
 
   return (
-    <div className="w-full h-full border-l">
-      <div className={styles.authContainer}>
-        <div className={styles.authCard}>
-          <h2 className={styles.authTitle}>
+    <div className="flex-1 lg:border-l">
+      <div className="flex justify-center items-center h-screen bg-[#115740]">
+        <div className="bg-white p-10 rounded-lg shadow-md w-full max-w-[400px]">
+          <h2 className="text-2xl text-[#006400] mb-5 text-center">
             {isPasswordReset
               ? "Reset Password"
               : isLogin
@@ -265,22 +265,26 @@ const Auth = () => {
               : "Register"}
           </h2>
           <div className="text-red-500 mb-2">{error?.message}</div>
-          {authMessage && <p className={styles.authMessage}>{authMessage}</p>}
+          {authMessage && (
+            <p className="text-[#ff0000] mb-[15px] text-center">
+              {authMessage}
+            </p>
+          )}
           {renderForm()}
-          <div className={styles.authOptions}>
+          <div className="flex justify-between mt-[15px]">
             <button
               onClick={() => {
                 setIsLogin(!isLogin);
                 setIsPasswordReset(false);
               }}
-              className={styles.authToggle}
+              className="text-[#006400] bg-transparent border-none cursor-pointer text-sm p-[5px]"
             >
               {isLogin ? "Need to register?" : "Already have an account?"}
             </button>
             {isLogin && (
               <button
                 onClick={() => setIsPasswordReset(!isPasswordReset)}
-                className={styles.authToggle}
+                className="text-[#006400] bg-transparent border-none cursor-pointer text-sm p-[5px]"
               >
                 {isPasswordReset ? "Back to Login" : "Forgot Password?"}
               </button>

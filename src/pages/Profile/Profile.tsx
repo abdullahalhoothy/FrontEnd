@@ -1,12 +1,44 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import React, { useEffect, useLayoutEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router";
 import { useAuth } from "../../context/AuthContext";
 import { Link } from "react-router-dom";
+import { Drawer } from "vaul";
+import { useUIContext } from "../../context/UIContext";
 
 const Profile = () => {
+  const { isMobile, isDrawerOpen, setIsDrawerOpen } = useUIContext();
   const { isAuthenticated } = useAuth();
   const nav = useNavigate();
 
+  if (!isAuthenticated) {
+    nav("/auth");
+  }
+
+  return (
+    <div className="relative lg:h-full flex flex-col">
+      {isMobile ? (
+        <>
+          <ProfileDrawer />
+          <button className="bg-white border p-2.5 fixed w-full bottom-0 left-0 right-0 z-[5] flex items-center gap-2 text-gray-400 font-normal" onClick={() => setIsDrawerOpen(true)}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor">
+              <path d="M18 15L12 9L6 15" stroke-width="1.5" stroke-miterlimit="16" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            Tap to see more options
+          </button>
+        </>
+      ) : (
+        <div className="h-full w-96 bg-[#115740] px-1 py-1">
+          <div className="w-full h-full bg-white rounded">
+            <ProfileContent />
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+};
+
+function ProfileContent() {
   const [isExpanded, setIsExpanded] = useState({
     billing: false,
   });
@@ -15,34 +47,78 @@ const Profile = () => {
     setIsExpanded((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
-  if (!isAuthenticated) {
-    nav("/auth");
-  }
+  return (
+    <>
+      <div className="text-2xl pl-6 pt-4 font-semibold mb-4">Account</div>
+      <div className="flex flex-col justify-center items-center">
+        <MenuItem label="Account" to="/profile" />
+        <MenuItem label="Change Password" to="/profile/change-password" />
+        <MenuItem label="Change Email" to="/profile/change-email" />
+        <ExpandableMenuItem
+          label="Billing"
+          isExpanded={isExpanded.billing}
+          onClick={() => toggleExpand("billing")}
+        >
+          <SubMenuItem label="Payment methods" to="/profile/payment-methods" />
+        </ExpandableMenuItem>
+      </div>
+    </>
+  );
+}
+
+function ProfileDrawer() {
+  const snapPoints = ["192", 1];
+  const [snap, setSnap] = useState<number | string | null>(snapPoints[0]);
+  const location = useLocation();
+  const contentRef = React.useRef<HTMLDivElement>(null);
+  const { isDrawerOpen, setIsDrawerOpen } = useUIContext();
+
+  useEffect(() => {
+    setSnap(snapPoints[0]);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const drawerContent = contentRef.current;
+
+    if (drawerContent) {
+      // Remove potential focus-trap attributes
+      drawerContent.removeAttribute("aria-hidden");
+      drawerContent.removeAttribute("tabIndex");
+    }
+  }, []);
+
 
   return (
-    <div className="h-full w-96 bg-[#115740] px-1 py-1">
-      <div className="w-full h-full bg-white rounded">
-        <div className="text-2xl pl-6 pt-4 font-semibold mb-4">Account</div>
+    <>
+      <Drawer.Root
+        snapPoints={snapPoints}
+        activeSnapPoint={snap}
+        setActiveSnapPoint={setSnap}
+        modal={false}
 
-        <div className="flex flex-col justify-center items-center">
-          <MenuItem label="Account" to="/profile" />
-          <MenuItem label="Change Password" to="/profile/change-password" />
-          <MenuItem label="Change Email" to="/profile/change-email" />
-          <ExpandableMenuItem
-            label="Billing"
-            isExpanded={isExpanded.billing}
-            onClick={() => toggleExpand("billing")}
-          >
-            <SubMenuItem
-              label="Payment methods"
-              to="/profile/payment-methods"
-            />
-          </ExpandableMenuItem>
-        </div>
-      </div>
-    </div>
+        open={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        onOpenChange={(open) => setIsDrawerOpen(open)}
+      >
+        <Drawer.Overlay className="fixed inset-0 bg-black/40" />
+        <Drawer.Portal>
+          <div ref={contentRef} tabIndex={-1} className="drawer-content">
+            <Drawer.Content
+              data-testid="content"
+              className="z-10 fixed flex flex-col bg-white border-2 border-primary border-b-none rounded-t-[10px] bottom-0 left-0 right-0 h-full max-h-[97%] mx-[-1px]"
+            >
+              <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-gray-300 mt-4 mb-8" />
+              <div className="flex flex-col h-full overflow-hidden">
+                <ProfileContent />
+              </div>
+            </Drawer.Content>
+          </div>
+        </Drawer.Portal>
+      </Drawer.Root>
+
+    </>
   );
-};
+}
 
 function MenuItem({ label, to }: { label: string; to: string }) {
   return (

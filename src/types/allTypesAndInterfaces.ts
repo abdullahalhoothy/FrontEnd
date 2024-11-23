@@ -298,6 +298,10 @@ export interface UIContextProps {
   handleViewClick(): void;
   setSidebarMode(mode: string): void;
   resetViewState(): void;
+  isMobile: boolean;
+  setIsMobile: React.Dispatch<React.SetStateAction<boolean>>;
+  isDrawerOpen: boolean;
+  setIsDrawerOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export interface GeoPoint {

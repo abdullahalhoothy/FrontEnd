@@ -150,7 +150,7 @@ export default function PaymentMethods() {
     );
 
   return (
-    <div className="mx-32 p-6 font-sans">
+    <div className="2xl:mx-32 p-6 font-sans">
       <div className="flex items-center mb-6">
         <Link
           to="/profile/payment-methods/add"

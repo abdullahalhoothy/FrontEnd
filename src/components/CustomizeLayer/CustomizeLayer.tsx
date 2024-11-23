@@ -121,14 +121,14 @@ function CustomizeLayer() {
           <SavedIconFeedback />
         </div>
       ) : (
-        <div className="flex flex-col pr-2 w-full h-full">
+        <div className="flex flex-col lg:pr-2 w-full h-full">
           <div className="w-full h-full px-4 py-4">
             {error && (
               <div className="mt-3 mb-2 text-red-500 font-semibold">
                 {error}
               </div>
             )}
-            <div className={styles.formGroup}>
+            <div className="mb-5 flex flex-col">
               <label
                 className="block mb-2 text-md font-medium text-black"
                 htmlFor="name"
@@ -139,13 +139,13 @@ function CustomizeLayer() {
                 type="text"
                 id="name"
                 name="name"
-                className={styles.input}
+                className="p-[10px] border border-[#ccc] rounded bg-[#f9f9f9] text-base focus:border-[#007bff] focus:bg-white focus:outline-none"
                 value={name}
                 onChange={handleSecondFormChange}
                 placeholder="Enter Name"
               />
             </div>
-            <div className={styles.formGroup}>
+            <div className="mb-5 flex flex-col">
               <label
                 className="block mb-2 text-md font-medium text-black"
                 htmlFor="pointColor"
@@ -154,7 +154,7 @@ function CustomizeLayer() {
               </label>
               <ColorSelect />
             </div>
-            <div className={styles.formGroup}>
+            <div className="mb-5 flex flex-col">
               <label
                 className="block mb-2 text-md font-medium text-black"
                 htmlFor="legend"
@@ -171,7 +171,7 @@ function CustomizeLayer() {
                 placeholder="Enter Legend"
               />
             </div>
-            <div className={styles.formGroup}>
+            <div className="mb-5 flex flex-col">
               <label
                 className="block mb-2 text-md font-medium text-black"
                 htmlFor="description"

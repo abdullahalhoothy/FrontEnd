@@ -74,11 +74,11 @@ const ChangeEmail: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
-      <div className="w-96 space-y-1 mb-4">
+      <div className="mx-2 max-w-96 space-y-1 mb-4">
         <h2 className="text-2xl font-semibold text-gray-700 ">Change Email</h2>
       </div>
       <form
-        className="p-4 rounded-lg border bg-white shadow w-96"
+        className="p-4 sm:rounded-lg border bg-white shadow mx-2 w-full sm:max-w-96"
         onSubmit={handleSubmit}
       >
         <div className="mb-4">

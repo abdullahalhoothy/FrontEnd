@@ -111,7 +111,7 @@ export default function StatisticsPopup({ polygon }) {
 
   return (
     <div
-      className={`bg-white rounded-lg border shadow-sm max-h-96 overflow-auto absolute p-4 z-10 ${
+      className={`bg-white rounded-lg border shadow-sm lg:max-h-96 overflow-auto absolute p-4 z-10 ${
         polygonSections.polygon.properties.shape === "circle"
           ? "min-w-[64rem]"
           : "min-w-[32rem]"

@@ -2,10 +2,11 @@ import mapboxgl, { LngLat, MapMouseEvent } from "mapbox-gl";
 import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import * as turf from "@turf/turf";
 
-function CircleControl(map, draw) {
+function CircleControl(map, draw, isMobile) {
   this._map = map;
   this.draw = draw;
   this.isDrawing = false;
+  this.isMobile = isMobile;
 
   // Method to create the control button
   this._createButton = (text, title, clickHandler) => {
@@ -20,7 +21,11 @@ function CircleControl(map, draw) {
     button.title = title;
     button.style.width = "29px";
     button.style.height = "29px";
-    button.addEventListener("click", clickHandler);
+    if (this.isMobile) {
+      button.addEventListener("touchend", clickHandler);
+    } else {
+      button.addEventListener("click", clickHandler);
+    }
     return button;
   };
 
@@ -28,7 +33,11 @@ function CircleControl(map, draw) {
   this.startDrawing = () => {
     if (this._map) {
       this._map.getCanvas().style.cursor = "crosshair";
-      this._map.once("click", this.handleCenterClick.bind(this));
+      if (this.isMobile) {
+        this._map.once("touchend", this.handleCenterClick.bind(this));
+      } else {
+        this._map.once("click", this.handleCenterClick.bind(this));
+      }
       this.isDrawing = true;
     }
   };
@@ -85,7 +94,6 @@ CircleControl.prototype.onAdd = function (map) {
   this._map = map;
   this._container = document.createElement("div");
   this._container.className = "mapboxgl-ctrl mapboxgl-ctrl-group";
-  this._container.id = "circle-control";
 
   const drawCirclesButton = this._createButton(
     "",
@@ -102,6 +110,7 @@ CircleControl.prototype.onRemove = function () {
   if (this._map) {
     this._map.getCanvas().style.cursor = "";
     this._map.off("click", this.handleCenterClick);
+    this._map.off("touchend", this.handleCenterClick);
   }
   if (this._container.parentNode) {
     this._container.parentNode.removeChild(this._container);

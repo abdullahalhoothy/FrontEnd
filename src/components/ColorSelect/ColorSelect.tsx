@@ -89,7 +89,7 @@ function ColorSelect({ layerIndex }: ColorSelectProps) {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as Node;
       const dropdowns = document.querySelectorAll(
-        `.${styles.customSelectContainer}`
+        ".relative.inline-block.w-full"
       );
       const clickedOutside = Array.from(dropdowns).every(function (dropdown) {
         return !dropdown.contains(target);
@@ -111,17 +111,15 @@ function ColorSelect({ layerIndex }: ColorSelectProps) {
       return (
         <div
           key={hex}
-          className={`${styles.customSelectOption} ${
+          className={`p-2 mx-auto cursor-pointer flex justify-between items-center ${
             sidebarMode === "catalog" ? styles.catalogSelect : ""
           } ${showLoaderTopup ? styles.disabledOption : ""}`}
           onClick={(e) => handleOptionClick(name, hex, e)}
         >
-          {sidebarMode !== "catalog" && (
-            <span className={styles.optionText}>{name}</span>
-          )}
+          {sidebarMode !== "catalog" && <span className="mr-2.5">{name}</span>}
           <span
-            className={`${styles.colorCircle} ${
-              sidebarMode === "catalog" ? styles.colorCatalog : ""
+            className={`w-[14px] h-[14px] rounded-full absolute left-[80px]  ${
+              sidebarMode === "catalog" ? "w-[14px] h-[14px] static" : ""
             }`}
             style={{ backgroundColor: hex }}
           />
@@ -132,30 +130,30 @@ function ColorSelect({ layerIndex }: ColorSelectProps) {
 
   return (
     <div
-      className={`${styles.customSelectContainer} ${
-        sidebarMode === "catalog" ? styles.selectContainerContext : ""
+      className={`relative inline-block w-full ${
+        sidebarMode === "catalog" ? "w-[50px]" : ""
       } ${showLoaderTopup ? styles.disabled : ""}`}
     >
       <div
-        className={`${styles.customSelectValue} ${
-          sidebarMode === "catalog" ? styles.noBorder : ""
+        className={`flex items-center justify-between p-[10px] border border-[#ccc] rounded cursor-pointer ${
+          sidebarMode === "catalog" ? "border-none p-0" : ""
         }`}
         onClick={toggleDropdown}
       >
         {sidebarMode !== "catalog" ? (
           <>
-            <span className={styles.selectedText}>
-              {colorName || "Select a color"}
-            </span>
+            <span className="font-bold">{colorName || "Select a color"}</span>
             <MdKeyboardArrowDown
-              className={`${styles.arrowIcon} ${isOpen ? styles.open : ""}`}
+              className={`text-2xl ${isOpen ? "rotate-180" : ""}`}
             />
           </>
         ) : (
           <>
             <span
-              className={`${styles.colorCircle} ${
-                sidebarMode === "catalog" ? styles.colorCircleCatalog : ""
+              className={`w-[14px] h-[14px] rounded-full absolute left-[80px] ${
+                sidebarMode === "catalog"
+                  ? "static min-w-[14px] min-h-[14px] ml-[16px]"
+                  : ""
               }`}
               style={{ backgroundColor: colorHex }}
             />
@@ -164,8 +162,10 @@ function ColorSelect({ layerIndex }: ColorSelectProps) {
       </div>
       {isOpen && (
         <div
-          className={`${styles.customSelectOptions} ${
-            sidebarMode === "catalog" ? styles.CatalogueSelectOptions : ""
+          className={`absolute top-full left-0 right-0 border border-[#ccc] rounded bg-white z-[1] ${
+            sidebarMode === "catalog"
+              ? "max-w-[35px] left-[5px] top-[30px] flex flex-col justify-center py-[4px]"
+              : ""
           }`}
         >
           {renderOptions()}
