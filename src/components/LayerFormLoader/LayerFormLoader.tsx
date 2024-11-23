@@ -19,10 +19,10 @@ function LayerFormLoader() {
   }, []);
 
   return (
-    <div className="h-full w-96">
+    <>
       {createLayerformStage === "initial" && <FetchDatasetForm />}
       {createLayerformStage === "secondStep" && <CustomizeLayer />}
-    </div>
+    </>
   );
 }
 

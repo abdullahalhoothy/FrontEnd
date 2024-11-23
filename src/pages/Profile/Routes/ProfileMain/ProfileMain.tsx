@@ -202,25 +202,34 @@ const ProfileMain: React.FC = () => {
 
   return (
     <div className="w-full h-full overflow-y-scroll px-10">
-      <div className={styles.profileContainer}>
-        <div className={styles.profileHeader}>
-          <h2 className={styles.profileTitle}>User Profile</h2>
-          <button onClick={handleLogout} className={styles.logoutButton}>
-            <FaSignOutAlt /> Logout
+      <div className="m-5 mx-auto p-5 bg-[#f0f8f0] rounded-lg lg:shadow-md shadow-sm">
+        <div className="flex justify-between items-center mb-5">
+          <h2 className="text-2xl text-[#006400] mb-5 text-center">
+            User Profile
+          </h2>
+          <button
+            onClick={handleLogout}
+            className="flex items-center px-4 py-2 bg-red-600 text-white rounded cursor-pointer text-lg hover:bg-red-700"
+          >
+            <FaSignOutAlt className="mr-2" /> Logout
           </button>
         </div>
-        <div className={styles.profileInfo}>
-          <div className={styles.profileItem}>
-            <FaUser className={styles.icon} />
-            <span className={styles.label}>Username:</span> {profile.username}
+        <div className="bg-white p-5 rounded-lg mb-5">
+          <div className="flex items-start mb-2">
+            <FaUser className="mr-2 text-[#006400]" />
+            <span className="font-bold mr-1 min-w-[100px]">Username:</span>
+            {profile.username}
           </div>
-          <div className={styles.profileItem}>
-            <FaEnvelope className={styles.icon} />
-            <span className={styles.label}>Email:</span> {profile.email}
+          <div className="flex items-start mb-2">
+            <FaEnvelope className="mr-2 text-[#006400]" />
+            <span className="font-bold mr-1 min-w-[100px]">Email:</span>
+            {profile.email}
           </div>
           {profile.prdcer && (
-            <div className={styles.producerInfo}>
-              <h3 className={styles.sectionTitle}>Producer Information</h3>
+            <div>
+              <h3 className="text-lg text-[#006400] mt-5 mb-2">
+                Producer Information
+              </h3>
               {renderSection(
                 "Datasets",
                 <FaDatabase />,

@@ -61,11 +61,11 @@ function CatalogDetailsForm() {
   }
 
   return (
-    <div className="flex flex-col justify-between h-full w-full pr-1.5">
+    <div className="flex flex-col justify-between h-full w-full lg:pr-1.5">
       <div className='flex flex-col mt-7 px-4'>
         {error && <p className=' text-red-500 font-semibold'>{error}</p>}
 
-        <div className={styles.formGroup}>
+        <div className="mb-5 flex flex-col w-full">
           <label className='block mb-2 text-md font-medium text-black' htmlFor="legendlist">
             Legend List
           </label>
@@ -80,7 +80,7 @@ function CatalogDetailsForm() {
             readOnly
           ></textarea>
         </div>
-        <div className={styles.formGroup}>
+        <div className="mb-5 flex flex-col w-full">
           <label className='block mb-2 text-md font-medium text-black' htmlFor="subprice">
             Subscription Price
           </label>
@@ -93,7 +93,7 @@ function CatalogDetailsForm() {
           />
         </div>
 
-        <div className={styles.formGroup}>
+        <div className="mb-5 flex flex-col w-full">
           <label className='block mb-2 text-md font-medium text-black' htmlFor="name">
             Name
           </label>
@@ -106,7 +106,7 @@ function CatalogDetailsForm() {
           />
         </div>
 
-        <div className={styles.formGroup}>
+        <div className="mb-5 flex flex-col w-full">
           <label className='block mb-2 text-md font-medium text-black' htmlFor="description">
             Description
           </label>
@@ -125,14 +125,14 @@ function CatalogDetailsForm() {
         <div className="flex h-full w-full space-x-2">
           <button
             onClick={handleDiscardClick}
-            className="w-full h-full bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
+            className="w-full h-10 bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
                  hover:bg-white transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-slate-100 disabled:cursor-not-allowed">
             Discard
           </button>
 
           <button
             onClick={handleButtonClick}
-            className="w-full h-full bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] 
+            className="w-full h-10 bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] 
             transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-[#115740] disabled:cursor-not-allowed"
           >
             Save

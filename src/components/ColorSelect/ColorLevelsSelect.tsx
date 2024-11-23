@@ -74,7 +74,7 @@ function ColorLevelsSelect({ layerIndex }: ColorSelectProps) {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as Node;
       const dropdowns = document.querySelectorAll(
-        `.${styles.customSelectContainer}`
+        ".relative.inline-block.w-full"
       );
       const clickedOutside = Array.from(dropdowns).every(function (dropdown) {
         return !dropdown.contains(target);
@@ -96,17 +96,15 @@ function ColorLevelsSelect({ layerIndex }: ColorSelectProps) {
       return (
         <div
           key={hex}
-          className={`${styles.customSelectOption} ${
+          className={`p-2 mx-auto cursor-pointer flex justify-between items-center ${
             sidebarMode === "catalog" ? styles.catalogSelect : ""
           } ${showLoaderTopup ? styles.disabledOption : ""}`}
           onClick={(e) => handleOptionClick(name, hex, e)}
         >
-          {sidebarMode !== "catalog" && (
-            <span className={styles.optionText}>{name}</span>
-          )}
+          {sidebarMode !== "catalog" && <span className="mr-2.5">{name}</span>}
           <span
-            className={`${styles.colorCircle} ${
-              sidebarMode === "catalog" ? styles.colorCatalog : ""
+            className={`w-[14px] h-[14px] rounded-full absolute left-[80px] ${
+              sidebarMode === "catalog" ? "w-[14px] h-[14px] static" : ""
             }`}
             style={{ backgroundColor: hex }}
           />

@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useLayoutEffect,
+} from "react";
 import Modal from "../components/Modal/Modal";
 import { useCatalogContext } from "./CatalogContext";
 import { useLayerContext } from "./LayerContext";
@@ -23,7 +29,6 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const [sidebarMode, setSidebarModeState] = useState("default");
   const [isMenuExpanded, setIsMenuExpanded] = useState(true);
   const [isViewClicked, setIsViewClicked] = useState(false);
-
   // Use CatalogContext and LayerContext to manage their respective states
   const {
     saveResponse: catalogIsSaved,
@@ -46,7 +51,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
   // Function to open the modal with specified content and options
   function openModal(content: ReactNode, options: ModalOptions = {}) {
-    setModalContent(content)
+    setModalContent(content);
     setModalOptions(options);
     setIsModalOpen(true);
   }
@@ -96,6 +101,24 @@ export function UIProvider({ children }: { children: ReactNode }) {
     setSidebarModeState(mode);
   }
 
+  const [isMobile, setIsMobile] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  
+  useLayoutEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 1024) {
+        setIsMobile(true);
+        setIsDrawerOpen(true);
+      } else {
+        setIsMobile(false);
+        setIsDrawerOpen(false);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    handleResize();
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
     <UIContext.Provider
       value={{
@@ -110,7 +133,10 @@ export function UIProvider({ children }: { children: ReactNode }) {
         toggleMenu,
         handleViewClick,
         setSidebarMode,
-        resetViewState
+        resetViewState,
+        isMobile,
+        setIsMobile,
+        isDrawerOpen, setIsDrawerOpen
       }}
     >
       {children}

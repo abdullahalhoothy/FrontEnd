@@ -23,7 +23,7 @@ export default function BasedOnDropdown({ layerIndex }: BasedOnDropdownProps) {
   };
   return (
     <div className="ms-2.5 flex flex-col">
-      <label htmlFor="ratingDropdown" className={`${styles.zl} text-sm`}>
+      <label htmlFor="ratingDropdown" className={`text-[11px] my-[2px] text-[#555] whitespace-nowrap text-sm`}>
         Based on
       </label>
       <select

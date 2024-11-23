@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useLayoutEffect, useState } from "react";
 import SideBar from "../SideBar/SideBar";
 import { Route, Routes } from "react-router";
 import NotFound from "../../pages/NotFound/NotFound";
 import Dataview from "../../pages/Dataview/Dataview";
 import Auth from "../../pages/Auth/Auth";
 import MapContainer from "../../pages/MapContainer/MapContainer";
-import Home from "../../pages/Home/Home";
+import Home, { HomeContent } from "../../pages/Home/Home";
 import Profile from "../../pages/Profile/Profile";
 import ProfileLayout from "../../pages/Profile/ProfileLayout";
 import OrganizationLayout from "../../pages/Organization/OrganizationLayout";
@@ -18,28 +18,32 @@ import ChangeEmail from "../../pages/ChangeEmail/ChangeEmail";
 import ChangePassword from "../../pages/ChangePassword/ChangePassword";
 import PaymentMethods from "../../pages/PaymentMethods/PaymentMethods";
 import PaymentMethod from "../../pages/PaymentMethod/PaymentMethod";
+import MobileNavbar from "../MobileNavbar/MobileNavbar";
+import { Drawer } from "vaul";
+import clsx from "clsx";
 
 const Layout = () => {
   return (
-    <>
-      <SideBar />
+    <div className="flex flex-col">
+      <MobileNavbar />
 
-      <>
+      <div className="flex lg:flex-row flex-col w-screen h-screen">
+        <SideBar />
+
         <Routes>
           <Route path="*" element={<NotFound />} />
+          <Route path={"/tabularView"} element={<></>} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/" element={<Home />} />
-          <Route path="/tabularView" element={<Dataview />} />
           <Route path={"/profile/*"} element={<Profile />} />
           <Route path={"/organization/*"} element={<Organization />} />
           <Route path={"/billing/*"} element={<Billing />} />
         </Routes>
-      </>
 
-      <>
         <Routes>
           <Route path={"/"} element={<MapContainer />} />
-          <Route path={"/tabularView"} element={<></>} />
+          <Route path="/tabularView" element={<Dataview />} />
+
           <Route path={"/profile"} element={<ProfileLayout />}>
             <Route path="" element={<ProfileMain />} />
             <Route path="change-password" element={<ChangePassword />} />
@@ -58,8 +62,8 @@ const Layout = () => {
             <Route path="price" element={<CommingSoon data={"Price"} />} />
           </Route>
         </Routes>
-      </>
-    </>
+      </div>
+    </div>
   );
 };
 

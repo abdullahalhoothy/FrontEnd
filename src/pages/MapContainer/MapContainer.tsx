@@ -22,6 +22,7 @@ import StatisticsPopups from "./StatisticsPopups";
 import BenchmarkControl from "./BenchmarkControl";
 import apiRequest from "../../services/apiRequest";
 import urls from "../../urls.json";
+import { useUIContext } from "../../context/UIContext";
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_KEY;
 
@@ -37,12 +38,14 @@ function Container() {
   } = useCatalogContext();
   const { centralizeOnce, initialFlyToDone, setInitialFlyToDone } =
     useLayerContext();
+  const { isMobile } = useUIContext();
 
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapboxMap | null>(null);
   const styleLoadedRef = useRef(false);
   const lastCoordinatesRef = useRef<[number, number] | null>(null);
   const legendRef = useRef<HTMLDivElement | null>(null);
+  const draw = useRef<MapboxDraw | null>(null);
   const [currentStyle, setCurrentStyle] = useState(
     "mapbox://styles/mapbox/streets-v11"
   );
@@ -66,6 +69,9 @@ function Container() {
         zoom: mapConfig.zoom,
       });
 
+      const stylesControl = new StylesControl(currentStyle, setCurrentStyle);
+      mapRef.current.addControl(stylesControl, "top-right");
+
       // Add Navigation Control
       mapRef.current.addControl(new mapboxgl.NavigationControl(), "top-right");
       // Set an id for the navigation control
@@ -76,12 +82,9 @@ function Container() {
         navControlContainer.setAttribute("id", "navigation-control");
       }
 
-      const stylesControl = new StylesControl(currentStyle, setCurrentStyle);
-      mapRef.current.addControl(stylesControl, "top-left");
-
       let modes = MapboxDraw.modes;
 
-      const draw = new MapboxDraw({
+      draw.current = new MapboxDraw({
         displayControlsDefault: false,
         controls: {
           point: false,
@@ -110,24 +113,6 @@ function Container() {
           },
         },
       });
-
-      const circleControl = new CircleControl(mapRef.current, draw);
-      mapRef.current.addControl(circleControl, "top-right");
-      mapRef.current.addControl(draw);
-
-      const drawButton = mapRef.current
-        .getContainer()
-        .querySelector(".mapbox-gl-draw_polygon");
-      if (drawButton) {
-        drawButton.setAttribute("id", "draw-button");
-      }
-
-      const drawTrashButton = mapRef.current
-        .getContainer()
-        .querySelector(".mapbox-gl-draw_trash");
-      if (drawTrashButton) {
-        drawTrashButton.setAttribute("id", "draw-trash");
-      }
 
       mapRef.current.on("draw.create", (e) => {
         console.log(e);
@@ -168,15 +153,43 @@ function Container() {
     }
 
     return function () {
+      if (draw.current) {
+        mapRef.current?.removeControl(draw.current);
+      }
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
       }
+
       if (styleLoadedRef.current) {
         styleLoadedRef.current = false;
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (mapRef.current && draw.current) {
+      const circleControl = new CircleControl(
+        mapRef.current,
+        draw.current,
+        isMobile
+      );
+
+      // Add controls
+      mapRef.current.addControl(circleControl, "top-right");
+      mapRef.current.addControl(draw.current);
+
+      return () => {
+        // Cleanup controls properly
+        if (mapRef.current) {
+          if (mapRef.current.hasControl(circleControl)) {
+            mapRef.current.removeControl(circleControl);
+          }
+          mapRef.current.removeControl(draw.current);
+        }
+      };
+    }
+  }, [isMobile]);
 
   function getColorsArray(colorHex, index) {
     const array = colors?.find((arr) => arr.includes(colorHex));
@@ -713,16 +726,24 @@ function Container() {
     };
 
     if (mapRef.current) {
-      mapRef.current.on("click", handleMapClick);
+      if (isMobile) {
+        mapRef.current.on("touchend", handleMapClick);
+      } else {
+        mapRef.current.on("click", handleMapClick);
+      }
     }
 
     // Cleanup listener on unmount or polygon change
     return () => {
       if (mapRef.current) {
-        mapRef.current.off("click", handleMapClick);
+        if (isMobile) {
+          mapRef.current.off("touchend", handleMapClick);
+        } else {
+          mapRef.current.off("click", handleMapClick);
+        }
       }
     };
-  }, [polygons]);
+  }, [polygons, isMobile]);
 
   // Create or update the legend based on the geoPoints data
   useEffect(() => {
@@ -819,9 +840,9 @@ function Container() {
   }, [currentStyle]);
 
   return (
-    <div className="w-[80%] h-full relative overflow-hidden" id="map-container">
+    <div className="flex-1 h-full relative overflow-hidden" id="map-container">
       <div
-        className="absolute w-full h-full"
+        className="lg:absolute w-full h-full"
         id="map-container"
         ref={mapContainerRef}
       />

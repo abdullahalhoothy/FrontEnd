@@ -16,12 +16,10 @@
 .modalContent {
   background: white;
   padding: 20px;
-  border-radius: 4px;
   width: 100%;
   max-width: 950px;
   /* Increased to ensure cards fit nicely */
-  min-height: 80%;
-  max-height: 80%;
+
   position: relative;
 }
 

@@ -22,3 +22,6 @@
         @apply my-1 mx-3 p-1 rounded-lg flex flex-row items-center select-none hover:cursor-pointer hover:bg-black hover:bg-opacity-20 transition-all;
     }
 }
+body {
+    pointer-events: auto !important;
+}

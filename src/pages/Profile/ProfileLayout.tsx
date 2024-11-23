@@ -1,12 +1,12 @@
-import React from 'react';
-import { Outlet } from 'react-router';
+import React from "react";
+import { Outlet } from "react-router";
 
 const ProfileLayout = () => {
-    return (
-        <div className='h-full w-[80%]'>
-            <Outlet />
-        </div>
-    );
-}
+  return (
+    <div className="flex-1 lg:h-full lg:w-[80%]">
+      <Outlet />
+    </div>
+  );
+};
 
 export default ProfileLayout;
