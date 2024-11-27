@@ -19,15 +19,14 @@ import ChangePassword from "../../pages/ChangePassword/ChangePassword";
 import PaymentMethods from "../../pages/PaymentMethods/PaymentMethods";
 import PaymentMethod from "../../pages/PaymentMethod/PaymentMethod";
 import MobileNavbar from "../MobileNavbar/MobileNavbar";
-import { Drawer } from "vaul";
 import clsx from "clsx";
 
 const Layout = () => {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col overflow-hidden">
       <MobileNavbar />
 
-      <div className="flex lg:flex-row flex-col w-screen h-screen">
+      <div className="flex lg:flex-row flex-col w-screen h-screen relative">
         <SideBar />
 
         <Routes>

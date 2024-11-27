@@ -14,7 +14,6 @@ import { useNavigate } from "react-router";
 import { useAuth } from "../../context/AuthContext";
 import apiRequest from "../../services/apiRequest";
 import urls from "../../urls.json";
-import { Drawer } from "vaul";
 import clsx from "clsx";
 
 const PaymentMethodForm: React.FC = () => {

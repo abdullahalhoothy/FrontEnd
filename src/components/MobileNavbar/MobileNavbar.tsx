@@ -3,7 +3,6 @@ import { useAuth } from "../../context/AuthContext";
 import { BiCloset, BiMenu, BiX } from "react-icons/bi";
 import { MdPerson } from "react-icons/md";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Drawer } from "vaul";
 import { SideBarContent } from "../SideBar/SideBar";
 
 export default function MobileNavbar() {
@@ -17,9 +16,11 @@ export default function MobileNavbar() {
   return (
     <div className="lg:hidden bg-white ">
       <div className="flex justify-between items-center px-4 py-2 border-b">
-        <div className="flex items-center gap-2">
-          <img src="/slocator.png" alt="Google Logo" className="w-7" />
-        </div>
+        <Link to="/" className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            <img src="/slocator.png" alt="Google Logo" className="w-7" />
+          </div>
+        </Link>
         <div>
           {isAuthenticated ? (
             <div className="flex items-center gap-2">
@@ -31,7 +32,7 @@ export default function MobileNavbar() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <Link to="/auth/login" className="text-lg">
+              <Link to="/auth" className="text-base">
                 Login
               </Link>
             </div>
@@ -46,28 +47,25 @@ export default function MobileNavbar() {
           <BiMenu className="text-2xl" />
         </button>
       </div>
-      <Drawer.Root
-        direction="left"
-        open={isSidebarOpen}
-        onOpenChange={(open) => setIsSidebarOpen(open)}
-      >
-        <Drawer.Portal>
-          <Drawer.Overlay className="fixed inset-0 bg-black/40 z-10" />
-          <Drawer.Content
-            className="left-0 top-0 bottom-2 fixed z-10 outline-none h-full bg-primary w-[310px] flex"
-            // The gap between the edge of the screen and the drawer is 8px in this case.
-            style={
-              {
-                "--initial-transform": "calc(100% + 8px)",
-              } as React.CSSProperties
-            }
-          >
-            <div className="grow py-4 mt-4 flex flex-col bg-primary text-white">
-              <SideBarContent />
-            </div>
-          </Drawer.Content>
-        </Drawer.Portal>
-      </Drawer.Root>
+      <>
+        {isSidebarOpen && (
+          <div
+            className={`fixed inset-0 z-10 bg-black transition-opacity duration-300 ${isSidebarOpen ? "opacity-40" : "opacity-0 pointer-events-none"
+              }`}
+            onClick={() => setIsSidebarOpen(false)}
+          ></div>
+        )}
+        <div
+          className={`fixed left-0 top-0 bottom-2 z-10 outline-none h-full bg-primary w-[310px] flex transition-transform duration-300 ${isSidebarOpen ? "translate-x-0" : "translate-x-[-100%]"
+            }`}
+        >
+          <div className="grow py-4 mt-4 flex flex-col bg-primary text-white">
+            <SideBarContent />
+          </div>
+        </div>
+      </>
+
+
     </div>
   );
 }

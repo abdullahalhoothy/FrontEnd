@@ -60,8 +60,8 @@ function InternalCostEstimator() {
             setIsError(new Error("Invalid response from server"));
           }
         },
-        () => {},
-        () => {},
+        () => { },
+        () => { },
         () => setIsLoading(false),
         setIsError,
         "post",
@@ -72,7 +72,7 @@ function InternalCostEstimator() {
 
   return (
     <div className="lg:h-full lg:w-1/3 flex flex-col justify-between items-center">
-      <div className="lg:h-[90%] w-full pl-4 pr-2 lg:overflow-y-auto px-24 ">
+      <div className="lg:h-[90%] h-full w-full pl-4 pr-2 overflow-y-auto px-24 ">
         {isError && (
           <div className="mt-6 text-red-500 font-semibold">
             {isError.message}
@@ -174,13 +174,12 @@ function InternalCostEstimator() {
                         <button
                           key={type}
                           type="button"
-                          className={`py-2 px-4 bg-[#f0f0f0] border border-[#ccc] rounded cursor-pointer text-[14px] transition-all duration-300 ease-in-out ${
-                            included
-                              ? "bg-[#28a745] text-white"
+                          className={`p-2 rounded border transition-all ${included
+                              ? "bg-green-600 text-white border-green-700"
                               : excluded
-                              ? "bg-[#dc3545] text-white"
-                              : ""
-                          }`}
+                                ? "bg-red-600 text-white border-red-700"
+                                : "bg-gray-100 border-gray-300"
+                            }`}
                           onClick={(e) => {
                             e.preventDefault();
                             handleTypeToggle(type);

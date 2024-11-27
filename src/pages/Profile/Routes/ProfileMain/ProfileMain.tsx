@@ -201,15 +201,15 @@ const ProfileMain: React.FC = () => {
   }
 
   return (
-    <div className="w-full h-full overflow-y-scroll px-10">
+    <div className="w-full h-full overflow-y-scroll lg:px-10 px-4 text-sm">
       <div className="m-5 mx-auto p-5 bg-[#f0f8f0] rounded-lg lg:shadow-md shadow-sm">
         <div className="flex justify-between items-center mb-5">
-          <h2 className="text-2xl text-[#006400] mb-5 text-center">
+          <h2 className="lg:text-2xl text-lg text-[#006400] mb-5 text-center">
             User Profile
           </h2>
           <button
             onClick={handleLogout}
-            className="flex items-center px-4 py-2 bg-red-600 text-white rounded cursor-pointer text-lg hover:bg-red-700"
+            className="flex items-center px-4 h-9 lg:text-lg text-base bg-red-600 text-white rounded cursor-pointer  hover:bg-red-700"
           >
             <FaSignOutAlt className="mr-2" /> Logout
           </button>

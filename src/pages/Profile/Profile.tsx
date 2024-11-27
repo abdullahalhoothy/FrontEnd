@@ -2,13 +2,14 @@ import React, { useEffect, useLayoutEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { useAuth } from "../../context/AuthContext";
 import { Link } from "react-router-dom";
-import { Drawer } from "vaul";
 import { useUIContext } from "../../context/UIContext";
+import BottomDrawer from "../../components/BottomDrawer/BottomDrawer";
 
 const Profile = () => {
   const { isMobile, isDrawerOpen, setIsDrawerOpen } = useUIContext();
   const { isAuthenticated } = useAuth();
   const nav = useNavigate();
+  const location = useLocation();
 
   if (!isAuthenticated) {
     nav("/auth");
@@ -17,15 +18,17 @@ const Profile = () => {
   return (
     <div className="relative lg:h-full flex flex-col">
       {isMobile ? (
-        <>
-          <ProfileDrawer />
-          <button className="bg-white border p-2.5 fixed w-full bottom-0 left-0 right-0 z-[5] flex items-center gap-2 text-gray-400 font-normal" onClick={() => setIsDrawerOpen(true)}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor">
-              <path d="M18 15L12 9L6 15" stroke-width="1.5" stroke-miterlimit="16" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-            Tap to see more options
-          </button>
-        </>
+        location.pathname === '/profile' && (
+          <>
+            <ProfileDrawer />
+            <button className="bg-white border p-2.5 fixed w-full bottom-0 left-0 right-0 z-[5] flex items-center gap-2 text-gray-400 font-normal" onClick={() => setIsDrawerOpen(true)}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor">
+                <path d="M18 15L12 9L6 15" stroke-width="1.5" stroke-miterlimit="16" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              Tap to see more options
+            </button>
+          </>
+        )
       ) : (
         <div className="h-full w-96 bg-[#115740] px-1 py-1">
           <div className="w-full h-full bg-white rounded">
@@ -79,7 +82,6 @@ function ProfileDrawer() {
 
   useEffect(() => {
     const drawerContent = contentRef.current;
-
     if (drawerContent) {
       // Remove potential focus-trap attributes
       drawerContent.removeAttribute("aria-hidden");
@@ -87,35 +89,13 @@ function ProfileDrawer() {
     }
   }, []);
 
-
   return (
     <>
-      <Drawer.Root
-        snapPoints={snapPoints}
-        activeSnapPoint={snap}
-        setActiveSnapPoint={setSnap}
-        modal={false}
-
-        open={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
-        onOpenChange={(open) => setIsDrawerOpen(open)}
-      >
-        <Drawer.Overlay className="fixed inset-0 bg-black/40" />
-        <Drawer.Portal>
-          <div ref={contentRef} tabIndex={-1} className="drawer-content">
-            <Drawer.Content
-              data-testid="content"
-              className="z-10 fixed flex flex-col bg-white border-2 border-primary border-b-none rounded-t-[10px] bottom-0 left-0 right-0 h-full max-h-[97%] mx-[-1px]"
-            >
-              <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-gray-300 mt-4 mb-8" />
-              <div className="flex flex-col h-full overflow-hidden">
-                <ProfileContent />
-              </div>
-            </Drawer.Content>
-          </div>
-        </Drawer.Portal>
-      </Drawer.Root>
-
+      <BottomDrawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen} modal={false} defaultSnap={0.375} snapPoints={[0, 0.375, 1]}>
+        <div className="flex flex-col h-full overflow-hidden">
+          <ProfileContent />
+        </div>
+      </BottomDrawer>
     </>
   );
 }

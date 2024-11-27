@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { FaBoxOpen, FaLayerGroup } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
 import FetchDatasetForm from "../../components/FetchDatasetForm/FetchDatasetForm";
@@ -10,7 +10,8 @@ import CatalogFormLoader from "../../components/CatalogFormLoader/CatalogFormLoa
 import DataContainer from "../../components/DataContainer/DataContainer";
 import { useUIContext } from "../../context/UIContext";
 import { useCatalogContext } from "../../context/CatalogContext";
-import { Drawer } from "vaul";
+import BottomDrawer from "../../components/BottomDrawer/BottomDrawer";
+
 
 const Home = () => {
   const { isAuthenticated } = useAuth();
@@ -48,11 +49,21 @@ const Home = () => {
     if (!isAuthenticated && selectedTab === "CATALOG") nav("/auth");
   }, [selectedTab]);
 
-  const { isMobile } = useUIContext();
+  const { isMobile, setIsDrawerOpen, isDrawerOpen } = useUIContext();
   return (
     <>
       {!isMobile && <div className="lg:block hidden w-96 h-full pr-1 pb-1 bg-[#115740]"><HomeContent /></div>}
-      {isMobile && <HomerDrawer />}
+      {isMobile && (
+        <>
+          <button className="bg-white border p-2.5 fixed w-full bottom-0 left-0 right-0 z-[5] flex items-center gap-2 text-gray-400 font-normal" onClick={() => setIsDrawerOpen(true)}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor">
+              <path d="M18 15L12 9L6 15" stroke-width="1.5" stroke-miterlimit="16" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            Tap to see more options
+          </button>
+          <HomerDrawer />
+        </>
+      )}
     </>
   );
 };
@@ -81,6 +92,8 @@ export function HomeContent() {
   useEffect(() => {
     if (!isAuthenticated && selectedTab === "CATALOG") nav("/auth");
   }, [selectedTab]);
+
+
 
   return (
     <div className="flex flex-col relative h-full overflow-hidden ">
@@ -127,42 +140,47 @@ export function HomeContent() {
   );
 }
 
+
 function HomerDrawer() {
-  const snapPoints = ["256", 1];
+  const snapPoints = ['148px', '355px', 1];
   const [snap, setSnap] = useState<number | string | null>(snapPoints[0]);
-  const { isDrawerOpen, setIsDrawerOpen } = useUIContext();
+
+  const { isDrawerOpen, isModalOpen, setIsDrawerOpen } = useUIContext();
+
+
+  // Add a useEffect to manually manage pointer events
+  useEffect(() => {
+    if (!isDrawerOpen) {
+      document.body.style.pointerEvents = 'auto';
+    }
+
+    // Cleanup function to restore pointer events
+    return () => {
+      document.body.style.pointerEvents = 'auto';
+    };
+  }, [isDrawerOpen]);
+
+  // Debugging focus and click handling
+  const handleOpenChange = (isOpen: boolean) => {
+    console.log('Drawer open state changed:', isOpen);
+    setIsDrawerOpen(isOpen);
+    if (isOpen) {
+      document.body.style.pointerEvents = 'auto';
+    }
+  };
 
   return (
     <>
-      <button className="bg-white border p-2.5 fixed w-full bottom-0 left-0 right-0 z-[5] flex items-center gap-2 text-gray-400 font-normal" onClick={() => setIsDrawerOpen(true)}>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor">
-          <path d="M18 15L12 9L6 15" stroke-width="1.5" stroke-miterlimit="16" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-        Tap to see more options
-      </button>
-      <Drawer.Root
-        snapPoints={snapPoints}
-        activeSnapPoint={snap}
-        setActiveSnapPoint={setSnap}
-        modal={false}
-        open={isDrawerOpen}
-        onOpenChange={(open) => setIsDrawerOpen(open)}
-      >
-        <Drawer.Overlay className="fixed inset-0 bg-black/40" />
-        <Drawer.Portal>
-          <Drawer.Content
-            data-testid="content"
-            className="z-10 fixed flex flex-col bg-white border border-gray-200 border-b-none rounded-t-[10px] bottom-0 left-0 right-0 h-full max-h-[97%] mx-[-1px]"
-          >
-            <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-gray-300 mt-4 mb-8" />
-            <div className="flex flex-col h-full overflow-hidden">
-              <HomeContent />
-            </div>
-          </Drawer.Content>
-        </Drawer.Portal>
-      </Drawer.Root>
+      <BottomDrawer open={isDrawerOpen && !isModalOpen} onOpenChange={setIsDrawerOpen} modal={false}>
+        <div className="flex flex-col h-full overflow-auto pb-4 pt-4" >
+          <HomeContent />
+        </div>
+      </BottomDrawer>
     </>
   );
 }
 
 export default Home;
+
+
+

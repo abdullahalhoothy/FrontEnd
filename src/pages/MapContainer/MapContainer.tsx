@@ -56,7 +56,7 @@ function Container() {
       if (mapboxgl.getRTLTextPluginStatus() === "unavailable") {
         mapboxgl.setRTLTextPlugin(
           "https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-rtl-text/v0.2.3/mapbox-gl-rtl-text.js",
-          (): void => {},
+          (): void => { },
           true // Lazy load the plugin only when text is in arabic
         );
       }
@@ -95,7 +95,7 @@ function Container() {
         defaultMode: "simple_select",
         modes: {
           ...modes,
-          simple_select: { ...MapboxDraw.modes.simple_select, dragMove() {} },
+          simple_select: { ...MapboxDraw.modes.simple_select, dragMove() { } },
           direct_select: {
             ...MapboxDraw.modes.direct_select,
             dragVertex(state, e, delta) {
@@ -202,8 +202,8 @@ function Container() {
         const existingLayers = mapRef.current.getStyle().layers;
         const existingLayerIds = existingLayers
           ? existingLayers.map(function (layer: any) {
-              return layer.id;
-            })
+            return layer.id;
+          })
           : [];
 
         existingLayerIds.forEach(function (layerId: any) {
@@ -245,7 +245,7 @@ function Container() {
                         "rgba(33,102,172,0)",
                         0.2,
                         featureCollection.points_color ||
-                          mapConfig.defaultColor,
+                        mapConfig.defaultColor,
                         0.4,
                         "rgb(209,229,240)",
                         0.6,
@@ -288,47 +288,47 @@ function Container() {
                           ["<=", ["get", "rating"], 1],
                           getColorsArray(
                             featureCollection.points_color ||
-                              mapConfig.defaultColor,
+                            mapConfig.defaultColor,
                             5
                           ),
                           // Category 2: Rating <= 2
                           ["<=", ["get", "rating"], 2],
                           getColorsArray(
                             featureCollection.points_color ||
-                              mapConfig.defaultColor,
+                            mapConfig.defaultColor,
                             4
                           ),
                           // Category 3: Rating <= 3
                           ["<=", ["get", "rating"], 3],
                           getColorsArray(
                             featureCollection.points_color ||
-                              mapConfig.defaultColor,
+                            mapConfig.defaultColor,
                             3
                           ),
                           // Category 4: Rating <= 4
                           ["<=", ["get", "rating"], 4],
                           getColorsArray(
                             featureCollection.points_color ||
-                              mapConfig.defaultColor,
+                            mapConfig.defaultColor,
                             2
                           ),
                           // Category 5: Rating <= 5
                           ["<=", ["get", "rating"], 5],
                           getColorsArray(
                             featureCollection.points_color ||
-                              mapConfig.defaultColor,
+                            mapConfig.defaultColor,
                             1
                           ),
                           ["==", ["get", "rating"], 6],
                           getColorsArray(
                             featureCollection.points_color ||
-                              mapConfig.defaultColor,
+                            mapConfig.defaultColor,
                             0
                           ),
 
                           // default
                           featureCollection.points_color ||
-                            mapConfig.defaultColor,
+                          mapConfig.defaultColor,
                         ],
                       };
                       // Save the current color settings to persist them when the dropdown is closed
@@ -449,7 +449,7 @@ function Container() {
                         "rgba(33,102,172,0)",
                         0.2,
                         featureCollection.points_color ||
-                          mapConfig.defaultColor,
+                        mapConfig.defaultColor,
                         0.4,
                         "rgb(209,229,240)",
                         0.6,
@@ -621,7 +621,7 @@ function Container() {
             ) {
               const lastFeature =
                 featureCollection.features[
-                  featureCollection.features.length - 1
+                featureCollection.features.length - 1
                 ];
               const newCoordinates = lastFeature.geometry.coordinates as [
                 number,
@@ -771,9 +771,8 @@ function Container() {
           const item = document.createElement("div");
           item.className = "px-2.5 py-1.5 flex items-center gap-2";
           item.innerHTML = `
-          <div class="w-3 h-3 rounded-full" style="background-color: ${
-            point.points_color || mapConfig.defaultColor
-          }"></div>
+          <div class="w-3 h-3 rounded-full" style="background-color: ${point.points_color || mapConfig.defaultColor
+            }"></div>
           <span class="text-sm">${point.layer_legend || "Unnamed"}</span>`;
           legendRef.current.appendChild(item);
         });
@@ -796,9 +795,8 @@ function Container() {
           const item = document.createElement("div");
           item.className = "px-2.5 py-1.5 flex items-center gap-2";
           item.innerHTML = `
-          <div class="w-3 h-3 rounded-full" style="background-color: ${
-            point.points_color || mapConfig.defaultColor
-          }"></div>
+          <div class="w-3 h-3 rounded-full" style="background-color: ${point.points_color || mapConfig.defaultColor
+            }"></div>
           <span class="text-sm">${point.layer_legend || "Unnamed"}</span>`;
           legendRef.current.appendChild(item);
         });
@@ -842,7 +840,7 @@ function Container() {
   return (
     <div className="flex-1 h-full relative overflow-hidden" id="map-container">
       <div
-        className="lg:absolute w-full h-full"
+        className="lg:absolute w-full h-screen overflow-hidden"
         id="map-container"
         ref={mapContainerRef}
       />

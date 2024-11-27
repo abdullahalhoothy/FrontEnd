@@ -3,7 +3,7 @@ import { Outlet } from 'react-router';
 
 const OrganizationLayout = () => {
     return (
-        <div className='h-full w-[80%]'>
+        <div className='h-full lg:w-[80%]'>
             <Outlet />
         </div>
     );

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { usePolygonsContext } from "../../context/PolygonsContext";
 import * as turf from "@turf/turf";
+import { useUIContext } from "../../context/UIContext";
 
 function calculatePercentageDifference(number, benchmark) {
   if (!number || !benchmark) return 0;
@@ -46,6 +47,19 @@ function CloseButton({ polygon }) {
 }
 
 export default function StatisticsPopup({ polygon }) {
+
+  const { isMobile } = useUIContext();
+
+  return (
+    <>
+      {isMobile && <MobileStatisticsPopup polygon={polygon} />}
+      {!isMobile && <DesktopStatisticsPopup polygon={polygon} />}
+    </>
+  );
+}
+
+
+function DesktopStatisticsPopup({ polygon }) {
   const {
     sections,
     benchmarks,
@@ -111,11 +125,10 @@ export default function StatisticsPopup({ polygon }) {
 
   return (
     <div
-      className={`bg-white rounded-lg border shadow-sm lg:max-h-96 overflow-auto absolute p-4 z-10 ${
-        polygonSections.polygon.properties.shape === "circle"
-          ? "min-w-[64rem]"
-          : "min-w-[32rem]"
-      }`}
+      className={`bg-white rounded-lg border shadow-sm lg:max-h-96 overflow-auto absolute p-4 z-10 ${polygonSections.polygon.properties.shape === "circle"
+        ? "min-w-[64rem]"
+        : "min-w-[32rem]"
+        }`}
       style={{
         position: "absolute",
         left: `${popupPosition.x}px`,
@@ -149,27 +162,25 @@ export default function StatisticsPopup({ polygon }) {
               </th>
               <th className="w-3/4 p-0" colSpan={9}>
                 <div
-                  className={`flex ${
-                    polygonSections.polygon.properties.shape === "circle"
-                      ? "justify-between"
-                      : "justify-end"
-                  }`}
+                  className={`flex ${polygonSections.polygon.properties.shape === "circle"
+                    ? "justify-between"
+                    : "justify-end"
+                    }`}
                 >
                   {polygonSections.areas.map((area, index) => {
                     return (
                       <div
                         key={area}
-                        className={`font-normal space-y-0.5 overflow-hidden ${
-                          polygonSections.polygon.properties.shape === "circle"
-                            ? "w-[32%]"
-                            : "w-[64%]"
-                        }`}
+                        className={`font-normal space-y-0.5 overflow-hidden ${polygonSections.polygon.properties.shape === "circle"
+                          ? "w-[32%]"
+                          : "w-[64%]"
+                          }`}
                       >
                         <div className="bg-blue-600 text-white text-center mb-1 h-12 w-full flex items-center justify-center ">
                           {area === "Unknown"
                             ? `Area ${(turf.area(polygon) / 100000).toFixed(
-                                3
-                              )} km²`
+                              3
+                            )} km²`
                             : area}
                         </div>
                         <div className="flex justify-between text-xs gap-0.5">
@@ -211,31 +222,28 @@ export default function StatisticsPopup({ polygon }) {
                   {section.points.map((point, itemIndex) => (
                     <tr
                       key={`${section.title}-${point.layer_name}`}
-                      className={`${
-                        itemIndex % 2 === 0 ? "bg-gray-50" : "bg-white"
-                      }`}
+                      className={`${itemIndex % 2 === 0 ? "bg-gray-50" : "bg-white"
+                        }`}
                     >
                       <td className="py-1 px-1 w-1/4" colSpan={2}>
                         {point.layer_name}
                       </td>
                       <td className="w-3/4 p-0" colSpan={9}>
                         <div
-                          className={`flex overflow-hidden ${
-                            polygonSections.polygon.properties.shape ===
+                          className={`flex overflow-hidden ${polygonSections.polygon.properties.shape ===
                             "circle"
-                              ? "justify-between"
-                              : "justify-end"
-                          }`}
+                            ? "justify-between"
+                            : "justify-end"
+                            }`}
                         >
                           {point.data.map((data) => (
                             <div
                               key={`${point.layer_name}-${data.area}km`}
-                              className={`flex items-center ${
-                                polygonSections.polygon.properties.shape ===
+                              className={`flex items-center ${polygonSections.polygon.properties.shape ===
                                 "circle"
-                                  ? "w-[32%]"
-                                  : "w-[64%]"
-                              }`}
+                                ? "w-[32%]"
+                                : "w-[64%]"
+                                }`}
                             >
                               <div className="text-right py-1 px-1.5 w-1/4">
                                 {data.count}
@@ -261,11 +269,10 @@ export default function StatisticsPopup({ polygon }) {
                                 )}
                                 {benchmark?.value !== "" && (
                                   <div
-                                    className={`text-center h-full flex items-center justify-center p-1 ${
-                                      benchmark?.value > data.avg
-                                        ? "bg-red-50 text-red-500"
-                                        : "bg-blue-50 text-blue-500"
-                                    }`}
+                                    className={`text-center h-full flex items-center justify-center p-1 ${benchmark?.value > data.avg
+                                      ? "bg-red-50 text-red-500"
+                                      : "bg-blue-50 text-blue-500"
+                                      }`}
                                   >
                                     {calculatePercentageDifference(
                                       data.avg,
@@ -290,3 +297,127 @@ export default function StatisticsPopup({ polygon }) {
     </div>
   );
 }
+
+
+const MobileStatisticsPopup = ({ polygon }) => {
+  const { sections, benchmarks, setBenchmarks, isBenchmarkControlOpen, setIsBenchmarkControlOpen } =
+    usePolygonsContext();
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (polygon?.isStatisticsPopupOpen) {
+      setIsOpen(true);
+    }
+  }, [polygon]);
+
+  if (!polygon || !polygon.isStatisticsPopupOpen || !sections) return null;
+
+  const polygonSections = sections.find((section) => section.polygon.id === polygon.id);
+
+  if (!polygonSections) return null;
+  if (isBenchmarkControlOpen) return null;
+  return (
+    <div
+      className="fixed top-1/2 -translate-y-1/2 mx-4 my-2 left-0 right-0 bg-white shadow-lg rounded-lg p-4 z-50 overflow-y-auto text-sm"
+      style={{
+        height: "80vh",
+      }}
+    >
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-bold text-blue-600">Statistics</h3>
+        <CloseButton polygon={polygon} />
+      </div>
+      <div className="space-y-6">
+        {polygonSections.areas.map((area, areaIndex) => (
+          <div key={areaIndex} className="w-full border-t pt-4 space-y-4">
+            {/* Header for the Area */}
+            <div className="bg-blue-600 text-white text-center mb-4 h-9 w-full flex items-center justify-center">
+              {area === "Unknown"
+                ? `Area ${(turf.area(polygon) / 100000).toFixed(3)} km²`
+                : area}
+            </div>
+            {/* Data for the Area */}
+            {polygonSections.sections.map((section, sectionIndex) => {
+              const benchmark = benchmarks.find(
+                (benchmark) => benchmark.title === section.title
+              );
+
+              return (
+                <div key={sectionIndex} className="space-y-4">
+
+                  {section.points.map((point, pointIndex) => {
+                    const dataForArea = point.data.find(
+                      (data) => data.area === area
+                    );
+
+                    if (!dataForArea) return null;
+
+                    return (
+                      <div
+                        key={pointIndex}
+                        className="flex flex-col gap-2 bg-gray-100 rounded-md p-4"
+                      >
+                        {/* Section Title */}
+                        <div className="font-bold text-blue-600 text-base capitalize">
+                          {section.title.split("_").join(" ")}
+                        </div>
+                        {/* Layer Name */}
+                        <div className="font-medium text-gray-800 mb-2">
+                          {point.layer_name}
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-700 font-medium">Count:</span>
+                          <span className="text-gray-700">{dataForArea.count}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-700 font-medium">Percentage:</span>
+                          <span className="text-gray-700">
+                            {dataForArea.percentage}%
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-700 font-medium">Average:</span>
+                          <span className="text-gray-700">{dataForArea.avg}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-700 font-medium">
+                            vs Benchmark:
+                          </span>
+                          <span>
+                            {benchmark?.value === "" ? (
+                              <button
+                                className="text-blue-500 underline"
+                                onClick={() =>
+                                  setIsBenchmarkControlOpen(!isBenchmarkControlOpen)
+                                }
+                              >
+                                Set Benchmark
+                              </button>
+                            ) : (
+                              <div
+                                className={`text-center p-1 rounded ${benchmark?.value > dataForArea.avg
+                                  ? "text-red-600"
+                                  : "text-blue-600"
+                                  }`}
+                              >
+                                {calculatePercentageDifference(
+                                  dataForArea.avg,
+                                  benchmark?.value
+                                )}
+                                %
+                              </div>
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
