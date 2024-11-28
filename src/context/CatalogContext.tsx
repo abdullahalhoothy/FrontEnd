@@ -7,6 +7,7 @@ import {
 } from "../types/allTypesAndInterfaces";
 import { HttpReq } from "../services/apiService";
 import urls from "../urls.json";
+import userIdData from "../currentUserId.json";
 import {
   createContext,
   useContext,
@@ -124,7 +125,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
       typeOfCard === "layer"
         ? {
             prdcer_lyr_id: id,
-            user_id: authResponse.localId,
+            user_id: userIdData.user_id,
           }
         : typeOfCard === "userCatalog"
         ? { prdcer_ctlg_id: id, as_layers: true, user_id: authResponse.localId }

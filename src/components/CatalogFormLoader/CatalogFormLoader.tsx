@@ -16,7 +16,7 @@ const CatalogFormLoader = () => {
   }, []);
 
   return (
-    <div className="flex-1 h-full">
+    <div className="flex-1 lg:h-full">
       {formStage === "catalog" && <CatalogMenu />}
 
       {formStage === "catalogDetails" && <CatalogDetailsForm />}

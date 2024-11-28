@@ -3,26 +3,31 @@
 @tailwind utilities;
 
 ::-webkit-scrollbar {
-    width: 10px;
+  width: 10px;
 }
 
 /* Track */
 ::-webkit-scrollbar-track {
-    background: #ccc;
+  background: #ccc;
 }
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
-    background: #999;
+  background: #999;
 }
 
-
 @layer components {
-    .sidebar-icon {
-        @apply my-1 mx-3 p-1 rounded-lg flex flex-row items-center select-none hover:cursor-pointer hover:bg-black hover:bg-opacity-20 transition-all;
-    }
+  .sidebar-icon {
+    @apply my-1 mx-3 p-1 rounded-lg flex flex-row items-center select-none hover:cursor-pointer hover:bg-black hover:bg-opacity-20 transition-all;
+  }
 }
 
 body {
-    pointer-events: auto !important;
+  pointer-events: auto !important;
+}
+
+.mapbox-gl-draw_ctrl-draw-btn.active,
+.mapbox-gl-draw_ctrl-draw-btn.active:hover,
+.mapboxgl-ctrl button:not(:disabled):hover {
+  background-color: rgb(0 0 0 / 10%);
 }

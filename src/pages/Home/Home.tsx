@@ -96,9 +96,9 @@ export function HomeContent() {
 
 
   return (
-    <div className="flex flex-col relative h-full overflow-hidden ">
+    <div className="flex-1 h-full flex flex-col relative overflow-hidden ">
       {/* Tabs */}
-      <div className="flex pt-1 select-none space-x-1 font-semibold border-b">
+      <div className="flex  pt-1 select-none space-x-1 font-semibold border-b">
         <div
           className={
             "flex justify-center items-center rounded-t-lg w-full h-10 border border-slate-300 transition-all " +
@@ -131,7 +131,7 @@ export function HomeContent() {
       </div>
 
       {/* Container */}
-      <div className="flex-1 flex flex-col  border-slate-300 border border-t-0 bg-white overflow-hidden">
+      <div className="flex-1 flex flex-col  border-slate-300 lg:border border-t-0 bg-white overflow-hidden">
         {selectedTab === "LAYER" && <LayerFormLoader />}
 
         {selectedTab === "CATALOG" && <CatalogFormLoader />}
@@ -172,9 +172,7 @@ function HomerDrawer() {
   return (
     <>
       <BottomDrawer open={isDrawerOpen && !isModalOpen} onOpenChange={setIsDrawerOpen} modal={false}>
-        <div className="flex flex-col h-full overflow-auto pb-4 pt-4" >
-          <HomeContent />
-        </div>
+        <HomeContent />
       </BottomDrawer>
     </>
   );

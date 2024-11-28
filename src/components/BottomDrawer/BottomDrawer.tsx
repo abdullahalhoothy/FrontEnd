@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 const BottomDrawer = ({ open, onOpenChange, defaultSnap = 0.25, modal = true, snapPoints = [0, 0.25, 0.5, 1], children }) => {
     const [startY, setStartY] = useState(null);
@@ -6,7 +6,9 @@ const BottomDrawer = ({ open, onOpenChange, defaultSnap = 0.25, modal = true, sn
     const [isDragging, setIsDragging] = useState(false);
     const [position, setPosition] = useState(open ? defaultSnap : 0);
     const [initialPosition, setInitialPosition] = useState(open ? defaultSnap : 0);
-
+    const lastY = useRef(0);
+    const lastTime = useRef(0);
+    const velocity = useRef(0);
 
     useEffect(() => {
         if (open) {
@@ -19,50 +21,70 @@ const BottomDrawer = ({ open, onOpenChange, defaultSnap = 0.25, modal = true, sn
         };
     }, [open]);
 
+    useEffect(() => {
+        setPosition(open ? defaultSnap : 0);
+        setInitialPosition(open ? defaultSnap : 0);
+    }, [open, defaultSnap]);
+
     const handleTouchStart = (e) => {
         setStartY(e.touches[0].clientY);
+        lastY.current = e.touches[0].clientY;
+        lastTime.current = Date.now();
         setIsDragging(true);
         setInitialPosition(position);
+        velocity.current = 0;
     };
 
     const handleTouchMove = (e) => {
         if (isDragging) {
             const currentY = e.touches[0].clientY;
-            const deltaY = startY - currentY; // Positive when dragging up
+            const currentTime = Date.now();
+            const deltaY = lastY.current - currentY;
+            const deltaTime = currentTime - lastTime.current;
+
+            if (deltaTime > 0) {
+                velocity.current = deltaY / deltaTime;
+            }
 
             if (drawerHeight) {
-                const newPosition = Math.max(0, Math.min(1, initialPosition + deltaY / drawerHeight));
+                const newPosition = Math.max(0, Math.min(1, initialPosition + (startY - currentY) / drawerHeight));
                 setPosition(newPosition);
             }
+
+            lastY.current = currentY;
+            lastTime.current = currentTime;
         }
     };
 
     const handleTouchEnd = () => {
         if (isDragging) {
             const currentPosition = position;
+            let targetPosition;
 
-            const closestSnapPoint = snapPoints.reduce((prev, curr) =>
-                Math.abs(curr - currentPosition) < Math.abs(prev - currentPosition) ? curr : prev
-            );
-
-            setPosition(closestSnapPoint);
-
-            // Notify parent about open/close state
-            if (closestSnapPoint === 0) {
-                onOpenChange(false); // Fully close
+            if (Math.abs(velocity.current) > 0.5) {
+                // Fast swipe
+                if (velocity.current > 0) {
+                    // Swiping up
+                    targetPosition = snapPoints.find(point => point > currentPosition) || snapPoints[snapPoints.length - 1];
+                } else {
+                    // Swiping down
+                    targetPosition = [...snapPoints].reverse().find(point => point < currentPosition) || snapPoints[0];
+                }
             } else {
-                onOpenChange(true); // Open
+                // Slow drag, snap to closest point
+                targetPosition = snapPoints.reduce((prev, curr) =>
+                    Math.abs(curr - currentPosition) < Math.abs(prev - currentPosition) ? curr : prev
+                );
             }
+
+            setPosition(targetPosition);
+            onOpenChange(targetPosition !== snapPoints[0]);
         }
 
         setStartY(null);
         setIsDragging(false);
+        velocity.current = 0;
     };
-
-    useEffect(() => {
-        setPosition(open ? defaultSnap : 0);
-        setInitialPosition(open ? defaultSnap : 0);
-    }, [open, defaultSnap]);
 
     return (
         <>
@@ -92,8 +114,7 @@ const BottomDrawer = ({ open, onOpenChange, defaultSnap = 0.25, modal = true, sn
                     transition: isDragging ? 'none' : 'transform 0.3s ease',
                     zIndex: 20,
                 }}
-                className="border-2 border-primary border-b-none rounded-t-[10px] h-full max-h-[97%] mx-[-1px]"
-
+                className="border-2 border-primary border-b-none rounded-t-[10px] h-screen max-h-[97%] mx-[-1px]"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
@@ -121,7 +142,6 @@ const BottomDrawer = ({ open, onOpenChange, defaultSnap = 0.25, modal = true, sn
                             borderRadius: '99px',
                             background: '#ccc',
                             marginTop: '8px',
-
                         }}
                     ></div>
                 </div>
@@ -132,3 +152,4 @@ const BottomDrawer = ({ open, onOpenChange, defaultSnap = 0.25, modal = true, sn
 };
 
 export default BottomDrawer;
+

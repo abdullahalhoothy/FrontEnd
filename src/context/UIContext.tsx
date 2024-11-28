@@ -9,6 +9,7 @@ import Modal from "../components/Modal/Modal";
 import { useCatalogContext } from "./CatalogContext";
 import { useLayerContext } from "./LayerContext";
 import { ModalOptions, UIContextProps } from "../types/allTypesAndInterfaces";
+import { useLocation } from "react-router";
 
 const UIContext = createContext<UIContextProps | undefined>(undefined);
 
@@ -29,6 +30,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const [sidebarMode, setSidebarModeState] = useState("default");
   const [isMenuExpanded, setIsMenuExpanded] = useState(true);
   const [isViewClicked, setIsViewClicked] = useState(false);
+  const location = useLocation();
   // Use CatalogContext and LayerContext to manage their respective states
   const {
     saveResponse: catalogIsSaved,
@@ -103,12 +105,14 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
   const [isMobile, setIsMobile] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  
+
   useLayoutEffect(() => {
     const handleResize = () => {
       if (window.innerWidth <= 1024) {
         setIsMobile(true);
-        setIsDrawerOpen(true);
+        if (location.pathname !== "/profile") {
+          setIsDrawerOpen(true);
+        }
       } else {
         setIsMobile(false);
         setIsDrawerOpen(false);

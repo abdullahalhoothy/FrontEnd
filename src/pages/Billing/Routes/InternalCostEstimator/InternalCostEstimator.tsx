@@ -72,7 +72,7 @@ function InternalCostEstimator() {
 
   return (
     <div className="lg:h-full lg:w-1/3 flex flex-col justify-between items-center">
-      <div className="lg:h-[90%] h-full w-full pl-4 pr-2 overflow-y-auto px-24 ">
+      <div className="lg:h-[90%] w-full pl-4 pr-2 lg:overflow-y-auto px-24 ">
         {isError && (
           <div className="mt-6 text-red-500 font-semibold">
             {isError.message}
@@ -200,10 +200,10 @@ function InternalCostEstimator() {
         </div>
       </div>
 
-      <div className="flex justify-center items-center space-x-10 border-t w-full lg:h-[10%]">
+      <div className="flex-1 flex justify-center items-center space-x-10 border-t pt-2 w-full lg:h-[10%]">
         <button
           type="submit"
-          className="w-36 h-16 bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
+          className="w-36 lg:h-16 h-12 bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
                  hover:bg-white transition-all cursor-pointer"
           disabled={isLoading}
           onClick={handleCostEstimate}

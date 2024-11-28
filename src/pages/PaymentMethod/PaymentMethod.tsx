@@ -29,6 +29,8 @@ const PaymentMethodForm: React.FC = () => {
   const [cardExpiryError, setCardExpiryError] = useState<string | null>(null);
   const [cardCvcError, setCardCvcError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [cardholderName, setCardholderName] = useState("");
+
   const handleCardChange = (event: any) => {
     setCardBrand(event.brand); // Update the brand based on user input
     setCardNumberError(event.error ? event.error.message : null);
@@ -85,12 +87,15 @@ const PaymentMethodForm: React.FC = () => {
         await stripe.createPaymentMethod({
           type: "card",
           card: cardNumberElement,
+          billing_details: {
+            name: cardholderName, // Add the cardholder's name here
+          },
         });
 
       if (stripeError) {
         setErrorMessage(
           stripeError.message ||
-            "Failed to create the payment method. Please try again."
+          "Failed to create the payment method. Please try again."
         );
         return;
       }
@@ -154,6 +159,17 @@ const PaymentMethodForm: React.FC = () => {
         </div>
         <form onSubmit={handleSubmit} className="px-4 py-4">
           <div className="space-y-4">
+            <div>
+              <input
+                id="cardholder-name"
+                type="text"
+                value={cardholderName}
+                onChange={(e) => setCardholderName(e.target.value)}
+                className="w-full p-3 border border-gray-200 shadow-sm rounded-md focus:outline-none"
+                placeholder="Name on card"
+                required
+              />
+            </div>
             <div>
               <div className="relative">
                 <CardNumberElement

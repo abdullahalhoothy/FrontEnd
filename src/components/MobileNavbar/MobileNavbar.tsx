@@ -24,11 +24,11 @@ export default function MobileNavbar() {
         <div>
           {isAuthenticated ? (
             <div className="flex items-center gap-2">
-              <div>
+              <Link to="/profile">
                 <div className="flex items-center justify-center w-7 h-7 rounded-full bg-gray-200 ">
                   <span className="text-gray-500 text-sm font-medium">JD</span>
                 </div>
-              </div>
+              </Link>
             </div>
           ) : (
             <div className="flex items-center gap-2">

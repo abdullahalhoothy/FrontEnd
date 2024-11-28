@@ -392,7 +392,7 @@ const FetchDatasetForm = () => {
           </div>
         </div>
       </div>
-      <div className="flex-col flex  px-2 py-2 select-none border-t">
+      <div className="flex-col flex  px-2 py-2 select-none border-t lg:mb-0 mb-6">
         <div className="flex space-x-2">
           <button
             onClick={(e) => handleButtonClick("sample", e)}

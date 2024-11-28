@@ -94,7 +94,7 @@ function CatalogMenu() {
 
   return (
     <div className="flex flex-col justify-between h-full w-full lg:pr-1.5">
-      <div className="flex flex-col justify-start mt-7 ">
+      <div className="flex flex-col justify-start lg:mt-7 mt-3">
         <div className="flex justify-between items-center mx-8 my-2">
           <p className={"text-lg font-semibold"}>Datasets</p>
           <button
@@ -120,7 +120,7 @@ function CatalogMenu() {
       </div>
 
       {showRestorePrompt && (
-        <div className="ms-8 me-8 m-auto border-solid rounded border-2 border-[#115740] p-2  mt-5 ">
+        <div className="ms-8 me-8 m-auto border-solid rounded border-2 border-[#115740] p-2 mt-5 ">
           <p className="text-lg text-center font-semibold flex pb-3">
             You have unsaved data. Would you like to restore it?
           </p>
@@ -147,14 +147,14 @@ function CatalogMenu() {
           </div>
         </div>
       )}
-      <div className="flex flex-col h-full justify-start items-center overflow-y-auto overflow-x-hidden px-4">
+      <div className="flex flex-col justify-start items-center overflow-y-auto overflow-x-hidden px-4">
         {safeGeoPoints.map(function (featureCollection, index) {
           return <MultipleLayersSetting key={index} layerIndex={index} />;
         })}
       </div>
 
-      <div className="w-full flex-col h-[9%] flex  px-2 py-2 select-none border-t">
-        <div className="flex h-full w-full space-x-2">
+      <div className="w-full flex-col lg:h-[9%] flex px-2 py-2 select-none border-t lg:mb-0 mb-6">
+        <div className="flex w-full space-x-2">
           <button
             disabled={!(safeGeoPoints.length > 0)}
             onClick={handleDiscardClick}
