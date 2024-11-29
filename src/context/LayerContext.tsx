@@ -86,7 +86,7 @@ export function LayerProvider(props: { children: ReactNode }) {
 
   const [localLoading, setLocalLoading] = useState<boolean>(false);
   const [textSearchInput, setTextSearchInput] = useState<string>("");
-  const [searchType, setSearchType] = useState<string>("new nearby search");
+  const [searchType, setSearchType] = useState<string>("category_search");
   const [password, setPassword] = useState<string>("");
 
   const callCountRef = useRef<number>(0);
@@ -252,7 +252,7 @@ export function LayerProvider(props: { children: ReactNode }) {
       excludedTypes: reqFetchDataset.excludedTypes,
       action: action,
       search_type: searchType,
-      ...(searchType === "text search" && {
+      ...(searchType === "keyword_search" && {
         text_search_input: textSearchInput.trim(),
       }),
       ...(action === "full data" && { password: password }),
@@ -391,7 +391,8 @@ export function LayerProvider(props: { children: ReactNode }) {
     }
     if (
       reqFetchDataset.includedTypes.length === 0 &&
-      reqFetchDataset.excludedTypes.length === 0
+      reqFetchDataset.excludedTypes.length === 0 &&
+      searchType !== "keyword_search"
     ) {
       return new Error("At least one category must be included or excluded.");
     }
@@ -415,7 +416,7 @@ export function LayerProvider(props: { children: ReactNode }) {
       excludedTypes: [],
     });
     setTextSearchInput("");
-    setSearchType("new nearby search");
+    setSearchType("category_search");
     setPassword("");
     setGeoPoints([]);
   }

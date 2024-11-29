@@ -47,8 +47,8 @@ const FetchDatasetForm = () => {
 
   // USER INPUT
   const [searchType, setSearchType] = useState<
-    "new nearby search" | "text search"
-  >("new nearby search");
+    "category_search" | "keyword_search"
+  >("category_search");
   const [searchText, setSearchText] = useState("");
   const [password, setPassword] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("");
@@ -219,12 +219,12 @@ const FetchDatasetForm = () => {
               value={searchType}
               onChange={(e) => setSearchType(e.target.value as any)}
             >
-              <option value="new nearby search">Category Search</option>
-              <option value="text search">Keyword Search</option>
+              <option value="category_search">Category Search</option>
+              <option value="keyword_search">Keyword Search</option>
             </select>
           </div>
 
-          {searchType == "text search" && (
+          {searchType == "keyword_search" && (
             <div className="pt-4">
               <label
                 className="block mb-2 text-md font-medium text-black"
@@ -294,7 +294,7 @@ const FetchDatasetForm = () => {
             </select>
           </div>
 
-          {searchType !== "text search" && (<div className="flex flex-col my-5">
+          {searchType !== "keyword_search" && (<div className="flex flex-col my-5">
             <div className="flex justify-between">
               <label className="mb-4 font-bold">
                 What are you looking for?
