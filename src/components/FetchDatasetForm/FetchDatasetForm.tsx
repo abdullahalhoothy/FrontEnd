@@ -26,6 +26,8 @@ const FetchDatasetForm = () => {
     incrementFormStage,
     handleFetchDataset,
     resetFetchDatasetForm,
+    searchType,
+    setSearchType,
   } = useLayerContext();
 
   // AUTH CONTEXT
@@ -46,9 +48,6 @@ const FetchDatasetForm = () => {
   const [isError, setIsError] = useState<Error | null>(null);
 
   // USER INPUT
-  const [searchType, setSearchType] = useState<
-    "category_search" | "keyword_search"
-  >("category_search");
   const [searchText, setSearchText] = useState("");
   const [password, setPassword] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("");
@@ -217,7 +216,9 @@ const FetchDatasetForm = () => {
               id="searchType"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               value={searchType}
-              onChange={(e) => setSearchType(e.target.value as any)}
+              onChange={(e) => {
+                console.log("searchType", e.target.value);
+                setSearchType(e.target.value as any)}}
             >
               <option value="category_search">Category Search</option>
               <option value="keyword_search">Keyword Search</option>

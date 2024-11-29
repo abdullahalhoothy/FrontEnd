@@ -394,6 +394,7 @@ export function LayerProvider(props: { children: ReactNode }) {
       reqFetchDataset.excludedTypes.length === 0 &&
       searchType !== "keyword_search"
     ) {
+      console.log("At least one category must be included or excluded.", reqFetchDataset, searchType);
       return new Error("At least one category must be included or excluded.");
     }
     if (
@@ -406,6 +407,10 @@ export function LayerProvider(props: { children: ReactNode }) {
     }
     return true;
   }
+
+  useEffect(() => {
+    console.log("searchType", searchType);
+  }, [searchType]);
 
   function resetFetchDatasetForm() {
     // Reset form data when component unmounts
