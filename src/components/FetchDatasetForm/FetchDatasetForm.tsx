@@ -294,7 +294,7 @@ const FetchDatasetForm = () => {
             </select>
           </div>
 
-          <div className="flex flex-col my-5">
+          {searchType !== "text search" && (<div className="flex flex-col my-5">
             <div className="flex justify-between">
               <label className="mb-4 font-bold">
                 What are you looking for?
@@ -389,7 +389,7 @@ const FetchDatasetForm = () => {
                 </div>
               ))}
             </div>
-          </div>
+          </div>)}
         </div>
       </div>
       <div className="flex-col flex  px-2 py-2 select-none border-t lg:mb-0 mb-6">
