@@ -28,6 +28,8 @@ const FetchDatasetForm = () => {
     resetFetchDatasetForm,
     searchType,
     setSearchType,
+    textSearchInput,
+    setTextSearchInput,
   } = useLayerContext();
 
   // AUTH CONTEXT
@@ -48,7 +50,6 @@ const FetchDatasetForm = () => {
   const [isError, setIsError] = useState<Error | null>(null);
 
   // USER INPUT
-  const [searchText, setSearchText] = useState("");
   const [password, setPassword] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
@@ -239,8 +240,8 @@ const FetchDatasetForm = () => {
                 name="textSearchInput"
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                 placeholder="Enter search text"
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
+                value={textSearchInput}
+                onChange={(e) => setTextSearchInput(e.target.value)}
               />
             </div>
           )}
