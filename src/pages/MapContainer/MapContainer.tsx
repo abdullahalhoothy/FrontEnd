@@ -13,7 +13,6 @@ import * as turf from "@turf/turf";
 import PolygonsProvider, {
   usePolygonsContext,
 } from "../../context/PolygonsContext";
-import axios from "axios";
 import { StylesControl } from "./StylesControl";
 import { CircleControl } from "./CircleControl";
 
@@ -25,7 +24,6 @@ import urls from "../../urls.json";
 import { useUIContext } from "../../context/UIContext";
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_KEY;
-const MINIMUM_POLYGON_POINTS = 3;
 
 function Container() {
   const { polygons, setPolygons } = usePolygonsContext();
@@ -115,82 +113,46 @@ function Container() {
         },
       });
 
+      
       mapRef.current.on("draw.create", (e) => {
         const geojson = e.features[0];
         const coordinates = e.features[0].geometry.coordinates[0];
-        
-        if (coordinates.length >= MINIMUM_POLYGON_POINTS) {
-          const lastPoint = coordinates[coordinates.length - 1];
-          const pixelPoint = mapRef?.current?.project(lastPoint);
-          
-          geojson.isStatisticsPopupOpen = true;
-          if(pixelPoint) {
-            geojson.pixelPosition = {
-              x: pixelPoint.x,
-              y: pixelPoint.y,
-            };
-          }
+        const lastPoint = coordinates[coordinates.length - 1];
+        const pixelPoint = mapRef?.current?.project(lastPoint);
+
+        geojson.isStatisticsPopupOpen = true;
+        if (pixelPoint) {
+          geojson.pixelPosition = {
+            x: pixelPoint.x,
+            y: pixelPoint.y,
+          };
         }
-        
+
         setPolygons((prev: any) => {
           return [...prev, geojson];
         });
       });
-    
+
       mapRef.current.on("draw.update", (e) => {
         const geojson = e.features[0];
         const updatedPolygonsId = e.features[0].id;
         const coordinates = e.features[0].geometry.coordinates[0];
-        
-        if (coordinates.length >= MINIMUM_POLYGON_POINTS) {
-          const lastPoint = coordinates[coordinates.length - 1];
-          const pixelPoint = mapRef?.current?.project(lastPoint);
-          
-          geojson.isStatisticsPopupOpen = true;
-          if(pixelPoint) {
-            geojson.pixelPosition = {
-              x: pixelPoint.x,
-              y: pixelPoint.y,
-            };
-          }
+        const lastPoint = coordinates[coordinates.length - 1];
+        const pixelPoint = mapRef?.current?.project(lastPoint);
+
+        geojson.isStatisticsPopupOpen = true;
+        if (pixelPoint) {
+          geojson.pixelPosition = {
+            x: pixelPoint.x,
+            y: pixelPoint.y,
+          };
         }
-    
+
         setPolygons((prev: any) => {
           return prev.map((polygon: any) => {
             return polygon.id === updatedPolygonsId ? geojson : polygon;
           });
         });
-      });
-      
-      mapRef.current.on("draw.render", (e) => {
-        const features = draw.current?.getAll().features;
-        if (!features || features.length === 0) return;
-        
-        const currentFeature = features[features.length - 1];
-        const coordinates = currentFeature.geometry.coordinates[0];
-        
-        if (coordinates.length >= MINIMUM_POLYGON_POINTS) {
-          const lastPoint = coordinates[coordinates.length - 1];
-          const pixelPoint = mapRef?.current?.project(lastPoint);
-          
-          currentFeature.isStatisticsPopupOpen = true;
-          if(pixelPoint) {
-            currentFeature.pixelPosition = {
-              x: pixelPoint.x,
-              y: pixelPoint.y,
-            };
-          } else {
-            currentFeature.isStatisticsPopupOpen = false;
-          }
-          
-          setPolygons((prev: any) => {
-            const existingPolygon = prev.find(p => p.id === currentFeature.id);
-            if (existingPolygon) {
-              return prev.map(p => p.id === currentFeature.id ? currentFeature : p);
-            }
-            return [...prev, currentFeature];
-          });
-        }
       });
 
       mapRef.current.on("draw.delete", (e) => {
