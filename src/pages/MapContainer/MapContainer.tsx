@@ -631,10 +631,18 @@ function Container() {
           const layerId = "circle-layer-" + index;
 
           if (mapRef.current) {
-            mapRef.current.removeLayer(layerId);
-            mapRef.current.removeLayer(`${layerId}-fill`);
-            mapRef.current.removeSource(sourceId);
-            mapRef.current.removeSource(bufferSourceId);
+            if (mapRef.current.getLayer(layerId)) {
+              mapRef.current.removeLayer(layerId);
+            }
+            if (mapRef.current.getLayer(`${layerId}-fill`)) {
+              mapRef.current.removeLayer(`${layerId}-fill`);
+            }
+            if (mapRef.current.getSource(sourceId)) {
+              mapRef.current.removeSource(sourceId);
+            }
+            if (mapRef.current.getSource(bufferSourceId)) {
+              mapRef.current.removeSource(bufferSourceId);
+            }
           }
         });
       }
