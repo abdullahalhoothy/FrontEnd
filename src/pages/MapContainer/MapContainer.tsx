@@ -121,37 +121,71 @@ function Container() {
         const pixelPoint = mapRef?.current?.project(lastPoint);
 
         geojson.isStatisticsPopupOpen = true;
-        if (pixelPoint) {
+        geojson.popupCoordinates = lastPoint;
+        if(pixelPoint) {
           geojson.pixelPosition = {
             x: pixelPoint.x,
             y: pixelPoint.y,
           };
         }
-
+        
         setPolygons((prev: any) => {
           return [...prev, geojson];
         });
       });
-
+    
       mapRef.current.on("draw.update", (e) => {
         const geojson = e.features[0];
         const updatedPolygonsId = e.features[0].id;
         const coordinates = e.features[0].geometry.coordinates[0];
         const lastPoint = coordinates[coordinates.length - 1];
         const pixelPoint = mapRef?.current?.project(lastPoint);
-
+        
         geojson.isStatisticsPopupOpen = true;
-        if (pixelPoint) {
+        geojson.popupCoordinates = lastPoint;
+        if(pixelPoint) {
           geojson.pixelPosition = {
             x: pixelPoint.x,
             y: pixelPoint.y,
           };
         }
-
+    
         setPolygons((prev: any) => {
           return prev.map((polygon: any) => {
             return polygon.id === updatedPolygonsId ? geojson : polygon;
           });
+        });
+      });
+    
+      mapRef.current.on("click", (e) => {
+        const features = draw.current?.getFeatures();
+        if (!features) return;
+    
+        // Check if we clicked on a vertex
+        const clickedPoint = [e.lngLat.lng, e.lngLat.lat];
+        
+        features.forEach(feature => {
+          const coordinates = feature.geometry.coordinates[0];
+        
+          const isVertex = coordinates.some(coord => 
+            Math.abs(coord[0] - clickedPoint[0]) < 0.0001 && 
+            Math.abs(coord[1] - clickedPoint[1]) < 0.0001
+          );
+    
+          if (isVertex) {
+            setPolygons((prev: any) => {
+              return prev.map((polygon: any) => {
+                if (polygon.id === feature.id) {
+                  return {
+                    ...polygon,
+                    isStatisticsPopupOpen: true,
+                    popupCoordinates: clickedPoint
+                  };
+                }
+                return polygon;
+              });
+            });
+          }
         });
       });
 
@@ -163,6 +197,7 @@ function Container() {
           });
         });
       });
+    
 
       mapRef.current.on("draw.move", (e) => {
         const geojson = e.features[0];
