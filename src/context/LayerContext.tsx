@@ -248,15 +248,14 @@ export function LayerProvider(props: { children: ReactNode }) {
     const postData = {
       dataset_country: reqFetchDataset.selectedCountry,
       dataset_city: reqFetchDataset.selectedCity,
+
       includedTypes: reqFetchDataset.includedTypes,
       excludedTypes: reqFetchDataset.excludedTypes,
       action: action,
       search_type: searchType,
-      ...(searchType === "keyword_search" && {
-        text_search_input: textSearchInput.trim(),
-      }),
+      text_search: textSearchInput.trim() || "",
       ...(action === "full data" && { password: password }),
-      ...(pageToken && { page_token: pageToken }),
+      page_token: pageToken || "",
       user_id: user_id,
     };
 
