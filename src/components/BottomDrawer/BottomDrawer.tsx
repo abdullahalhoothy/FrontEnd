@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 
-const BottomDrawer = ({ open, onOpenChange, defaultSnap = 0.25, modal = true, snapPoints = [0, 0.25, 0.5, 1], children }) => {
+const BottomDrawer = ({ open, onOpenChange, currentSnap = 0.25, defaultSnap = 0.25, modal = true, snapPoints = [0, 0.25, 0.5, 1], children }) => {
     const [startY, setStartY] = useState(null);
     const [drawerHeight, setDrawerHeight] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
@@ -25,6 +25,13 @@ const BottomDrawer = ({ open, onOpenChange, defaultSnap = 0.25, modal = true, sn
         setPosition(open ? defaultSnap : 0);
         setInitialPosition(open ? defaultSnap : 0);
     }, [open, defaultSnap]);
+
+    useEffect(() => {
+        if (currentSnap === 0.5) {
+            setPosition(currentSnap);
+            setInitialPosition(currentSnap);
+        }
+    }, [currentSnap]);
 
     const handleTouchStart = (e) => {
         setStartY(e.touches[0].clientY);
@@ -115,9 +122,7 @@ const BottomDrawer = ({ open, onOpenChange, defaultSnap = 0.25, modal = true, sn
                     zIndex: 20,
                 }}
                 className="border-2 border-primary border-b-none rounded-t-[10px] h-screen max-h-[97%] mx-[-1px]"
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
+
                 ref={(el) => {
                     if (el && !drawerHeight) {
                         setDrawerHeight(el.getBoundingClientRect().height);
@@ -127,12 +132,15 @@ const BottomDrawer = ({ open, onOpenChange, defaultSnap = 0.25, modal = true, sn
                 <div
                     style={{
                         width: '100%',
-                        height: '24px',
+                        height: '48px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         cursor: 'pointer',
                     }}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
                 >
                     {/* Drag handle */}
                     <div
@@ -141,7 +149,6 @@ const BottomDrawer = ({ open, onOpenChange, defaultSnap = 0.25, modal = true, sn
                             height: '6px',
                             borderRadius: '99px',
                             background: '#ccc',
-                            marginTop: '8px',
                         }}
                     ></div>
                 </div>

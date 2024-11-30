@@ -189,7 +189,7 @@ function CustomizeLayer() {
               />
             </div>
           </div>
-          <div className="w-full h-[7%] flex  px-2 py-2 select-none border-t lg:mb-0 mb-6">
+          <div className="w-full h-[7%] flex  px-2 py-2 select-none border-t lg:mb-0 mb-14">
             <div className="flex h-full w-full space-x-2">
               <button
                 onClick={handleDiscardClick}

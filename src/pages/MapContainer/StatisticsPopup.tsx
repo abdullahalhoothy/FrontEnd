@@ -122,6 +122,7 @@ function DesktopStatisticsPopup({ polygon }) {
   );
 
   if (!polygonSections) return null;
+  if (polygonSections.sections.length === 0) return null;
 
   return (
     <div
@@ -315,7 +316,10 @@ const MobileStatisticsPopup = ({ polygon }) => {
   const polygonSections = sections.find((section) => section.polygon.id === polygon.id);
 
   if (!polygonSections) return null;
+  if (polygonSections.sections.length === 0) return null;
+
   if (isBenchmarkControlOpen) return null;
+
   return (
     <div
       className="fixed top-1/2 -translate-y-1/2 mx-4 my-2 left-0 right-0 bg-white shadow-lg rounded-lg p-4 z-50 overflow-y-auto text-sm"

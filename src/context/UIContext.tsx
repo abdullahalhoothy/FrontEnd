@@ -4,6 +4,7 @@ import React, {
   useState,
   ReactNode,
   useLayoutEffect,
+  useEffect,
 } from "react";
 import Modal from "../components/Modal/Modal";
 import { useCatalogContext } from "./CatalogContext";
@@ -105,23 +106,23 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
   const [isMobile, setIsMobile] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-
-  useLayoutEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth <= 1024) {
-        setIsMobile(true);
-        if (location.pathname !== "/profile") {
-          setIsDrawerOpen(true);
-        }
+    
+  useEffect(() => {
+    const updateState = () => {
+      const isMobileView = window.innerWidth <= 1024;
+      setIsMobile(isMobileView);
+      if (isMobileView && location.pathname !== "/profile") {
+        setIsDrawerOpen(true);
       } else {
-        setIsMobile(false);
         setIsDrawerOpen(false);
       }
     };
-    window.addEventListener("resize", handleResize);
-    handleResize();
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+
+    updateState(); // Set initial state
+    window.addEventListener("resize", updateState);
+
+    return () => window.removeEventListener("resize", updateState);
+  }, [location.pathname]); // Track location changes
 
   return (
     <UIContext.Provider

@@ -533,7 +533,7 @@ function Container() {
 
                   // Create and add new popup
                   popup = new mapboxgl.Popup({
-                    closeButton: false,
+                    closeButton: isMobile,
                   })
                     .setLngLat(coordinates)
                     .setHTML(loadingContent) // Initially show loading spinner
@@ -610,8 +610,14 @@ function Container() {
               };
 
               if (mapRef.current) {
-                mapRef.current.on("mouseenter", layerId, handleMouseOver);
-                mapRef.current.on("mouseleave", layerId, handleMouseLeave);
+                if (isMobile) {
+                  // For mobile devices, use touchstart and touchend events
+                  mapRef.current.on("touchstart", layerId, handleMouseOver);
+                } else {
+                  // For desktop, keep original mouseenter and mouseleave events
+                  mapRef.current.on("mouseenter", layerId, handleMouseOver);
+                  mapRef.current.on("mouseleave", layerId, handleMouseLeave);
+                }
               }
             }
 
@@ -678,7 +684,7 @@ function Container() {
         });
       }
     };
-  }, [geoPoints, initialFlyToDone, centralizeOnce]);
+  }, [geoPoints, initialFlyToDone, centralizeOnce, isMobile]);
 
   // Select polygons when clicked on the map
   useEffect(() => {
@@ -838,9 +844,9 @@ function Container() {
   }, [currentStyle]);
 
   return (
-    <div className="flex-1 h-full relative overflow-hidden" id="map-container">
+    <div className="flex-1 relative " id="map-container">
       <div
-        className="lg:absolute w-full h-screen overflow-hidden"
+        className="lg:absolute w-full h-full overflow-hidden"
         id="map-container"
         ref={mapContainerRef}
       />
