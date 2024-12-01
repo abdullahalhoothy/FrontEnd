@@ -317,9 +317,23 @@ function Container() {
                   mapRef.current.removeLayer(layerId);
 
                   const bounds = turf.bbox(featureCollection);
+                  console.log("Grid Boundaries:", {
+                    west: bounds[0],
+                    south: bounds[1],
+                    east: bounds[2],
+                    north: bounds[3],
+                    boundingBox: bounds
+                  });
+
                   const cellSide = 1; // Size in kilometers
                   const options = {units: 'kilometers' as const};
                   const grid = turf.squareGrid(bounds, cellSide, options);
+
+                  console.log("Generated Grid:", {
+                    totalCells: grid.features.length,
+                    firstCell: grid.features[0],
+                    lastCell: grid.features[grid.features.length - 1]
+                  });
 
                   grid.features = grid.features.map(cell => {
                     const pointsWithin = turf.pointsWithinPolygon(featureCollection, cell);
@@ -349,14 +363,24 @@ function Container() {
                     paint: {
                       'fill-color': featureCollection.points_color || mapConfig.defaultColor,
                       'fill-opacity': [
-                        'interpolate',
-                        ['linear'],
-                        ['get', 'density'],
-                        0, 0.1,
-                        5, 0.8 
+                        'case',
+                        ['==', ['get', 'density'], 0],
+                        0,
+                        ['interpolate',
+                          ['linear'],
+                          ['get', 'density'],
+                          1, 0.2,
+                          5, 0.8
+                        ]
                       ],
-                      'fill-outline-color': '#000',
-                    }
+                      'fill-outline-color': [
+                        'case',
+                        ['==', ['get', 'density'], 0],
+                        'rgba(0,0,0,0)',
+                        '#000'
+                      ]
+                    },
+                    filter: ['>=', ['get', 'density'], 0]
                   });
                 }
               }
@@ -396,12 +420,26 @@ function Container() {
                   });
                 } else {
                   mapRef.current.removeLayer(layerId);
-
+                  
+                  console.log("featureCollection", featureCollection);
                   const bounds = turf.bbox(featureCollection);
+                  console.log("Grid Boundaries:", {
+                    west: bounds[0],
+                    south: bounds[1],
+                    east: bounds[2],
+                    north: bounds[3],
+                    boundingBox: bounds
+                  });
+
                   const cellSide = 1; // Size in kilometers
                   const options = {units: 'kilometers' as const};
                   const grid = turf.squareGrid(bounds, cellSide, options);
 
+                  console.log("Generated Grid:", {
+                    totalCells: grid.features.length,
+                    firstCell: grid.features[0],
+                    lastCell: grid.features[grid.features.length - 1]
+                  });
 
                   grid.features = grid.features.map(cell => {
                     const pointsWithin = turf.pointsWithinPolygon(featureCollection, cell);
@@ -430,18 +468,28 @@ function Container() {
                     paint: {
                       'fill-color': featureCollection.points_color || mapConfig.defaultColor,
                       'fill-opacity': [
-                        'interpolate',
-                        ['linear'],
-                        ['get', 'density'],
-                        0, 0.1,
-                        5, 0.8 
+                        'case',
+                        ['==', ['get', 'density'], 0],
+                        0,
+                        ['interpolate',
+                          ['linear'],
+                          ['get', 'density'],
+                          1, 0.2,
+                          5, 0.8
+                        ]
                       ],
-                      'fill-outline-color': '#000',
-                    }
+                      'fill-outline-color': [
+                        'case',
+                        ['==', ['get', 'density'], 0],
+                        'rgba(0,0,0,0)',
+                        '#000'
+                      ]
+                    },
+                    filter: ['>=', ['get', 'density'], 0]
                   });
                 }
               }
-
+ 
               let hoveredStateId: number | null = null;
               let popup: mapboxgl.Popup | null = null;
               let isOverPopup = false;
