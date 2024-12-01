@@ -1,77 +1,76 @@
 .street-view-popup {
-    max-width: 100% !important
+  max-width: 100% !important;
 }
 
 .street-view-popup .mapboxgl-popup-content {
-    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
-    border-radius: 8px;
-    border: 1px solid #e0e0e0;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
 }
 
 .street-view-popup .mapboxgl-popup-close-button {
-    font-size: 18px;
-    width: 20px;
-    height: 20px;
-    border-radius: 4px;
-    right: 4px;
-    top: 4px;
+  font-size: 18px;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  right: 4px;
+  top: 4px;
 }
 
 .street-view-popup .mapboxgl-popup-tip {
-    margin: -1px;
+  margin: -1px;
 }
-
 
 /* Override default mapbox styles */
 .mapboxgl-popup {
-    background: none !important;
-    border: none !important;
-    box-shadow: none !important;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .mapboxgl-popup-close-button {
-    display: none !important;
+  font-size: 18px;
 }
 
 .mapboxgl-popup-content {
-    background: none !important;
-    border: none !important;
-    box-shadow: none !important;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 /* Custom popup styles */
 .popup-content {
-    background: white;
-    margin: -20px;
-    border-radius: 8px;
-    padding: 15px;
-    color: #333;
-    font-family: 'Arial', sans-serif;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background: white;
+  margin: -20px;
+  border-radius: 8px;
+  padding: 15px;
+  color: #333;
+  font-family: "Arial", sans-serif;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .popup-content-strong {
-    font-size: 16px;
-    font-weight: bold;
-    margin-bottom: 8px;
-    display: block;
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  display: block;
 }
 
 .popup-content-div {
-    margin-bottom: 5px;
-    font-size: 14px;
+  margin-bottom: 5px;
+  font-size: 14px;
 }
 
 .popup-content-address,
 .popup-content-status {
-    font-style: italic;
+  font-style: italic;
 }
 
 .popup-content-rating {
-    color: rgb(17, 87, 64);
-    font-weight: 700;
+  color: rgb(17, 87, 64);
+  font-weight: 700;
 }
 
 .popup-content-total-ratings {
-    color: #999;
+  color: #999;
 }

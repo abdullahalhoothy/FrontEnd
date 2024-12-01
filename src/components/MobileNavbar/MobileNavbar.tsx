@@ -50,13 +50,13 @@ export default function MobileNavbar() {
       <>
         {isSidebarOpen && (
           <div
-            className={`fixed inset-0 z-10 bg-black transition-opacity duration-300 ${isSidebarOpen ? "opacity-40" : "opacity-0 pointer-events-none"
+            className={`fixed inset-0 z-30 bg-black transition-opacity duration-300 ${isSidebarOpen ? "opacity-40" : "opacity-0 pointer-events-none"
               }`}
             onClick={() => setIsSidebarOpen(false)}
           ></div>
         )}
         <div
-          className={`fixed left-0 top-0 bottom-2 z-10 outline-none h-full bg-primary w-[310px] flex transition-transform duration-300 ${isSidebarOpen ? "translate-x-0" : "translate-x-[-100%]"
+          className={`fixed left-0 top-0 bottom-2 z-30 outline-none h-full bg-primary w-[310px] flex transition-transform duration-300 ${isSidebarOpen ? "translate-x-0" : "translate-x-[-100%]"
             }`}
         >
           <div className="grow py-4 mt-4 flex flex-col bg-primary text-white">

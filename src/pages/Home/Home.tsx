@@ -11,6 +11,7 @@ import DataContainer from "../../components/DataContainer/DataContainer";
 import { useUIContext } from "../../context/UIContext";
 import { useCatalogContext } from "../../context/CatalogContext";
 import BottomDrawer from "../../components/BottomDrawer/BottomDrawer";
+import { useLayerContext } from "../../context/LayerContext";
 
 
 const Home = () => {
@@ -142,9 +143,9 @@ export function HomeContent() {
 
 
 function HomerDrawer() {
-  const snapPoints = ['148px', '355px', 1];
-  const [snap, setSnap] = useState<number | string | null>(snapPoints[0]);
-
+  const snapPoints = [0, 0.25, 0.5, 1];
+  const [snap, setSnap] = useState<number>(snapPoints[1]);
+  const { createLayerformStage } = useLayerContext();
   const { isDrawerOpen, isModalOpen, setIsDrawerOpen } = useUIContext();
 
 
@@ -169,9 +170,20 @@ function HomerDrawer() {
     }
   };
 
+  useEffect(() => {
+    if (createLayerformStage === 'secondStep') {
+      console.log('test')
+      setSnap(snapPoints[2]);
+    } else {
+      setSnap(snapPoints[1]);
+    }
+  }, [createLayerformStage]);
+
   return (
     <>
-      <BottomDrawer open={isDrawerOpen && !isModalOpen} onOpenChange={setIsDrawerOpen} modal={false}>
+      <BottomDrawer open={isDrawerOpen && !isModalOpen} onOpenChange={setIsDrawerOpen} modal={false}
+        currentSnap={snap}
+        snapPoints={snapPoints}>
         <HomeContent />
       </BottomDrawer>
     </>

@@ -71,8 +71,8 @@ function InternalCostEstimator() {
   }
 
   return (
-    <div className="lg:h-full lg:w-1/3 flex flex-col justify-between items-center">
-      <div className="lg:h-[90%] w-full pl-4 pr-2 lg:overflow-y-auto px-24 ">
+    <div className="h-full overflow-y-auto relative lg:w-1/3 flex flex-col justify-between items-center ">
+      <div className="w-full pl-4 pr-2 px-24">
         {isError && (
           <div className="mt-6 text-red-500 font-semibold">
             {isError.message}
@@ -200,7 +200,7 @@ function InternalCostEstimator() {
         </div>
       </div>
 
-      <div className="flex-1 flex justify-center items-center space-x-10 border-t pt-2 w-full lg:h-[10%]">
+      <div className="sticky bg-white w-full bottom-0 left-0 flex-1 flex justify-center items-center space-x-10 border-t pt-2 lg:h-[10%]">
         <button
           type="submit"
           className="w-36 lg:h-16 h-12 bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg

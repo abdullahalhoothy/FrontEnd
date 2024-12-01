@@ -7,7 +7,7 @@ import { UIProvider } from "./context/UIContext";
 
 function App() {
   return (
-    <div className="flex w-screen h-screen">
+    <div className="flex w-screen h-svh">
       <BrowserRouter>
         <AuthProvider>
           <CatalogProvider>

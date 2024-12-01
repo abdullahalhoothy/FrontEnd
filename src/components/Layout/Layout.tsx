@@ -23,10 +23,10 @@ import clsx from "clsx";
 
 const Layout = () => {
   return (
-    <div className="flex flex-col overflow-hidden">
+    <div className="flex flex-col ">
       <MobileNavbar />
 
-      <div className="flex lg:flex-row flex-col w-screen h-screen relative">
+      <div className="flex-1 flex lg:flex-row flex-col w-screen relative overflow-hidden overflow-y-auto">
         <SideBar />
 
         <Routes>

@@ -201,7 +201,7 @@ const ProfileMain: React.FC = () => {
   }
 
   return (
-    <div className="w-full h-full overflow-y-scroll lg:px-10 px-4 text-sm">
+    <div className="w-full h-full overflow-y-auto lg:px-10 px-4 text-sm">
       <div className="m-5 mx-auto p-5 bg-[#f0f8f0] rounded-lg lg:shadow-md shadow-sm">
         <div className="flex justify-between items-center mb-5">
           <h2 className="lg:text-2xl text-lg text-[#006400] mb-5 text-center">
