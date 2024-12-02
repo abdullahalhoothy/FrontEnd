@@ -2,7 +2,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import "./MapContainer.css";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import mapboxgl, { Map as MapboxMap, GeoJSONSource } from "mapbox-gl";
 import mapConfig from "../../mapConfig.json";
 import { useLayerContext } from "../../context/LayerContext";
@@ -25,6 +25,64 @@ import { useUIContext } from "../../context/UIContext";
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_KEY;
 
+interface CityBorders {
+  northeast: { lat: number; lng: number };
+  southwest: { lat: number; lng: number };
+}
+
+interface CityData {
+  name: string;
+  borders: CityBorders;
+}
+
+const getCityBoundaries = async (cityName: string): Promise<[number, number][] | null> => {
+  try {
+    const cityRes = await apiRequest({
+      url: urls.country_city,
+      method: "get",
+      isAuthRequest: false
+    });
+
+    // Get all cities as a flat array
+    const allCities = Object.values(cityRes.data.data).flat() as Array<{
+      name: string;
+      borders: {
+        northeast: { lat: number; lng: number };
+        southwest: { lat: number; lng: number };
+      };
+    }>;
+
+    // Find the selected city
+    const cityData = allCities.find(city => 
+      city.name.toLowerCase() === cityName.toLowerCase()
+    );
+
+    if (cityData) {
+      // Create bounding box coordinates in clockwise order
+      const boundingBox = [
+        [cityData.borders.southwest.lng, cityData.borders.northeast.lat], // NW
+        [cityData.borders.northeast.lng, cityData.borders.northeast.lat], // NE
+        [cityData.borders.northeast.lng, cityData.borders.southwest.lat], // SE
+        [cityData.borders.southwest.lng, cityData.borders.southwest.lat], // SW
+        [cityData.borders.southwest.lng, cityData.borders.northeast.lat]  // NW (close the polygon)
+      ] as [number, number][];
+
+      console.log("City boundaries found:", {
+        city: cityName,
+        boundaries: boundingBox
+      });
+      
+      return boundingBox;
+    }
+    
+    console.log("City not found:", cityName);
+    return null;
+  } catch (error) {
+    console.error("Error fetching city boundaries:", error);
+    return null;
+  }
+};
+
 function Container() {
   const { polygons, setPolygons } = usePolygonsContext();
   const {
@@ -35,7 +93,7 @@ function Container() {
     colors,
     gradientColorBasedOnZone,
   } = useCatalogContext();
-  const { centralizeOnce, initialFlyToDone, setInitialFlyToDone } =
+  const { centralizeOnce, initialFlyToDone, setInitialFlyToDone,reqFetchDataset } =
     useLayerContext();
   const { isMobile } = useUIContext();
 
@@ -49,6 +107,8 @@ function Container() {
     "mapbox://styles/mapbox/streets-v11"
   );
   const [layerColors, setLayerColors] = useState({});
+  const currentDrawMode = useRef<string>('simple_select');
+  const [cityBoundaries, setCityBoundaries] = useState<[number, number][] | null>(null);
 
   useEffect(function () {
     if (mapContainerRef.current && !mapRef.current) {
@@ -100,7 +160,6 @@ function Container() {
             dragVertex(state, e, delta) {
               const feature = state.feature;
               if (feature.properties?.shape !== "circle") {
-                // Call the original dragVertex function
                 MapboxDraw.modes.direct_select.dragVertex.call(
                   this,
                   state,
@@ -113,79 +172,23 @@ function Container() {
         },
       });
 
-      
       mapRef.current.on("draw.create", (e) => {
+        console.log(e);
         const geojson = e.features[0];
-        const coordinates = e.features[0].geometry.coordinates[0];
-        const lastPoint = coordinates[coordinates.length - 1];
-        const pixelPoint = mapRef?.current?.project(lastPoint);
-
-        geojson.isStatisticsPopupOpen = true;
-        geojson.popupCoordinates = lastPoint;
-        if(pixelPoint) {
-          geojson.pixelPosition = {
-            x: pixelPoint.x,
-            y: pixelPoint.y,
-          };
-        }
-        
+        geojson.isStatisticsPopupOpen = false;
         setPolygons((prev: any) => {
           return [...prev, geojson];
         });
       });
-    
+
       mapRef.current.on("draw.update", (e) => {
         const geojson = e.features[0];
         const updatedPolygonsId = e.features[0].id;
-        const coordinates = e.features[0].geometry.coordinates[0];
-        const lastPoint = coordinates[coordinates.length - 1];
-        const pixelPoint = mapRef?.current?.project(lastPoint);
-        
-        geojson.isStatisticsPopupOpen = true;
-        geojson.popupCoordinates = lastPoint;
-        if(pixelPoint) {
-          geojson.pixelPosition = {
-            x: pixelPoint.x,
-            y: pixelPoint.y,
-          };
-        }
-    
+        geojson.isStatisticsPopupOpen = false;
         setPolygons((prev: any) => {
           return prev.map((polygon: any) => {
             return polygon.id === updatedPolygonsId ? geojson : polygon;
           });
-        });
-      });
-    
-      mapRef.current.on("click", (e) => {
-        const features = draw.current?.getFeatures();
-        if (!features) return;
-    
-        // Check if we clicked on a vertex
-        const clickedPoint = [e.lngLat.lng, e.lngLat.lat];
-        
-        features.forEach(feature => {
-          const coordinates = feature.geometry.coordinates[0];
-        
-          const isVertex = coordinates.some(coord => 
-            Math.abs(coord[0] - clickedPoint[0]) < 0.0001 && 
-            Math.abs(coord[1] - clickedPoint[1]) < 0.0001
-          );
-    
-          if (isVertex) {
-            setPolygons((prev: any) => {
-              return prev.map((polygon: any) => {
-                if (polygon.id === feature.id) {
-                  return {
-                    ...polygon,
-                    isStatisticsPopupOpen: true,
-                    popupCoordinates: clickedPoint
-                  };
-                }
-                return polygon;
-              });
-            });
-          }
         });
       });
 
@@ -197,7 +200,6 @@ function Container() {
           });
         });
       });
-    
 
       mapRef.current.on("draw.move", (e) => {
         const geojson = e.features[0];
@@ -252,145 +254,142 @@ function Container() {
     return array[index];
   }
 
-  useEffect(() => {
-    function addGeoPoints() {
-      if (mapRef.current && styleLoadedRef.current) {
-        const existingLayers = mapRef.current.getStyle().layers;
-        const existingLayerIds = existingLayers
-          ? existingLayers.map(function (layer: any) {
-            return layer.id;
-          })
-          : [];
+  const addGeoPoints = useCallback(async () => {
+    if (!mapRef.current || !styleLoadedRef.current) return;
 
-        existingLayerIds.forEach(function (layerId: any) {
-          if (layerId.startsWith("circle-layer-")) {
-            const index = parseInt(layerId.replace("circle-layer-", ""), 10);
-            if (!geoPoints[index] || !geoPoints[index].display) {
-              if (mapRef.current) {
-                mapRef.current.removeLayer(layerId);
-                mapRef.current.removeSource("circle-source-" + index);
-              }
-            }
-          }
+    try {
+      if (!mapRef.current.isStyleLoaded()) {
+        mapRef.current.once('style.load', () => {
+          addGeoPoints();
         });
+        return;
+      }
 
-        geoPoints.forEach(function (featureCollection, index) {
-          const sourceId = "circle-source-" + index;
-          const layerId = "circle-layer-" + index;
+      const existingLayers = mapRef.current.getStyle()?.layers || [];
+      existingLayers.forEach((layer: any) => {
+        if (layer.id.startsWith('circle-layer-')) {
+          const sourceId = `circle-source-${layer.id.split('-')[2]}`;
+          if (mapRef.current?.getLayer(layer.id)) {
+            mapRef.current.removeLayer(layer.id);
+          }
+          if (mapRef.current?.getSource(sourceId)) {
+            mapRef.current.removeSource(sourceId);
+          }
+        }
+      });
 
-          const existingSource = mapRef.current
-            ? (mapRef.current.getSource(sourceId) as GeoJSONSource)
-            : null;
+      for (const [index, featureCollection] of geoPoints.entries()) {
+        const sourceId = `circle-source-${index}`;
+        const layerId = `circle-layer-${index}`;
 
-          if (featureCollection.display) {
-            if (existingSource) {
-              existingSource.setData(featureCollection);
-              if (mapRef.current) {
-                if (featureCollection.is_heatmap) {
-                  mapRef.current.removeLayer(layerId);
-                  mapRef.current.addLayer({
-                    id: layerId,
-                    type: "heatmap",
-                    source: sourceId,
-                    paint: {
-                      "heatmap-color": [
-                        "interpolate",
-                        ["linear"],
-                        ["heatmap-density"],
-                        0,
-                        "rgba(33,102,172,0)",
-                        0.2,
-                        featureCollection.points_color ||
-                        mapConfig.defaultColor,
-                        0.4,
-                        "rgb(209,229,240)",
-                        0.6,
-                        "rgb(253,219,199)",
-                        0.8,
-                        "rgb(239,138,98)",
-                        1,
-                        "rgb(178,24,43)",
-                      ],
-                    },
-                  });
-                } else {
-                  mapRef.current.removeLayer(layerId);
+        if (!featureCollection.display) continue;
 
-                  const bounds = turf.bbox(featureCollection);
-                  console.log("Grid Boundaries:", {
-                    west: bounds[0],
-                    south: bounds[1],
-                    east: bounds[2],
-                    north: bounds[3],
-                    boundingBox: bounds
-                  });
+        if (featureCollection.is_grid) {
+          console.log("Grid Mode Triggered for layer:", {
+            index,
+            featureCollection,
+            is_grid: featureCollection.is_grid
+          });
 
-                  const cellSide = 1; // Size in kilometers
-                  const options = {units: 'kilometers' as const};
-                  const grid = turf.squareGrid(bounds, cellSide, options);
+          // Try to get city boundaries first
+          const cityBounds = await getCityBoundaries(reqFetchDataset.selectedCity);
+          
+          // Calculate bounds either from city data or feature collection
+          let bounds: [number, number, number, number];
+          if (cityBounds) {
+            // Calculate bounds from city boundaries
+            const lngs = cityBounds.map(coord => coord[0]);
+            const lats = cityBounds.map(coord => coord[1]);
+            bounds = [
+              Math.min(...lngs), // westernmost
+              Math.min(...lats), // southernmost
+              Math.max(...lngs), // easternmost
+              Math.max(...lats)  // northernmost
+            ];
+            console.log("Using city boundaries for grid");
+          } else {
+            // Fallback to feature collection bounds
+            bounds = turf.bbox(featureCollection);
+            console.log("Using feature collection boundaries for grid");
+          }
 
-                  console.log("Generated Grid:", {
-                    totalCells: grid.features.length,
-                    firstCell: grid.features[0],
-                    lastCell: grid.features[grid.features.length - 1]
-                  });
+          console.log("Grid Boundaries:", bounds);
 
-                  grid.features = grid.features.map(cell => {
-                    const pointsWithin = turf.pointsWithinPolygon(featureCollection, cell);
-                    const density = pointsWithin.features.length;
-                    return {
-                      ...cell,
-                      properties: {
-                        ...cell.properties,
-                        density
-                      }
-                    };
-                  });
+          const cellSide = 1; // Size in kilometers
+          const options = {units: 'kilometers' as const};
+          const grid = turf.squareGrid(bounds, cellSide, options);
 
-
-                  const gridSourceId = `${sourceId}-grid`;
-                  if (!mapRef.current.getSource(gridSourceId)) {
-                    mapRef.current.addSource(gridSourceId, {
-                      type: "geojson",
-                      data: grid
-                    });
-                  }
-
-                  mapRef.current.addLayer({
-                    id: `${layerId}-fill`,
-                    type: "fill",
-                    source: gridSourceId,
-                    paint: {
-                      'fill-color': featureCollection.points_color || mapConfig.defaultColor,
-                      'fill-opacity': [
-                        'case',
-                        ['==', ['get', 'density'], 0],
-                        0,
-                        ['interpolate',
-                          ['linear'],
-                          ['get', 'density'],
-                          1, 0.2,
-                          5, 0.8
-                        ]
-                      ],
-                      'fill-outline-color': [
-                        'case',
-                        ['==', ['get', 'density'], 0],
-                        'rgba(0,0,0,0)',
-                        '#000'
-                      ]
-                    },
-                    filter: ['>=', ['get', 'density'], 0]
-                  });
-                }
+          // Calculate point density for each cell
+          grid.features = grid.features.map(cell => {
+            const pointsWithin = turf.pointsWithinPolygon(featureCollection, cell);
+            const density = pointsWithin.features.length;
+            return {
+              ...cell,
+              properties: {
+                ...cell.properties,
+                density
               }
-            } else {
-              if (mapRef.current) {
-                mapRef.current.addSource(sourceId, {
-                  type: "geojson",
-                  data: featureCollection,
-                  generateId: true,
-                });
+            };
+          });
+
+          // Add or update grid source
+          const gridSourceId = `${sourceId}-grid`;
+          const source = mapRef.current?.getSource(gridSourceId) as GeoJSONSource;
+          if (source) {
+            source.setData(grid);
+          } else {
+            mapRef.current?.addSource(gridSourceId, {
+              type: "geojson",
+              data: grid
+            });
+          }
+
+          // Add grid visualization layer
+          if (!mapRef.current?.getLayer(`${layerId}-fill`)) {
+            mapRef.current?.addLayer({
+              id: `${layerId}-fill`,
+              type: "fill",
+              source: gridSourceId,
+              paint: {
+                'fill-color': featureCollection.points_color || mapConfig.defaultColor,
+                'fill-opacity': [
+                  'case',
+                  ['==', ['get', 'density'], 0],
+                  0,
+                  ['interpolate',
+                    ['linear'],
+                    ['get', 'density'],
+                    1, 0.2,
+                    5, 0.8
+                  ]
+                ],
+                'fill-outline-color': [
+                  'case',
+                  ['==', ['get', 'density'], 0],
+                  'rgba(0,0,0,0)',
+                  '#000'
+                ]
+              },
+              filter: ['>=', ['get', 'density'], 0]
+            });
+          }
+        } else {
+          // Existing logic for non-grid layers
+          if (!mapRef.current?.getSource(sourceId)) {
+            mapRef.current?.addSource(sourceId, {
+              type: "geojson",
+              data: featureCollection,
+              generateId: true,
+            });
+          }
+
+          if (!mapRef.current?.getLayer(layerId)) {
+            const layerConfig = {
+              id: layerId,
+              source: sourceId,
+              layout: {},
+              paint: {}
+            };
 
                 if (featureCollection.is_heatmap) {
                   mapRef.current.addLayer({
@@ -667,38 +666,36 @@ function Container() {
           }
         });
       }
-    }
+    };
 
-    if (styleLoadedRef.current) {
-      addGeoPoints();
-    } else if (mapRef.current) {
-      mapRef.current.on("styledata", addGeoPoints);
-    }
+    setupMap();
 
     return () => {
       if (mapRef.current) {
-        mapRef.current.off("styledata", addGeoPoints);
-
-        geoPoints.forEach(function (featureCollection, index) {
-          const sourceId = "circle-source-" + index;
-          const bufferSourceId = `${sourceId}-buffer`;
-          const layerId = "circle-layer-" + index;
-
-          if (mapRef.current) {
-            if (mapRef.current.getLayer(layerId)) {
-              mapRef.current.removeLayer(layerId);
+        mapRef.current.off('style.load', setupMap);
+        
+        if (mapRef.current.isStyleLoaded()) {
+          try {
+            const style = mapRef.current.getStyle();
+            if (style && style.layers) {
+              style.layers.forEach((layer: any) => {
+                if (layer.id.startsWith('circle-layer-')) {
+                  const sourceId = `circle-source-${layer.id.split('-')[2]}`;
+                  if (mapRef.current?.getLayer(layer.id)) {
+                    mapRef.current.removeLayer(layer.id);
+                  }
+                  if (mapRef.current?.getSource(sourceId)) {
+                    mapRef.current.removeSource(sourceId);
+                  }
+                }
+              });
             }
-            if (mapRef.current.getLayer(`${layerId}-fill`)) {
-              mapRef.current.removeLayer(`${layerId}-fill`);
-            }
-            if (mapRef.current.getSource(sourceId)) {
-              mapRef.current.removeSource(sourceId);
-            }
-            if (mapRef.current.getSource(bufferSourceId)) {
-              mapRef.current.removeSource(bufferSourceId);
-            }
+          } catch (error) {
+            console.error('Error during cleanup:', error);
           }
-        });
+        } else {
+          console.warn('Style is not fully loaded yet. Cleanup skipped.');
+        }
       }
     };
   }, [geoPoints, initialFlyToDone, centralizeOnce, isMobile]);
@@ -711,7 +708,6 @@ function Container() {
 
       const polygon = polygons.find((polygon) => {
         try {
-          // Ensure polygon coordinates are in the correct format
           let turfPolygon;
           if (polygon.geometry.type === "Polygon") {
             turfPolygon = turf.polygon(polygon.geometry.coordinates);
@@ -722,7 +718,6 @@ function Container() {
             return false;
           }
 
-          // Check if the point is inside the polygon
           return turf.booleanPointInPolygon(point, turfPolygon);
         } catch (error) {
           console.error("Error processing polygon:", error);
@@ -780,10 +775,8 @@ function Container() {
       }
 
       if (legendRef.current) {
-        // Clear the legend container
         legendRef.current.innerHTML = `<h4 class="text-sm font-semibold text-gray-900 border-b p-2">Legend</h4>`;
 
-        // Add more content here based on geoPoints
         geoPoints.forEach((point, index) => {
           if (!point.display) {
             return;
@@ -794,20 +787,16 @@ function Container() {
           const item = document.createElement("div");
           item.className = "px-2.5 py-1.5 flex items-center gap-2";
           item.innerHTML = `
-          <div class="w-3 h-3 rounded-full" style="background-color: ${point.points_color || mapConfig.defaultColor
-            }"></div>
+          <div class="w-3 h-3 rounded-full" style="background-color: ${point.points_color || mapConfig.defaultColor}"></div>
           <span class="text-sm">${point.layer_legend || "Unnamed"}</span>`;
           legendRef.current.appendChild(item);
         });
-        // Update the legend position
         mapRef.current.getContainer().appendChild(legendRef.current);
       } else {
-        // Create the legend container
         legendRef.current = document.createElement("div");
         legendRef.current.className =
           "absolute bottom-[10px] right-[10px] z-10 bg-white border shadow h-48 min-w-48 rounded-md";
         legendRef.current.innerHTML = `<h4 class="text-sm font-semibold text-gray-900 border-b p-2">Legend</h4>`;
-        // Add more content here based on geoPoints
         geoPoints.forEach((point, index) => {
           if (!point.display) {
             return;
@@ -818,8 +807,7 @@ function Container() {
           const item = document.createElement("div");
           item.className = "px-2.5 py-1.5 flex items-center gap-2";
           item.innerHTML = `
-          <div class="w-3 h-3 rounded-full" style="background-color: ${point.points_color || mapConfig.defaultColor
-            }"></div>
+          <div class="w-3 h-3 rounded-full" style="background-color: ${point.points_color || mapConfig.defaultColor}"></div>
           <span class="text-sm">${point.layer_legend || "Unnamed"}</span>`;
           legendRef.current.appendChild(item);
         });

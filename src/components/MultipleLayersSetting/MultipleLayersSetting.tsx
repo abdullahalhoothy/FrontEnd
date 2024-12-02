@@ -40,6 +40,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     setGradientColorBasedOnZone,
     setIsAdvancedMode,
     setIsRadiusMode,
+    updateLayerGrid,
   } = useCatalogContext();
   const layer = geoPoints[layerIndex];
   console.log(layer);
@@ -48,6 +49,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   const [isZoneLayer, setIsZoneLayer] = useState(is_zone_lyr);
   const [isDisplay, setIsDisplay] = useState(display);
   const [isHeatmap, setIsHeatmap] = useState(is_heatmap);
+  const [isGrid, setIsGrid] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
   const { authResponse } = useAuth();
@@ -110,6 +112,9 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   }
 
   function handleHeatMapChange() {
+    if (isGrid) {
+      setIsGrid(false);
+    }
     updateLayerHeatmap(layerIndex, !isHeatmap);
     setIsHeatmap(!isHeatmap);
   }
@@ -218,6 +223,16 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       setRadiusInput(undefined);
     }
   }
+
+  function handleGridChange() {
+    if (isHeatmap) {
+      updateLayerHeatmap(layerIndex, false);
+      setIsHeatmap(false);
+    }
+    updateLayerGrid(layerIndex, !isGrid);
+    setIsGrid(!isGrid);
+  }
+
   return (
     <div className="w-full">
       {!isOpen && (
@@ -319,16 +334,29 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                 Apply
               </button>
             </div>
-            <div className="flex items-center gap-1 ms-2.5">
-              <input
-                type="checkbox"
-                checked={isHeatmap}
-                onChange={handleHeatMapChange}
-                className={`appearance-none w-[11px] h-[11px] cursor-pointer border border-[#28a745] rounded-sm relative text-sm`}
-              />
-              <p className="text-[11px] my-[2px] text-[#555] whitespace-nowrap">
-                Heatmap
-              </p>
+            <div className="flex flex-row gap-4 ms-2.5">
+              <div className="flex items-center gap-1">
+                <input
+                  type="checkbox"
+                  checked={isHeatmap}
+                  onChange={handleHeatMapChange}
+                  className="w-[11px] h-[11px] cursor-pointer accent-[#28a745]"
+                />
+                <p className="text-[11px] my-[2px] text-[#555] whitespace-nowrap">
+                  Heatmap
+                </p>
+              </div>
+              <div className="flex items-center gap-1">
+                <input
+                  type="checkbox"
+                  checked={isGrid}
+                  onChange={handleGridChange}
+                  className="w-[11px] h-[11px] cursor-pointer accent-[#28a745]"
+                />
+                <p className="text-[11px] my-[2px] text-[#555] whitespace-nowrap">
+                  Grid
+                </p>
+              </div>
             </div>
           </div>
         </div>
