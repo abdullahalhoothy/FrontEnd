@@ -97,6 +97,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [chosenPallet, setChosenPallet] = useState(null);
   const [selectedBasedon, setSelectedBasedon] = useState<string>("rating");
   const [layerColors, setLayerColors] = useState({});
+  const [visualizationMode, setVisualizationMode] = useState<VisualizationMode>('vertex');
 
   useEffect(
     function () {
@@ -315,6 +316,20 @@ export function CatalogProvider(props: { children: ReactNode }) {
     });
   }
 
+
+  function updateLayerVisualization(layerIndex: number, mode: VisualizationMode) {
+    setGeoPoints(function (prevGeoPoints) {
+      const updatedGeoPoints = prevGeoPoints.slice();
+      updatedGeoPoints[layerIndex] = {
+        ...updatedGeoPoints[layerIndex],
+        visualization_mode: mode,
+        is_heatmap: mode === 'heatmap',
+        is_grid: mode === 'grid'
+      };
+      return updatedGeoPoints;
+    });
+  }
+
   async function handleColorBasedZone() {
     let idToken: string;
 
@@ -369,6 +384,27 @@ export function CatalogProvider(props: { children: ReactNode }) {
       return updatedIndices;
     });
   };
+
+  function updateLayerGrid(layerIndex: number, isGrid: boolean) {
+    setGeoPoints(function (prevGeoPoints) {
+      const updatedGeoPoints = prevGeoPoints.slice();
+      if (isGrid) {
+        // If enabling grid, disable heatmap
+        updatedGeoPoints[layerIndex] = {
+          ...updatedGeoPoints[layerIndex],
+          is_grid: true,
+          is_heatmap: false
+        };
+      } else {
+        updatedGeoPoints[layerIndex] = {
+          ...updatedGeoPoints[layerIndex],
+          is_grid: false
+        };
+      }
+      return updatedGeoPoints;
+    });
+  }
+
   return (
     <CatalogContext.Provider
       value={{
@@ -431,6 +467,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
         setLayerColors,
         isRadiusMode,
         setIsRadiusMode,
+        updateLayerGrid,
       }}
     >
       {children}
