@@ -43,7 +43,6 @@ const getCityBoundaries = async (cityName: string): Promise<[number, number][] |
       isAuthRequest: false
     });
 
-    // Get all cities as a flat array
     const allCities = Object.values(cityRes.data.data).flat() as Array<{
       name: string;
       borders: {
@@ -52,30 +51,22 @@ const getCityBoundaries = async (cityName: string): Promise<[number, number][] |
       };
     }>;
 
-    // Find the selected city
     const cityData = allCities.find(city => 
       city.name.toLowerCase() === cityName.toLowerCase()
     );
 
     if (cityData) {
-      // Create bounding box coordinates in clockwise order
       const boundingBox = [
-        [cityData.borders.southwest.lng, cityData.borders.northeast.lat], // NW
-        [cityData.borders.northeast.lng, cityData.borders.northeast.lat], // NE
-        [cityData.borders.northeast.lng, cityData.borders.southwest.lat], // SE
-        [cityData.borders.southwest.lng, cityData.borders.southwest.lat], // SW
-        [cityData.borders.southwest.lng, cityData.borders.northeast.lat]  // NW (close the polygon)
+        [cityData.borders.southwest.lng, cityData.borders.northeast.lat],
+        [cityData.borders.northeast.lng, cityData.borders.northeast.lat],
+        [cityData.borders.northeast.lng, cityData.borders.southwest.lat],
+        [cityData.borders.southwest.lng, cityData.borders.southwest.lat],
+        [cityData.borders.southwest.lng, cityData.borders.northeast.lat]
       ] as [number, number][];
 
-      console.log("City boundaries found:", {
-        city: cityName,
-        boundaries: boundingBox
-      });
-      
       return boundingBox;
     }
     
-    console.log("City not found:", cityName);
     return null;
   } catch (error) {
     console.error("Error fetching city boundaries:", error);
@@ -285,16 +276,7 @@ function Container() {
         if (!featureCollection.display) continue;
 
         if (featureCollection.is_grid) {
-          console.log("Grid Mode Triggered for layer:", {
-            index,
-            featureCollection,
-            is_grid: featureCollection.is_grid
-          });
-
-          // Try to get city boundaries first
-          const cityBounds = await getCityBoundaries(reqFetchDataset.selectedCity);
-          
-          // Calculate bounds either from city data or feature collection
+          const cityBounds = await getCityBoundaries(reqFetchDataset.selectedCity);          
           let bounds: [number, number, number, number];
           if (cityBounds) {
             // Calculate bounds from city boundaries
@@ -306,11 +288,8 @@ function Container() {
               Math.max(...lngs), // easternmost
               Math.max(...lats)  // northernmost
             ];
-            console.log("Using city boundaries for grid");
           } else {
-            // Fallback to feature collection bounds
-            bounds = turf.bbox(featureCollection);
-            console.log("Using feature collection boundaries for grid");
+            bounds = turf.bbox(featureCollection).slice(0, 4) as [number, number, number, number];
           }
 
           console.log("Grid Boundaries:", bounds);
@@ -386,6 +365,7 @@ function Container() {
           if (!mapRef.current?.getLayer(layerId)) {
             const layerConfig = {
               id: layerId,
+              type: "circle",
               source: sourceId,
               layout: {},
               paint: {}
