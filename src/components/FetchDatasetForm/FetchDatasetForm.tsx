@@ -26,6 +26,10 @@ const FetchDatasetForm = () => {
     incrementFormStage,
     handleFetchDataset,
     resetFetchDatasetForm,
+    searchType,
+    setSearchType,
+    textSearchInput,
+    setTextSearchInput,
   } = useLayerContext();
 
   // AUTH CONTEXT
@@ -46,10 +50,6 @@ const FetchDatasetForm = () => {
   const [isError, setIsError] = useState<Error | null>(null);
 
   // USER INPUT
-  const [searchType, setSearchType] = useState<
-    "new nearby search" | "text search"
-  >("new nearby search");
-  const [searchText, setSearchText] = useState("");
   const [password, setPassword] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
@@ -217,14 +217,16 @@ const FetchDatasetForm = () => {
               id="searchType"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               value={searchType}
-              onChange={(e) => setSearchType(e.target.value as any)}
+              onChange={(e) => {
+                console.log("searchType", e.target.value);
+                setSearchType(e.target.value as any)}}
             >
-              <option value="new nearby search">Category Search</option>
-              <option value="text search">Keyword Search</option>
+              <option value="category_search">Category Search</option>
+              <option value="keyword_search">Keyword Search</option>
             </select>
           </div>
 
-          {searchType == "text search" && (
+          {searchType == "keyword_search" && (
             <div className="pt-4">
               <label
                 className="block mb-2 text-md font-medium text-black"
@@ -238,8 +240,8 @@ const FetchDatasetForm = () => {
                 name="textSearchInput"
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                 placeholder="Enter search text"
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
+                value={textSearchInput}
+                onChange={(e) => setTextSearchInput(e.target.value)}
               />
             </div>
           )}
@@ -294,7 +296,7 @@ const FetchDatasetForm = () => {
             </select>
           </div>
 
-          <div className="flex flex-col my-5">
+          {searchType !== "keyword_search" && (<div className="flex flex-col my-5">
             <div className="flex justify-between">
               <label className="mb-4 font-bold">
                 What are you looking for?
@@ -389,7 +391,7 @@ const FetchDatasetForm = () => {
                 </div>
               ))}
             </div>
-          </div>
+          </div>)}
         </div>
       </div>
       <div className="flex-col flex  px-2 py-2 select-none border-t lg:mb-0 mb-14">

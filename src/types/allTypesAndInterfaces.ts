@@ -121,6 +121,7 @@ export interface CatalogContextType {
   updateLayerDisplay(layerIndex: number, display: boolean): void;
   // updateLayerZone(layerIndex: number, isZoneLayer: boolean): void;
   updateLayerHeatmap(layerIndex: number, isHeatmap: boolean): void;
+  updateLayerGrid: (layerIndex: number, isGrid: boolean) => void;
   removeLayer(layerIndex: number): void;
   saveResponse: SaveResponse | null;
   saveResponseMsg: string;
@@ -271,6 +272,8 @@ export interface LayerContextType {
   handleTypeToggle: (type: string) => void;
   validateFetchDatasetForm: () => true | Error;
   resetFetchDatasetForm(): void;
+  selectedCity: string;
+  setSelectedCity: (city: string) => void;
 }
 
 export interface ReqFetchDataset {
@@ -346,6 +349,7 @@ export interface MapFeatures extends FetchDatasetResponse {
   layer_description?: string;
   is_zone_lyr?: string;
   is_heatmap?: boolean;
+  is_grid?: boolean;
   [key: string]: any;
 }
 
@@ -409,4 +413,14 @@ export interface CategoryData {
 export interface CostEstimate {
   cost: number;
   api_calls: number;
+}
+
+export interface CityBorders {
+  northeast: { lat: number; lng: number };
+  southwest: { lat: number; lng: number };
+}
+
+export interface CityData {
+  name: string;
+  borders: CityBorders;
 }
