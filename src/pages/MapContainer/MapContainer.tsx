@@ -7,7 +7,7 @@ import mapboxgl, { Map as MapboxMap, GeoJSONSource } from "mapbox-gl";
 import mapConfig from "../../mapConfig.json";
 import { useLayerContext } from "../../context/LayerContext";
 import { useCatalogContext } from "../../context/CatalogContext";
-import { CustomProperties } from "../../types/allTypesAndInterfaces";
+import { CustomProperties, CityBorders, CityData } from "../../types/allTypesAndInterfaces";
 import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import * as turf from "@turf/turf";
 import PolygonsProvider, {
@@ -24,16 +24,6 @@ import urls from "../../urls.json";
 import { useUIContext } from "../../context/UIContext";
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_KEY;
-
-interface CityBorders {
-  northeast: { lat: number; lng: number };
-  southwest: { lat: number; lng: number };
-}
-
-interface CityData {
-  name: string;
-  borders: CityBorders;
-}
 
 const getCityBoundaries = async (cityName: string): Promise<[number, number][] | null> => {
   try {

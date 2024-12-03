@@ -414,3 +414,13 @@ export interface CostEstimate {
   cost: number;
   api_calls: number;
 }
+
+export interface CityBorders {
+  northeast: { lat: number; lng: number };
+  southwest: { lat: number; lng: number };
+}
+
+export interface CityData {
+  name: string;
+  borders: CityBorders;
+}
