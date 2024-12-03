@@ -70,7 +70,7 @@ const Dataview: React.FC = () => {
   }, [geoPoints]);
 
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full overflow-y-auto">
       <div
         className="ag-theme-quartz-dark"
         style={{ height: "100%", width: "100%", backgroundColor: "#182230" }}
@@ -80,6 +80,7 @@ const Dataview: React.FC = () => {
           rowData={businesses}
           pagination={true}
           paginationPageSize={10}
+          
         />
       </div>
     </div>
