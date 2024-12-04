@@ -267,7 +267,7 @@ function Container() {
           if (!featureCollection.display) continue;
 
           if (featureCollection.is_grid) {
-            const cityBounds = await getCityBoundaries(reqFetchDataset.selectedCity);          
+            const cityBounds = await getCityBoundaries(reqFetchDataset.selectedCity);
             let bounds: [number, number, number, number];
             if (cityBounds) {
               // Calculate bounds from city boundaries
@@ -286,7 +286,7 @@ function Container() {
             console.log("Grid Boundaries:", bounds);
 
             const cellSide = 1; // Size in kilometers
-            const options = {units: 'kilometers' as const};
+            const options = { units: 'kilometers' as const };
             const grid = turf.squareGrid(bounds, cellSide, options);
 
             // Calculate point density for each cell
@@ -362,330 +362,313 @@ function Container() {
                 paint: {}
               };
 
-                  if (featureCollection.is_heatmap) {
-                    mapRef.current.addLayer({
-                      id: layerId,
-                      type: "heatmap",
-                      source: sourceId,
-                      paint: {
-                        "heatmap-color": [
-                          "interpolate",
-                          ["linear"],
-                          ["heatmap-density"],
-                          0,
-                          "rgba(33,102,172,0)",
-                          0.2,
-                          featureCollection.points_color ||
-                          mapConfig.defaultColor,
-                          0.4,
-                          "rgb(209,229,240)",
-                          0.6,
-                          "rgb(253,219,199)",
-                          0.8,
-                          "rgb(239,138,98)",
-                          1,
-                          "rgb(178,24,43)",
-                        ],
-                      },
-                    });
-                  } else {
-                    mapRef.current.removeLayer(layerId);
-                    
-                    console.log("featureCollection", featureCollection);
-                    const bounds = turf.bbox(featureCollection);
-                    console.log("Grid Boundaries:", {
-                      west: bounds[0],
-                      south: bounds[1],
-                      east: bounds[2],
-                      north: bounds[3],
-                      boundingBox: bounds
-                    });
+              if (featureCollection.is_heatmap) {
+                mapRef.current.addLayer({
+                  id: layerId,
+                  type: "heatmap",
+                  source: sourceId,
+                  paint: {
+                    "heatmap-color": [
+                      "interpolate",
+                      ["linear"],
+                      ["heatmap-density"],
+                      0,
+                      "rgba(33,102,172,0)",
+                      0.2,
+                      featureCollection.points_color ||
+                      mapConfig.defaultColor,
+                      0.4,
+                      "rgb(209,229,240)",
+                      0.6,
+                      "rgb(253,219,199)",
+                      0.8,
+                      "rgb(239,138,98)",
+                      1,
+                      "rgb(178,24,43)",
+                    ],
+                  },
+                });
+              } else {
+                mapRef.current.removeLayer(layerId);
 
-                    const cellSide = 1; // Size in kilometers
-                    const options = {units: 'kilometers' as const};
-                    const grid = turf.squareGrid(bounds, cellSide, options);
+                console.log("featureCollection", featureCollection);
+                const bounds = turf.bbox(featureCollection);
+                console.log("Grid Boundaries:", {
+                  west: bounds[0],
+                  south: bounds[1],
+                  east: bounds[2],
+                  north: bounds[3],
+                  boundingBox: bounds
+                });
 
-                    console.log("Generated Grid:", {
-                      totalCells: grid.features.length,
-                      firstCell: grid.features[0],
-                      lastCell: grid.features[grid.features.length - 1]
-                    });
+                const cellSide = 1; // Size in kilometers
+                const options = { units: 'kilometers' as const };
+                const grid = turf.squareGrid(bounds, cellSide, options);
 
-                    grid.features = grid.features.map(cell => {
-                      const pointsWithin = turf.pointsWithinPolygon(featureCollection, cell);
-                      const density = pointsWithin.features.length;
-                      return {
-                        ...cell,
-                        properties: {
-                          ...cell.properties,
-                          density
-                        }
-                      };
-                    });
+                console.log("Generated Grid:", {
+                  totalCells: grid.features.length,
+                  firstCell: grid.features[0],
+                  lastCell: grid.features[grid.features.length - 1]
+                });
 
-                    const gridSourceId = `${sourceId}-grid`;
-                    if (!mapRef.current.getSource(gridSourceId)) {
-                      mapRef.current.addSource(gridSourceId, {
-                        type: "geojson",
-                        data: grid
-                      });
+                grid.features = grid.features.map(cell => {
+                  const pointsWithin = turf.pointsWithinPolygon(featureCollection, cell);
+                  const density = pointsWithin.features.length;
+                  return {
+                    ...cell,
+                    properties: {
+                      ...cell.properties,
+                      density
                     }
+                  };
+                });
 
-                    mapRef.current.addLayer({
-                      id: `${layerId}-fill`,
-                      type: "fill",
-                      source: gridSourceId,
-                      paint: {
-                        'fill-color': featureCollection.points_color || mapConfig.defaultColor,
-                        'fill-opacity': [
-                          'case',
-                          ['==', ['get', 'density'], 0],
-                          0,
-                          ['interpolate',
-                            ['linear'],
-                            ['get', 'density'],
-                            1, 0.2,
-                            5, 0.8
-                          ]
-                        ],
-                        'fill-outline-color': [
-                          'case',
-                          ['==', ['get', 'density'], 0],
-                          'rgba(0,0,0,0)',
-                          '#000'
-                        ]
-                      },
-                      filter: ['>=', ['get', 'density'], 0]
-                    });
-                  }
+                const gridSourceId = `${sourceId}-grid`;
+                if (!mapRef.current.getSource(gridSourceId)) {
+                  mapRef.current.addSource(gridSourceId, {
+                    type: "geojson",
+                    data: grid
+                  });
                 }
- 
-                let hoveredStateId: number | null = null;
-                let popup: mapboxgl.Popup | null = null;
-                let isOverPopup = false;
-                let isOverPoint = false;
 
-                const handleMouseOver = async (
-                  e: mapboxgl.MapMouseEvent & mapboxgl.EventData
-                ) => {
-                  if (!mapRef.current) return;
-                  isOverPoint = true;
-                  // Update cursor style
-                  mapRef.current.getCanvas().style.cursor = "";
+                mapRef.current.addLayer({
+                  id: `${layerId}-fill`,
+                  type: "fill",
+                  source: gridSourceId,
+                  paint: {
+                    'fill-color': featureCollection.points_color || mapConfig.defaultColor,
+                    'fill-opacity': [
+                      'case',
+                      ['==', ['get', 'density'], 0],
+                      0,
+                      ['interpolate',
+                        ['linear'],
+                        ['get', 'density'],
+                        1, 0.2,
+                        5, 0.8
+                      ]
+                    ],
+                    'fill-outline-color': [
+                      'case',
+                      ['==', ['get', 'density'], 0],
+                      'rgba(0,0,0,0)',
+                      '#000'
+                    ]
+                  },
+                  filter: ['>=', ['get', 'density'], 0]
+                });
+              }
+            }
 
-                  // Check if there are features
-                  if (e.features && e.features.length > 0) {
-                    if (hoveredStateId !== null) {
-                      mapRef.current.setFeatureState(
-                        { source: sourceId, id: hoveredStateId },
-                        { hover: false }
-                      );
-                    }
+            let hoveredStateId: number | null = null;
+            let popup: mapboxgl.Popup | null = null;
+            let isOverPopup = false;
+            let isOverPoint = false;
 
-                    hoveredStateId = e.features[0].id as number;
-                    mapRef.current.setFeatureState(
-                      { source: sourceId, id: hoveredStateId },
-                      { hover: true }
-                    );
+            const handleMouseOver = async (
+              e: mapboxgl.MapMouseEvent & mapboxgl.EventData
+            ) => {
+              if (!mapRef.current) return;
+              isOverPoint = true;
+              // Update cursor style
+              mapRef.current.getCanvas().style.cursor = "";
 
-                    const coordinates = (
-                      e.features[0].geometry as any
-                    ).coordinates.slice();
-                    const properties = e.features[0]
-                      .properties as CustomProperties;
+              // Check if there are features
+              if (e.features && e.features.length > 0) {
+                if (hoveredStateId !== null) {
+                  mapRef.current.setFeatureState(
+                    { source: sourceId, id: hoveredStateId },
+                    { hover: false }
+                  );
+                }
 
-                    // Show loading spinner in the popup while fetching content
-                    const loadingContent = generatePopupContent(
+                hoveredStateId = e.features[0].id as number;
+                mapRef.current.setFeatureState(
+                  { source: sourceId, id: hoveredStateId },
+                  { hover: true }
+                );
+
+                const coordinates = (
+                  e.features[0].geometry as any
+                ).coordinates.slice();
+                const properties = e.features[0]
+                  .properties as CustomProperties;
+
+                // Show loading spinner in the popup while fetching content
+                const loadingContent = generatePopupContent(
+                  properties,
+                  coordinates,
+                  true,
+                  false
+                );
+
+                // Remove previous popup if it exists
+                if (popup) {
+                  popup.remove();
+                }
+
+                // Create and add new popup
+                popup = new mapboxgl.Popup({
+                  closeButton: isMobile,
+                })
+                  .setLngLat(coordinates)
+                  .setHTML(loadingContent) // Initially show loading spinner
+                  .addTo(mapRef.current!);
+                const [lng, lat] = coordinates;
+                // const url = `https://maps.googleapis.com/maps/api/streetview?return_error_code=true&size=600x300&location=${lat},${lng}&heading=151.78&pitch=-0.76&key=${
+                //   import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+                // }`;
+                try {
+                  const response = await apiRequest({
+                    url: urls.check_street_view,
+                    method: "POST",
+                    body: {
+                      lat: lat,
+                      lng: lng,
+                    },
+                  });
+                  // Once data is fetched, update the popup with the actual content
+                  const updatedContent = generatePopupContent(
+                    properties,
+                    coordinates,
+                    false,
+                    true
+                  );
+                  popup.setHTML(updatedContent).addTo(mapRef.current!);
+                } catch (error) {
+                  popup.setHTML(
+                    generatePopupContent(
                       properties,
                       coordinates,
-                      true,
+                      false,
                       false
-                    );
-
-                    // Remove previous popup if it exists
-                    if (popup) {
-                      popup.remove();
-                    }
-
-                    // Create and add new popup
-                    popup = new mapboxgl.Popup({
-                      closeButton: isMobile,
-                    })
-                      .setLngLat(coordinates)
-                      .setHTML(loadingContent) // Initially show loading spinner
-                      .addTo(mapRef.current!);
-                    const [lng, lat] = coordinates;
-                    // const url = `https://maps.googleapis.com/maps/api/streetview?return_error_code=true&size=600x300&location=${lat},${lng}&heading=151.78&pitch=-0.76&key=${
-                    //   import.meta.env.VITE_GOOGLE_MAPS_API_KEY
-                    // }`;
-                    try {
-                      const response = await apiRequest({
-                        url: urls.check_street_view,
-                        method: "POST",
-                        body: {
-                          lat: lat,
-                          lng: lng,
-                        },
-                      });
-                      // Once data is fetched, update the popup with the actual content
-                      const updatedContent = generatePopupContent(
-                        properties,
-                        coordinates,
-                        false,
-                        true
-                      );
-                      popup.setHTML(updatedContent).addTo(mapRef.current!);
-                    } catch (error) {
-                      popup.setHTML(
-                        generatePopupContent(
-                          properties,
-                          coordinates,
-                          false,
-                          false
-                        )
-                      );
-                    }
-
-                    // Add mouseenter and mouseleave events to the popup element
-                    const popupElement = popup.getElement();
-                    popupElement.addEventListener("mouseenter", () => {
-                      isOverPopup = true;
-                    });
-                    popupElement.addEventListener("mouseleave", () => {
-                      isOverPopup = false;
-                      if (!hoveredStateId) {
-                        popup?.remove();
-                        popup = null;
-                      }
-                    });
-                  }
-                };
-
-                const handleMouseLeave = () => {
-                  if (!mapRef.current) return;
-                  isOverPoint = false;
-                  // Reset cursor style
-                  mapRef.current.getCanvas().style.cursor = "";
-
-                  // Use setTimeout to check if the mouse is over the popup before closing
-                  setTimeout(() => {
-                    if (!isOverPopup && !isOverPoint && popup) {
-                      popup.remove();
-                      popup = null;
-                    }
-                  }, 500);
-
-                  if (hoveredStateId !== null) {
-                    mapRef.current.setFeatureState(
-                      { source: sourceId, id: hoveredStateId },
-                      { hover: false }
-                    );
-                  }
-
-                  hoveredStateId = null;
-                };
-
-                if (mapRef.current) {
-                  if (isMobile) {
-                    // For mobile devices, use touchstart and touchend events
-                    mapRef.current.on("touchstart", layerId, handleMouseOver);
-                  } else {
-                    // For desktop, keep original mouseenter and mouseleave events
-                    mapRef.current.on("mouseenter", layerId, handleMouseOver);
-                    mapRef.current.on("mouseleave", layerId, handleMouseLeave);
-                  }
+                    )
+                  );
                 }
-              }
 
-              if (
-                index === geoPoints.length - 1 &&
-                featureCollection.features.length
-              ) {
-                const lastFeature =
-                  featureCollection.features[
-                  featureCollection.features.length - 1
-                  ];
-                const newCoordinates = lastFeature.geometry.coordinates as [
-                  number,
-                  number
-                 ];
-
-                if (centralizeOnce && !initialFlyToDone && mapRef.current) {
-                  mapRef.current.flyTo({
-                    center: newCoordinates,
-                    zoom: mapConfig.zoom,
-                    speed: mapConfig.speed,
-                    curve: 1,
-                  });
-                  lastCoordinatesRef.current = newCoordinates;
-                  setInitialFlyToDone(true);
-                } else if (
-                  JSON.stringify(newCoordinates) !==
-                  JSON.stringify(lastCoordinatesRef.current)
-                ) {
-                  if (!centralizeOnce && mapRef.current) {
-                    mapRef.current.flyTo({
-                      center: newCoordinates,
-                      zoom: mapConfig.zoom,
-                      speed: mapConfig.speed,
-                      curve: 1,
-                    });
-                  }
-                  lastCoordinatesRef.current = newCoordinates;
-                }
-              }
-            } catch (error) {
-              console.error(`Error processing feature collection at index ${index}:`, error);
-            }
-          }
-        } catch (error) {
-          console.error('Error in addGeoPoints:', error);
-        }
-      }
-    } catch (error) {
-      console.error('Error in addGeoPoints:', error);
-    }
-  }, [geoPoints, initialFlyToDone, centralizeOnce, isMobile]);
-
-  const setupMap = () => {
-    if (mapRef.current && styleLoadedRef.current) {
-      addGeoPoints();
-    }
-  };
-
-  useEffect(() => {
-    setupMap();
-
-      return () => {
-        if (mapRef.current) {
-          mapRef.current.off('style.load', setupMap);
-
-          if (mapRef.current.isStyleLoaded()) {
-            try {
-              const style = mapRef.current.getStyle();
-              if (style && style.layers) {
-                style.layers.forEach((layer: any) => {
-                  if (layer.id.startsWith('circle-layer-')) {
-                    const sourceId = `circle-source-${layer.id.split('-')[2]}`;
-                    if (mapRef.current?.getLayer(layer.id)) {
-                      mapRef.current.removeLayer(layer.id);
-                    }
-                    if (mapRef.current?.getSource(sourceId)) {
-                      mapRef.current.removeSource(sourceId);
-                    }
+                // Add mouseenter and mouseleave events to the popup element
+                const popupElement = popup.getElement();
+                popupElement.addEventListener("mouseenter", () => {
+                  isOverPopup = true;
+                });
+                popupElement.addEventListener("mouseleave", () => {
+                  isOverPopup = false;
+                  if (!hoveredStateId) {
+                    popup?.remove();
+                    popup = null;
                   }
                 });
               }
-            } catch (error) {
-              console.error('Error during cleanup:', error);
+            };
+
+            const handleMouseLeave = () => {
+              if (!mapRef.current) return;
+              isOverPoint = false;
+              // Reset cursor style
+              mapRef.current.getCanvas().style.cursor = "";
+
+              // Use setTimeout to check if the mouse is over the popup before closing
+              setTimeout(() => {
+                if (!isOverPopup && !isOverPoint && popup) {
+                  popup.remove();
+                  popup = null;
+                }
+              }, 500);
+
+              if (hoveredStateId !== null) {
+                mapRef.current.setFeatureState(
+                  { source: sourceId, id: hoveredStateId },
+                  { hover: false }
+                );
+              }
+
+              hoveredStateId = null;
+            };
+
+            if (mapRef.current) {
+              if (isMobile) {
+                // For mobile devices, use touchstart and touchend events
+                mapRef.current.on("touchstart", layerId, handleMouseOver);
+              } else {
+                // For desktop, keep original mouseenter and mouseleave events
+                mapRef.current.on("mouseenter", layerId, handleMouseOver);
+                mapRef.current.on("mouseleave", layerId, handleMouseLeave);
+              }
             }
-          } else {
-            console.warn('Style is not fully loaded yet. Cleanup skipped.');
           }
+
+          if (
+            index === geoPoints.length - 1 &&
+            featureCollection.features.length
+          ) {
+            const lastFeature =
+              featureCollection.features[
+              featureCollection.features.length - 1
+              ];
+            const newCoordinates = lastFeature.geometry.coordinates as [
+              number,
+              number
+            ];
+
+            if (centralizeOnce && !initialFlyToDone && mapRef.current) {
+              mapRef.current.flyTo({
+                center: newCoordinates,
+                zoom: mapConfig.zoom,
+                speed: mapConfig.speed,
+                curve: 1,
+              });
+              lastCoordinatesRef.current = newCoordinates;
+              setInitialFlyToDone(true);
+            } else if (
+              JSON.stringify(newCoordinates) !==
+              JSON.stringify(lastCoordinatesRef.current)
+            ) {
+              if (!centralizeOnce && mapRef.current) {
+                mapRef.current.flyTo({
+                  center: newCoordinates,
+                  zoom: mapConfig.zoom,
+                  speed: mapConfig.speed,
+                  curve: 1,
+                });
+              }
+              lastCoordinatesRef.current = newCoordinates;
+            }
+          }
+        } catch (error) {
+          console.error('Error during cleanup:', error);
         }
-      };
+      }
     } catch (error) {
-      console.error('Error in addGeoPoints:', error);
+      console.error('Error during cleanup:', error);
+    }
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.off('style.load', setupMap);
+
+        if (mapRef.current.isStyleLoaded()) {
+          try {
+            const style = mapRef.current.getStyle();
+            if (style && style.layers) {
+              style.layers.forEach((layer: any) => {
+                if (layer.id.startsWith('circle-layer-')) {
+                  const sourceId = `circle-source-${layer.id.split('-')[2]}`;
+                  if (mapRef.current?.getLayer(layer.id)) {
+                    mapRef.current.removeLayer(layer.id);
+                  }
+                  if (mapRef.current?.getSource(sourceId)) {
+                    mapRef.current.removeSource(sourceId);
+                  }
+                }
+              });
+            }
+          } catch (error) {
+            console.error('Error during cleanup:', error);
+          }
+        } else {
+          console.warn('Style is not fully loaded yet. Cleanup skipped.');
+        }
+      }
     }
   }, [geoPoints, initialFlyToDone, centralizeOnce, isMobile]);
 
