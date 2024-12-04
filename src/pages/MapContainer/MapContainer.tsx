@@ -41,7 +41,7 @@ const getCityBoundaries = async (cityName: string): Promise<[number, number][] |
       };
     }>;
 
-    const cityData = allCities.find(city => 
+    const cityData = allCities.find(city =>
       city.name.toLowerCase() === cityName.toLowerCase()
     );
 
@@ -56,7 +56,7 @@ const getCityBoundaries = async (cityName: string): Promise<[number, number][] |
 
       return boundingBox;
     }
-    
+
     return null;
   } catch (error) {
     console.error("Error fetching city boundaries:", error);
@@ -74,7 +74,7 @@ function Container() {
     colors,
     gradientColorBasedOnZone,
   } = useCatalogContext();
-  const { centralizeOnce, initialFlyToDone, setInitialFlyToDone,reqFetchDataset } =
+  const { centralizeOnce, initialFlyToDone, setInitialFlyToDone, reqFetchDataset } =
     useLayerContext();
   const { isMobile } = useUIContext();
 
@@ -656,34 +656,37 @@ function Container() {
   useEffect(() => {
     setupMap();
 
-    return () => {
-      if (mapRef.current) {
-        mapRef.current.off('style.load', setupMap);
-        
-        if (mapRef.current.isStyleLoaded()) {
-          try {
-            const style = mapRef.current.getStyle();
-            if (style && style.layers) {
-              style.layers.forEach((layer: any) => {
-                if (layer.id.startsWith('circle-layer-')) {
-                  const sourceId = `circle-source-${layer.id.split('-')[2]}`;
-                  if (mapRef.current?.getLayer(layer.id)) {
-                    mapRef.current.removeLayer(layer.id);
+      return () => {
+        if (mapRef.current) {
+          mapRef.current.off('style.load', setupMap);
+
+          if (mapRef.current.isStyleLoaded()) {
+            try {
+              const style = mapRef.current.getStyle();
+              if (style && style.layers) {
+                style.layers.forEach((layer: any) => {
+                  if (layer.id.startsWith('circle-layer-')) {
+                    const sourceId = `circle-source-${layer.id.split('-')[2]}`;
+                    if (mapRef.current?.getLayer(layer.id)) {
+                      mapRef.current.removeLayer(layer.id);
+                    }
+                    if (mapRef.current?.getSource(sourceId)) {
+                      mapRef.current.removeSource(sourceId);
+                    }
                   }
-                  if (mapRef.current?.getSource(sourceId)) {
-                    mapRef.current.removeSource(sourceId);
-                  }
-                }
-              });
+                });
+              }
+            } catch (error) {
+              console.error('Error during cleanup:', error);
             }
-          } catch (error) {
-            console.error('Error during cleanup:', error);
+          } else {
+            console.warn('Style is not fully loaded yet. Cleanup skipped.');
           }
-        } else {
-          console.warn('Style is not fully loaded yet. Cleanup skipped.');
         }
-      }
-    };
+      };
+    } catch (error) {
+      console.error('Error in addGeoPoints:', error);
+    }
   }, [geoPoints, initialFlyToDone, centralizeOnce, isMobile]);
 
   // Select polygons when clicked on the map
@@ -833,6 +836,16 @@ function Container() {
       });
     }
   }, [currentStyle]);
+
+  const setupMap = () => {
+    if (mapRef.current && styleLoadedRef.current) {
+      addGeoPoints();
+    }
+  };
+
+  useEffect(() => {
+    setupMap();
+  }, [geoPoints, initialFlyToDone, centralizeOnce, isMobile]);
 
   return (
     <div className="flex-1 relative " id="map-container">
