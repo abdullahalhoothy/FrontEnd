@@ -117,42 +117,42 @@ function CatalogMenu() {
             + Add Layer
           </button>
         </div>
-      </div>
 
-      {showRestorePrompt && (
-        <div className="ms-8 me-8 m-auto border-solid rounded border-2 border-[#115740] p-2 mt-5 ">
-          <p className="text-lg text-center font-semibold flex pb-3">
-            You have unsaved data. Would you like to restore it?
-          </p>
-          <div className="flex w-full space-x-2">
-            <button
-              onClick={() => {
-                resetState();
 
-                setShowRestorePrompt(false);
-              }}
-              className="w-full h-full bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
+        {showRestorePrompt && (
+          <div className="ms-8 me-8 m-auto border-solid rounded border-2 border-[#115740] p-2 mt-5 ">
+            <p className="text-lg text-center font-semibold flex pb-3">
+              You have unsaved data. Would you like to restore it?
+            </p>
+            <div className="flex w-full space-x-2">
+              <button
+                onClick={() => {
+                  resetState();
+
+                  setShowRestorePrompt(false);
+                }}
+                className="w-full h-full bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
               hover:bg-white transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-slate-100 disabled:cursor-not-allowed"
-            >
-              No
-            </button>
+              >
+                No
+              </button>
 
-            <button
-              onClick={handleRestoreClick}
-              className="w-full h-full bg-[#115740] border-[#115740] border-2 text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] 
+              <button
+                onClick={handleRestoreClick}
+                className="w-full h-full bg-[#115740] border-[#115740] border-2 text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] 
          transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-[#115740] disabled:cursor-not-allowed"
-            >
-              Yes
-            </button>
+              >
+                Yes
+              </button>
+            </div>
           </div>
+        )}
+        <div className="flex flex-col justify-start items-center overflow-y-auto overflow-x-hidden px-4">
+          {safeGeoPoints.map(function (featureCollection, index) {
+            return <MultipleLayersSetting key={index} layerIndex={index} />;
+          })}
         </div>
-      )}
-      <div className="flex flex-col justify-start items-center overflow-y-auto overflow-x-hidden px-4">
-        {safeGeoPoints.map(function (featureCollection, index) {
-          return <MultipleLayersSetting key={index} layerIndex={index} />;
-        })}
       </div>
-
       <div className="w-full flex-col lg:h-[9%] flex px-2 py-2 select-none border-t lg:mb-0 mb-14">
         <div className="flex w-full space-x-2">
           <button
