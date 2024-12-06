@@ -226,12 +226,17 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
           <div className={"flex"}>
             <ColorSelect layerIndex={layerIndex} />
-            <input
-              type="checkbox"
-              checked={isDisplay}
-              onChange={handleDisplayChange}
-              className="appearance-none w-[11px] h-[11px] cursor-pointer border border-[#28a745] rounded-sm relative"
-            />
+            <div className="flex items-center gap-1">
+              <input
+                type="checkbox"
+                checked={isDisplay}
+                onChange={handleDisplayChange}
+                className="w-[11px] h-[11px] cursor-pointer accent-[#28a745]"
+              />
+              <p className="text-[11px] my-[2px] text-[#555] whitespace-nowrap">
+                Visible
+              </p>
+            </div>
           </div>
 
           <div
