@@ -128,6 +128,7 @@ export function LayerProvider(props: { children: ReactNode }) {
       points_color: selectedColor.hex,
       layer_legend: reqSaveLayer.legend,
       layer_description: reqSaveLayer.description,
+      city_name: reqFetchDataset.selectedCity,
       user_id: authResponse.localId,
     };
 
@@ -205,6 +206,7 @@ export function LayerProvider(props: { children: ReactNode }) {
           features: response.features,
           display: true,
           points_color: "#28A745",
+          city_name: reqFetchDataset.selectedCity,
         },
       ];
     });

@@ -24,6 +24,8 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     updateLayerDisplay,
     updateLayerHeatmap,
     removeLayer,
+    restoreLayer,
+    deletedLayers,
     isAdvanced,
     setIsAdvanced,
     openDropdownIndices,
@@ -45,11 +47,11 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   const layer = geoPoints[layerIndex];
   console.log(layer);
   console.log(geoPoints);
-  const { prdcer_layer_name, is_zone_lyr, display, is_heatmap } = layer;
+  const { prdcer_layer_name, is_zone_lyr, display, is_heatmap, is_grid, city_name } = layer;
   const [isZoneLayer, setIsZoneLayer] = useState(is_zone_lyr);
   const [isDisplay, setIsDisplay] = useState(display);
   const [isHeatmap, setIsHeatmap] = useState(is_heatmap);
-  const [isGrid, setIsGrid] = useState(false);
+  const [isGrid, setIsGrid] = useState(is_grid);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
   const { authResponse } = useAuth();
@@ -60,6 +62,9 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
   const dropdownIndex = layerIndex ?? -1;
   const isOpen = openDropdownIndices[1] === dropdownIndex;
+
+  const [showRestorePrompt, setShowRestorePrompt] = useState(false);
+  const [deletedTimestamp, setDeletedTimestamp] = useState<number | null>(null);
 
   useEffect(function () {
     handleGetGradientColors();
@@ -120,47 +125,14 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   }
 
   function handleRemoveLayer() {
-    const { [`circle-layer-${layerIndex}`]: _, ...remainingLayers } =
-      layerColors;
-    setGradientColorBasedOnZone([] as GradientColorBasedOnZone[]);
-    if (openDropdownIndices[1] == geoPoints.length - 1) {
-      updateDropdownIndex(1, null);
-    }
-    setIsRadiusMode(false);
+    setDeletedTimestamp(Date.now());
     removeLayer(layerIndex);
-    // Re-index the remaining layers (e.g., rename `circle-layer-x` to reflect new indices)
-    const reindexedLayers = Object.keys(remainingLayers).reduce(
-      (acc, key, index) => {
-        acc[`circle-layer-${index}`] = remainingLayers[key];
-        return acc;
-      },
-      {}
-    );
-    console.log(reindexedLayers);
-    setLayerColors(reindexedLayers);
-    // Re-index the `isAdvancedMode` state to reflect updated layer indices
-    if (layerIndex != undefined) {
-      setIsAdvancedMode((prevState) => {
-        const { [`circle-layer-${layerIndex}`]: _, ...remainingModes } =
-          prevState;
+    setShowRestorePrompt(true);
 
-        // Create a new re-indexed state for `isAdvancedMode`
-        const reindexedAdvancedMode = Object.keys(remainingModes).reduce(
-          (acc, key, index) => {
-            acc[`circle-layer-${index}`] = remainingModes[key];
-            return acc;
-          },
-          {}
-        );
-
-        return reindexedAdvancedMode;
-      });
-    }
-    if (openDropdownIndices[1] >= geoPoints.length - 1) {
-      updateDropdownIndex(1, geoPoints.length - 2);
-    }
-    setChosenPallet(null);
-    setRadiusInput(undefined);
+    // Auto-hide restore prompt after 5 seconds
+    setTimeout(() => {
+      setShowRestorePrompt(false);
+    }, 5000);
   }
 
   function toggleDropdown(event: ReactMouseEvent) {
@@ -359,6 +331,22 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Add restore prompt */}
+      {showRestorePrompt && deletedTimestamp && (
+        <div className="fixed bottom-4 right-4 bg-white shadow-lg rounded-lg p-4 flex items-center gap-4">
+          <span>Layer removed.</span>
+          <button
+            onClick={() => {
+              restoreLayer(deletedTimestamp);
+              setShowRestorePrompt(false);
+            }}
+            className="text-[#115740] hover:text-[#123f30] font-medium"
+          >
+            Undo
+          </button>
         </div>
       )}
     </div>

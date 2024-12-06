@@ -37,6 +37,7 @@ export interface UserLayer {
   layer_description: string;
   records_count: number;
   is_zone_lyr: boolean;
+  city_name?: string;
 }
 
 export interface CatalogueCardProps {
@@ -77,6 +78,7 @@ export interface CardItem {
   points_color?: string;
   legend?: string;
   lyrs?: { layer_id: string; points_color: string }[];
+  city_name?: string;
 }
 
 // Catalog Context Type
@@ -342,14 +344,18 @@ export interface FetchDatasetResponse {
   display?: boolean;
 }
 
+export type Bounds = [number, number, number, number]; // [west, south, east, north]
+
 export interface MapFeatures extends FetchDatasetResponse {
   prdcer_layer_name?: string;
   points_color?: string;
   layer_legend?: string;
   layer_description?: string;
   is_zone_lyr?: string;
+  city_name?: string;
   is_heatmap?: boolean;
   is_grid?: boolean;
+  bounds?: Bounds;
   [key: string]: any;
 }
 

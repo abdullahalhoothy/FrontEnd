@@ -98,6 +98,11 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [selectedBasedon, setSelectedBasedon] = useState<string>("rating");
   const [layerColors, setLayerColors] = useState({});
   const [visualizationMode, setVisualizationMode] = useState<VisualizationMode>('vertex');
+  const [deletedLayers, setDeletedLayers] = useState<{
+    layer: MapFeatures;
+    index: number;
+    timestamp: number;
+  }[]>([]);
 
   useEffect(
     function () {
@@ -293,10 +298,11 @@ export function CatalogProvider(props: { children: ReactNode }) {
 
   function updateLayerDisplay(layerIndex: number, display: boolean) {
     setGeoPoints(function (prevGeoPoints) {
-      var updatedGeoPoints = prevGeoPoints.slice();
+      const updatedGeoPoints = prevGeoPoints.slice();
       updatedGeoPoints[layerIndex].display = display;
       return updatedGeoPoints;
     });
+    // Bounds will be recalculated via useEffect in MapContainer
   }
 
   function updateLayerHeatmap(layerIndex: number, isHeatmap: boolean) {
@@ -309,13 +315,29 @@ export function CatalogProvider(props: { children: ReactNode }) {
 
   function removeLayer(layerIndex: number) {
     setGeoPoints(function (prevGeoPoints) {
-      var updatedGeoPoints = prevGeoPoints.filter(function (_, index) {
-        return index !== layerIndex;
-      });
-      return updatedGeoPoints;
+      const removedLayer = prevGeoPoints[layerIndex];
+      // Store the deleted layer with its metadata
+      setDeletedLayers(prev => [...prev, {
+        layer: removedLayer,
+        index: layerIndex,
+        timestamp: Date.now()
+      }]);
+      return prevGeoPoints.filter((_, index) => index !== layerIndex);
     });
   }
 
+  function restoreLayer(timestamp: number) {
+    const deletedLayer = deletedLayers.find(layer => layer.timestamp === timestamp);
+    if (!deletedLayer) return;
+
+    setGeoPoints(prev => {
+      const newLayers = [...prev];
+      newLayers.splice(deletedLayer.index, 0, deletedLayer.layer);
+      return newLayers;
+    });
+
+    setDeletedLayers(prev => prev.filter(layer => layer.timestamp !== timestamp));
+  }
 
   function updateLayerVisualization(layerIndex: number, mode: VisualizationMode) {
     setGeoPoints(function (prevGeoPoints) {
@@ -468,6 +490,8 @@ export function CatalogProvider(props: { children: ReactNode }) {
         isRadiusMode,
         setIsRadiusMode,
         updateLayerGrid,
+        deletedLayers,
+        restoreLayer,
       }}
     >
       {children}

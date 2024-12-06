@@ -17,6 +17,7 @@ type GeoPoint = {
   layer_legend?: string;
   layer_description?: string;
   is_zone_lyr?: string;
+  city_name?: string;
   percentageInside?: number;
 };
 
