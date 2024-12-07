@@ -121,14 +121,14 @@ function CustomizeLayer() {
           <SavedIconFeedback />
         </div>
       ) : (
-        <div className="flex flex-col lg:pr-2 w-full h-full">
-          <div className="w-full h-full px-4 py-4">
+        <div className="flex flex-col lg:pr-2 w-full h-full overflow-hidden">
+          <div className="w-full lg:h-full px-4 py-4 flex-1 ">
             {error && (
-              <div className="mt-3 mb-2 text-red-500 font-semibold">
+              <div className="mt-2 mb-2 text-red-500 font-semibold">
                 {error}
               </div>
             )}
-            <div className="mb-5 flex flex-col">
+            <div className="mb-4 flex flex-col">
               <label
                 className="block mb-2 text-md font-medium text-black"
                 htmlFor="name"
@@ -145,7 +145,7 @@ function CustomizeLayer() {
                 placeholder="Enter Name"
               />
             </div>
-            <div className="mb-5 flex flex-col">
+            <div className="mb-4 flex flex-col">
               <label
                 className="block mb-2 text-md font-medium text-black"
                 htmlFor="pointColor"
@@ -154,7 +154,7 @@ function CustomizeLayer() {
               </label>
               <ColorSelect />
             </div>
-            <div className="mb-5 flex flex-col">
+            <div className="mb-4 flex flex-col">
               <label
                 className="block mb-2 text-md font-medium text-black"
                 htmlFor="legend"
@@ -171,7 +171,7 @@ function CustomizeLayer() {
                 placeholder="Enter Legend"
               />
             </div>
-            <div className="mb-5 flex flex-col">
+            <div className="mb-4 flex flex-col">
               <label
                 className="block mb-2 text-md font-medium text-black"
                 htmlFor="description"
@@ -189,11 +189,11 @@ function CustomizeLayer() {
               />
             </div>
           </div>
-          <div className="w-full h-[7%] flex  px-2 py-2 select-none border-t lg:mb-0 mb-14">
-            <div className="flex h-full w-full space-x-2">
+          <div className="w-full lg:h-[7%] flex  px-2 py-2 select-none border-t lg:mb-0 mb-16">
+            <div className="flex lg:h-full w-full space-x-2">
               <button
                 onClick={handleDiscardClick}
-                className="w-full h-full bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
+                className="w-full h-10 bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
                hover:bg-white transition-all cursor-pointer"
               >
                 Discard
@@ -205,7 +205,7 @@ function CustomizeLayer() {
                   handleButtonClick(e);
                 }}
                 disabled={showLoaderTopup}
-                className="w-full h-full bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer"
+                className="w-full h-10 bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer"
               >
                 {showLoaderTopup ? "Loading..." : "Save"}
               </button>
