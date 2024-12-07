@@ -76,7 +76,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [isAdvancedMode, setIsAdvancedMode] = useState({});
   const [radiusInput, setRadiusInput] = useState<number | null>(null);
   const [isRadiusMode, setIsRadiusMode] = useState(false);
-  const [colors, setColors] = useState<string[]>([]);
+  const [colors, setColors] = useState<string[][]>([]);
 
   const [reqGradientColorBasedOnZone, setReqGradientColorBasedOnZone] =
     useState<ReqGradientColorBasedOnZone>({

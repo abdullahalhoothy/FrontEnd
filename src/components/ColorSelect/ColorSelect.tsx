@@ -150,7 +150,7 @@ function ColorSelect({ layerIndex }: ColorSelectProps) {
         ) : (
           <>
             <span
-              className={`w-[14px] h-[14px] rounded-full absolute left-[80px] ${
+              className={`w-[14px] h-[14px] rounded-full absolute left-[70px] ${
                 sidebarMode === "catalog"
                   ? "static min-w-[14px] min-h-[14px] ml-[16px]"
                   : ""
@@ -162,10 +162,10 @@ function ColorSelect({ layerIndex }: ColorSelectProps) {
       </div>
       {isOpen && (
         <div
-          className={`absolute top-full left-0 right-0 border border-[#ccc] rounded bg-white z-[1] ${
+          className={`absolute top-full left-0 right-0 border rounded z-[1] ${
             sidebarMode === "catalog"
-              ? "max-w-[35px] left-[5px] top-[30px] flex flex-col justify-center py-[4px]"
-              : ""
+              ? "bg-transparent border-none max-w-[35px] left-[5px] top-[30px] flex flex-col justify-center py-[4px]"
+              : "bg-white border-[#ccc]"
           }`}
         >
           {renderOptions()}

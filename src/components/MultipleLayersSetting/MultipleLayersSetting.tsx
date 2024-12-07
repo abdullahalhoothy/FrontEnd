@@ -16,6 +16,7 @@ import { HttpReq } from "../../services/apiService";
 import urls from "../../urls.json";
 import { useAuth } from "../../context/AuthContext";
 import BasedOnDropdown from "./BasedOnDropdown";
+import apiRequest from "../../services/apiRequest";
 
 function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   const { layerIndex } = props;
@@ -67,7 +68,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   const [deletedTimestamp, setDeletedTimestamp] = useState<number | null>(null);
 
   useEffect(function () {
-    handleGetGradientColors();
+        handleGetGradientColors();
   }, []);
   useEffect(
     function () {
@@ -162,6 +163,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       setColors(res.data.data);
     } catch (error) {
       setIsError(error);
+      console.error('error fetching gradient colors', error);
     }
   }
 
