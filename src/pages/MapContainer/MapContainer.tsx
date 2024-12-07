@@ -398,19 +398,40 @@ function Container() {
                 });
               }
             } else {
+              const allValues = featureCollection.features.map(f => 
+                Number(f.properties[featureCollection.basedon || 'rating']) || 0
+              );
+              const maxValue = Math.max(...allValues);
+              
+              const p25 = maxValue * 0.25;
+              const p50 = maxValue * 0.50;
+              const p75 = maxValue * 0.75;
+
               mapRef.current?.addLayer({
                 id: layerId,
                 type: "circle",
                 source: sourceId,
                 paint: {
-                  'circle-color': featureCollection.points_color || mapConfig.defaultColor,
-                  'circle-radius': 6,
-                  'circle-opacity': [
-                    'interpolate',
-                    ['linear'],
+                  'circle-color': [
+                    'step',
                     ['get', featureCollection.basedon || 'rating'],
-                    0, 0.3,
-                    5, 1
+                    featureCollection.points_color || mapConfig.defaultColor,
+                    p25, featureCollection.points_color || mapConfig.defaultColor,
+                    p50, featureCollection.points_color || mapConfig.defaultColor,
+                    p75, featureCollection.points_color || mapConfig.defaultColor
+                  ],
+                  "circle-radius": [
+                    "case",
+                    ["boolean", ["feature-state", "hover"], false],
+                    mapConfig.hoverCircleRadius,
+                    mapConfig.circleRadius,
+                  ],                  'circle-opacity': [
+                    'step',
+                    ['get', featureCollection.basedon || 'rating'],
+                    0.2,
+                    p25, 0.4,
+                    p50, 0.6,
+                    p75, 0.8
                   ]
                 }
               });
