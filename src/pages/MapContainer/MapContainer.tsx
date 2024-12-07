@@ -286,7 +286,7 @@ function Container() {
                   "heatmap-weight": [
                     "interpolate",
                     ["linear"],
-                    ["get", selectedBasedon || "heatmap_weight"],
+                    ["get", featureCollection.basedon || "heatmap_weight"],
                     0, 0,
                     5, 1
                   ],
@@ -334,10 +334,10 @@ function Container() {
 
               grid.features = grid.features.map(cell => {
                 const pointsWithin = turf.pointsWithinPolygon(featureCollection, cell);
-                const density = pointsWithin.features.reduce((sum, point) => 
-                  sum + (point.properties[selectedBasedon || 'heatmap_weight'] || 0), 
-                  0
-                ) / Math.max(1, pointsWithin.features.length);
+                const density = pointsWithin.features.reduce((sum, point) => {
+                  const value = point.properties[featureCollection.basedon || 'rating'];
+                  return sum + (typeof value === 'number' ? value : 0);
+                }, 0) / Math.max(1, pointsWithin.features.length);
                 
                 return {
                   ...cell,
@@ -400,7 +400,7 @@ function Container() {
                   'circle-opacity': [
                     'interpolate',
                     ['linear'],
-                    ['get', selectedBasedon || 'heatmap_weight'],
+                    ['get', featureCollection.basedon || 'rating'],
                     0, 0.3,
                     5, 1
                   ]
@@ -618,7 +618,7 @@ function Container() {
         }
       }
     }
-  }, [geoPoints, initialFlyToDone, centralizeOnce, isMobile, selectedBasedon]);
+  }, [geoPoints, initialFlyToDone, centralizeOnce, isMobile]);
 
   // Select polygons when clicked on the map
   useEffect(() => {
@@ -776,7 +776,7 @@ function Container() {
 
   useEffect(() => {
     setupMap();
-  }, [geoPoints, initialFlyToDone, centralizeOnce, isMobile, selectedBasedon]);
+  }, [geoPoints, initialFlyToDone, centralizeOnce, isMobile]);
 
   return (
     <div className="flex-1 relative " id="map-container">

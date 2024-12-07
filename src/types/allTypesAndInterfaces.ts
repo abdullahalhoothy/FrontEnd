@@ -323,6 +323,9 @@ export interface BoxmapProperties {
   website: string;
   business_status: string;
   user_ratings_total: number | string;
+  priceLevel?: number;
+  heatmap_weight?: number;
+  [key: string]: any;
 }
 
 export interface Feature {
@@ -356,6 +359,7 @@ export interface MapFeatures extends FetchDatasetResponse {
   is_heatmap?: boolean;
   is_grid?: boolean;
   bounds?: Bounds;
+  basedon?: string;
   [key: string]: any;
 }
 
