@@ -277,11 +277,19 @@ function Container() {
               });
             }
 
+            const layerConfig = {
+              id: layerId,
+              source: sourceId,
+              layout: {
+                'z-index': featureCollection.is_heatmap ? 1 : 
+                           featureCollection.is_grid ? 1 : 2  // Circle layers get higher z-index
+              },
+            };
+
             if (featureCollection.is_heatmap) {
               mapRef.current.addLayer({
-                id: layerId,
+                ...layerConfig,
                 type: "heatmap",
-                source: sourceId,
                 paint: {
                   "heatmap-weight": [
                     "interpolate",
