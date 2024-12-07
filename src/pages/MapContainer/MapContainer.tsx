@@ -361,6 +361,13 @@ function Container() {
 
               // Add grid visualization layer
               if (!mapRef.current?.getLayer(`${layerId}-fill`)) {
+                const allDensityValues = grid.features.map(cell => cell?.properties?.density ?? 0);
+                const maxDensity = Math.max(...allDensityValues);
+
+                const p25 = maxDensity * 0.25;
+                const p50 = maxDensity * 0.50;
+                const p75 = maxDensity * 0.75;
+
                 mapRef.current?.addLayer({
                   id: `${layerId}-fill`,
                   type: "fill",
@@ -369,13 +376,15 @@ function Container() {
                     'fill-color': featureCollection.points_color || mapConfig.defaultColor,
                     'fill-opacity': [
                       'case',
-                      ['==', ['get', 'density'], 0],
+                      ['==', ['get', 'density'], 0], 
                       0,
-                      ['interpolate',
-                        ['linear'],
+                      [
+                        'step',
                         ['get', 'density'],
-                        1, 0.2,
-                        5, 0.8
+                        0.2,
+                        p25, 0.4,
+                        p50, 0.6,
+                        p75, 0.8
                       ]
                     ],
                     'fill-outline-color': [
