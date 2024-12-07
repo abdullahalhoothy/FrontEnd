@@ -60,30 +60,53 @@ const Auth = () => {
   ) => {
     await HttpReq(
       urls.create_user_profile,
-      (data) => {
-        if (!("idToken" in (data as any))) {
-          setError(new Error("Registeration Error"));
-          return;
+      (data: any) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const userProfileResponse = data[0];
+          
+          if (userProfileResponse?.data?.user_id) {
+            setAuthResponse({
+              localId: userProfileResponse.data.user_id,
+              email: email,
+              displayName: username,
+            } as AuthResponse);
+            setAuthMessage("Registration successful! Please check your email to verify your account.");
+            setIsRegistered(true);
+          } else {
+            setError(new Error("Invalid registration response"));
+            setAuthMessage("Registration failed. Please try again.");
+          }
+        } else if (data?.detail) {
+          setError(new Error(data.detail));
+          setAuthMessage(data.detail);
+        } else {
+          setError(new Error("Registration failed - invalid response format"));
+          setAuthMessage("Registration failed. Please try again.");
         }
-
-        setAuthResponse(data as AuthResponse);
-        setIsRegistered(true);
-        console.log("registered");
       },
-      setAuthMessage,
+      () => {},
       setRequestId,
       setIsLoading,
-      setError,
+      (error: any) => {
+        if(!error) return;
+        console.log("#fix: registration","error",error);
+        if (error.response?.data?.detail) {
+          setError(new Error(error.response.data.detail));
+          setAuthMessage(error.response.data.detail);
+        }
+      },
       "post",
       { email, password, username }
     );
   };
 
   useEffect(() => {
-    // If no error occurred during registration, proceed with login
-    console.log(error?.message);
-    if (!error && isRegistered) {
-      handleLogin(email, password);
+    if (isRegistered && !error) {
+      setIsLogin(true);
+      setTimeout(() => {
+        setAuthMessage(null);
+        setIsRegistered(false);
+      }, 5000);
     }
   }, [isRegistered]);
 
@@ -197,6 +220,11 @@ const Auth = () => {
     );
   };
 
+  useEffect(() => {
+    console.log("#fix: auth", "authMessage ",authMessage);
+  }, [authMessage]);
+  
+
   return (
     <div className="w-full h-full lg:border-l">
       <div className="flex items-center justify-center h-screen bg-[#115740]">
@@ -208,9 +236,14 @@ const Auth = () => {
                 ? "Login"
                 : "Register"}
           </h2>
-          <div className="text-red-500 mb-4">{error?.message}</div>
-          {authMessage && (
-            <p className="text-red-500 mb-4 text-center">{authMessage}</p>
+          {!!authMessage && (
+            <p className={`mb-4 text-center ${
+              isRegistered
+                ? "text-green-600"
+                : "text-red-500"
+            }`}>
+              {authMessage}
+            </p>
           )}
           {renderForm()}
           <div className="flex justify-between mt-4">

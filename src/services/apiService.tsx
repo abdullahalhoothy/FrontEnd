@@ -39,7 +39,7 @@ export async function HttpReq<T>(
 
     const message: string = response.data.message;
     const request_id: string = response.data.request_id;
-    const data: T = response.data.data;
+    const data: T = response.data.data || response.data;
 
     setResData(data);
     setResMessage(message);
