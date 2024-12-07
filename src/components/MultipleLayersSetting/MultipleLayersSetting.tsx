@@ -22,11 +22,11 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   const { layerIndex } = props;
   const {
     geoPoints,
+    setGeoPoints,
     updateLayerDisplay,
     updateLayerHeatmap,
     removeLayer,
     restoreLayer,
-    deletedLayers,
     isAdvanced,
     setIsAdvanced,
     openDropdownIndices,
@@ -184,6 +184,17 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
           : layerIndex == 1
           ? geoPoints[0]?.prdcer_lyr_id
           : "";
+      
+      const updatedLayer = {
+        ...geoPoints[layerIndex],
+        radius_meters: radiusInput || 1000,
+      };
+      setGeoPoints(prev => {
+        const updated = [...prev];
+        updated[layerIndex] = updatedLayer;
+        return updated;
+      });
+
       setReqGradientColorBasedOnZone({
         prdcer_lyr_id,
         user_id: authResponse?.localId,
@@ -361,3 +372,4 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 }
 
 export default MultipleLayersSetting;
+

@@ -327,8 +327,7 @@ function Container() {
                 bounds = turf.bbox(featureCollection).slice(0, 4) as [number, number, number, number];
               }
 
-
-              const cellSide = 1; // Size in kilometers
+              const cellSide = (featureCollection.radius_meters || 1000) / 1000;
               const options = { units: 'kilometers' as const };
               const grid = turf.squareGrid(bounds, cellSide, options);
 
