@@ -58,7 +58,9 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   const { authResponse } = useAuth();
 
   const [isError, setIsError] = useState<Error | null>(null);
-  const [radiusInput, setRadiusInput] = useState(0);
+  const [radiusInput, setRadiusInput] = useState(
+    layer.radius_meters || 1000
+  );
   const isFirstRender = useRef(true);
 
   const dropdownIndex = layerIndex ?? -1;
@@ -68,7 +70,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   const [deletedTimestamp, setDeletedTimestamp] = useState<number | null>(null);
 
   useEffect(function () {
-        handleGetGradientColors();
+    handleGetGradientColors();
   }, []);
   useEffect(
     function () {
@@ -176,15 +178,15 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         layerIndex == 0
           ? geoPoints[0]?.prdcer_lyr_id
           : layerIndex == 1
-          ? geoPoints[1]?.prdcer_lyr_id
-          : "";
+            ? geoPoints[1]?.prdcer_lyr_id
+            : "";
       const change_lyr_id =
         layerIndex == 0
           ? geoPoints[1]?.prdcer_lyr_id
           : layerIndex == 1
-          ? geoPoints[0]?.prdcer_lyr_id
-          : "";
-      
+            ? geoPoints[0]?.prdcer_lyr_id
+            : "";
+
       const updatedLayer = {
         ...geoPoints[layerIndex],
         radius_meters: radiusInput || 1000,
@@ -304,14 +306,14 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                 className={`text-[11px] my-[2px] text-[#555] whitespace-nowrap block text-sm`}
                 htmlFor="radius"
               >
-                radius
+                Radius (m)
               </label>
               <input
                 id="radius"
-                type="text"
+                type="number"
                 name="radius"
                 className="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-md focus:ring-grey-100 focus:border-grey-100 block w-full p-1"
-                value={radiusInput}
+                defaultValue={radiusInput}
                 onChange={(e) => setRadiusInput(+e.target.value)}
                 placeholder="Type radius and press Enter"
               />
