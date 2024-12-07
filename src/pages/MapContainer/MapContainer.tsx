@@ -336,7 +336,7 @@ function Container() {
                 const density = pointsWithin.features.reduce((sum, point) => {
                   const value = point.properties[featureCollection.basedon || 'rating'];
                   return sum + (typeof value === 'number' ? value : 0);
-                }, 0) / Math.max(1, pointsWithin.features.length);
+                }, 0);
                 
                 return {
                   ...cell,
