@@ -52,11 +52,12 @@ export default function BasedOnDropdown({ layerIndex }: BasedOnDropdownProps) {
         id="ratingDropdown"
         value={currentBasedon}
         onChange={handleSelectChange}
-        className="bg-gray-100 px-2 py-2 text-xs cursor-pointer"
+        className="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-md focus:ring-grey-100 focus:border-grey-100 block w-full p-1"
       >
-        <option value="rating">Point Rating</option>
+        <option value="rating">Rating</option>
+        <option value="user_ratings_total">Total Ratings</option>
         <option value="priceLevel">Price Level</option>
-        <option value="user_ratings_total">User Ratings Total</option>
+        <option value="business_status">Business Status</option>
         <option value="heatmap_weight">Heatmap Weight</option>
       </select>
     </div>
