@@ -74,6 +74,7 @@ function Container() {
     openDropdownIndices,
     colors,
     gradientColorBasedOnZone,
+    selectedBasedon,
   } = useCatalogContext();
   const { centralizeOnce, initialFlyToDone, setInitialFlyToDone, reqFetchDataset } =
     useLayerContext();
@@ -282,6 +283,13 @@ function Container() {
                 type: "heatmap",
                 source: sourceId,
                 paint: {
+                  "heatmap-weight": [
+                    "interpolate",
+                    ["linear"],
+                    ["get", selectedBasedon || "heatmap_weight"],
+                    0, 0,
+                    5, 1
+                  ],
                   "heatmap-color": [
                     "interpolate",
                     ["linear"],
@@ -326,7 +334,11 @@ function Container() {
 
               grid.features = grid.features.map(cell => {
                 const pointsWithin = turf.pointsWithinPolygon(featureCollection, cell);
-                const density = pointsWithin.features.length;
+                const density = pointsWithin.features.reduce((sum, point) => 
+                  sum + (point.properties[selectedBasedon || 'heatmap_weight'] || 0), 
+                  0
+                ) / Math.max(1, pointsWithin.features.length);
+                
                 return {
                   ...cell,
                   properties: {
@@ -384,7 +396,14 @@ function Container() {
                 source: sourceId,
                 paint: {
                   'circle-color': featureCollection.points_color || mapConfig.defaultColor,
-                  'circle-radius': 6
+                  'circle-radius': 6,
+                  'circle-opacity': [
+                    'interpolate',
+                    ['linear'],
+                    ['get', selectedBasedon || 'heatmap_weight'],
+                    0, 0.3,
+                    5, 1
+                  ]
                 }
               });
             }
@@ -599,7 +618,7 @@ function Container() {
         }
       }
     }
-  }, [geoPoints, initialFlyToDone, centralizeOnce, isMobile]);
+  }, [geoPoints, initialFlyToDone, centralizeOnce, isMobile, selectedBasedon]);
 
   // Select polygons when clicked on the map
   useEffect(() => {
@@ -757,7 +776,7 @@ function Container() {
 
   useEffect(() => {
     setupMap();
-  }, [geoPoints, initialFlyToDone, centralizeOnce, isMobile]);
+  }, [geoPoints, initialFlyToDone, centralizeOnce, isMobile, selectedBasedon]);
 
   return (
     <div className="flex-1 relative " id="map-container">
