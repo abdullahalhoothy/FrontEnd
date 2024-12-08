@@ -69,6 +69,8 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   const [showRestorePrompt, setShowRestorePrompt] = useState(false);
   const [deletedTimestamp, setDeletedTimestamp] = useState<number | null>(null);
 
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(function () {
     handleGetGradientColors();
   }, []);
@@ -169,8 +171,8 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     }
   }
 
-  function handleApplyRadius() {
-    if (!radiusInput) {
+  function handleApplyRadius(newRadius: number) {
+    if (!newRadius) {
       return null;
     } else {
       setIsRadiusMode(true);
@@ -189,7 +191,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
       const updatedLayer = {
         ...geoPoints[layerIndex],
-        radius_meters: radiusInput || 1000,
+        radius_meters: newRadius || 1000,
       };
       setGeoPoints(prev => {
         const updated = [...prev];
@@ -203,11 +205,9 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         color_grid_choice: colors[chosenPallet || 0],
         change_lyr_id,
         based_on_lyr_id: prdcer_lyr_id,
-        radius_offset: radiusInput || 1000,
+        radius_offset: newRadius || 1000,
         color_based_on: selectedBasedon,
       });
-
-      setRadiusInput(undefined);
     }
   }
 
@@ -218,6 +218,18 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     }
     updateLayerGrid(layerIndex, !isGrid);
     setIsGrid(!isGrid);
+  }
+
+  function handleRadiusInputChange(newRadius: number) {
+    setRadiusInput(newRadius);
+
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
+    debounceTimeoutRef.current = setTimeout(() => {
+      handleApplyRadius(newRadius);
+    }, 300);
   }
 
   return (
@@ -314,17 +326,9 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                 name="radius"
                 className="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-md focus:ring-grey-100 focus:border-grey-100 block w-full p-1"
                 defaultValue={radiusInput}
-                onChange={(e) => setRadiusInput(+e.target.value)}
-                placeholder="Type radius and press Enter"
+                onChange={(e) => handleRadiusInputChange(+e.target.value)}
+                placeholder="Type radius"
               />
-            </div>
-            <div>
-              <button
-                onClick={handleApplyRadius}
-                className="w-full h-7 text-sm bg-[#115740] text-white  font-semibold rounded-md hover:bg-[#123f30] transition-all cursor-pointer"
-              >
-                Apply
-              </button>
             </div>
             <div className="flex flex-row gap-4 ms-2.5">
               <div className="flex items-center gap-1">
@@ -374,4 +378,3 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 }
 
 export default MultipleLayersSetting;
-
