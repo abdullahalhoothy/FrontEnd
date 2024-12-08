@@ -266,6 +266,8 @@ function Container() {
           const sourceId = `circle-source-${index}`;
           const layerId = `circle-layer-${index}`;
 
+          console.debug("#fix:basedon - featureCollection: basedon", featureCollection.basedon, featureCollection);
+
           if (!featureCollection.display) continue;
 
           if (!mapRef.current?.getLayer(layerId)) {
@@ -281,8 +283,8 @@ function Container() {
               id: layerId,
               source: sourceId,
               layout: {
-                'z-index': featureCollection.is_heatmap ? 1 : 
-                           featureCollection.is_grid ? 1 : 2  // Circle layers get higher z-index
+                'z-index': featureCollection.is_heatmap ? 1 :
+                  featureCollection.is_grid ? 1 : 2  // Circle layers get higher z-index
               },
             };
 
@@ -312,15 +314,9 @@ function Container() {
                 }
               });
             } else if (featureCollection.is_grid) {
-              console.log("Grid mode - FeatureCollection:", {
-                hasCity: 'city_name' in featureCollection,
-                cityName: featureCollection.city_name,
-                featureCollection
-              });
-              
+
               const cityBounds = await getCityBoundaries(featureCollection.city_name || reqFetchDataset.selectedCity);
-              console.log("Retrieved city bounds for:", featureCollection.city_name, cityBounds);
-              
+
               let bounds: [number, number, number, number];
               if (cityBounds) {
                 const lngs = cityBounds.map(coord => coord[0]);
@@ -341,11 +337,11 @@ function Container() {
 
               grid.features = grid.features.map(cell => {
                 const pointsWithin = turf.pointsWithinPolygon(featureCollection, cell);
-                const density = pointsWithin.features.reduce((sum, point) => {
-                  const value = point.properties[featureCollection.basedon || 'rating'];
+                const density = featureCollection.basedon.length > 0 ? pointsWithin.features.reduce((sum, point) => {
+                  const value = point.properties[featureCollection.basedon];
                   return sum + (typeof value === 'number' ? value : 0);
-                }, 0);
-                
+                }, 0) : pointsWithin.features.length;
+
                 return {
                   ...cell,
                   properties: {
@@ -355,7 +351,6 @@ function Container() {
                 };
               });
 
-              // Add or update grid source
               const gridSourceId = `${sourceId}-grid`;
               const source = mapRef.current?.getSource(gridSourceId) as GeoJSONSource;
               if (source) {
@@ -367,7 +362,6 @@ function Container() {
                 });
               }
 
-              // Add grid visualization layer
               if (!mapRef.current?.getLayer(`${layerId}-fill`)) {
                 const allDensityValues = grid.features.map(cell => cell?.properties?.density ?? 0);
                 const maxDensity = Math.max(...allDensityValues);
@@ -376,15 +370,12 @@ function Container() {
                 const p50 = maxDensity * 0.50;
                 const p75 = maxDensity * 0.75;
 
-                mapRef.current?.addLayer({
-                  id: `${layerId}-fill`,
-                  type: "fill",
-                  source: gridSourceId,
-                  paint: {
+                const paint = featureCollection.basedon.length > 0 ?
+                  {
                     'fill-color': featureCollection.points_color || mapConfig.defaultColor,
                     'fill-opacity': [
                       'case',
-                      ['==', ['get', 'density'], 0], 
+                      ['==', ['get', 'density'], 0],
                       0,
                       [
                         'step',
@@ -401,48 +392,79 @@ function Container() {
                       'rgba(0,0,0,0)',
                       '#000'
                     ]
-                  },
+                  } :
+                  {
+                    'fill-color': featureCollection.points_color || mapConfig.defaultColor,
+                    'fill-opacity': [
+                      'case',
+                      ['==', ['get', 'density'], 0],
+                      0,
+                      1
+                    ],
+                    'fill-outline-color': [
+                      'case',
+                      ['==', ['get', 'density'], 0],
+                      'rgba(0,0,0,0)',
+                      '#000'
+                    ]
+                  }
+
+
+
+                mapRef.current?.addLayer({
+                  id: `${layerId}-fill`,
+                  type: "fill",
+                  source: gridSourceId,
+                  paint: paint,
                   filter: ['>=', ['get', 'density'], 0]
                 });
               }
             } else {
-              const allValues = featureCollection.features.map(f => 
-                Number(f.properties[featureCollection.basedon || 'rating']) || 0
+              const allValues = featureCollection.features.map(f =>
+                Number(f.properties[featureCollection.basedon]) || 0
               );
               const maxValue = Math.max(...allValues);
-              
+
               const p25 = maxValue * 0.25;
               const p50 = maxValue * 0.50;
               const p75 = maxValue * 0.75;
 
-              mapRef.current?.addLayer({
-                id: layerId,
-                type: "circle",
-                source: sourceId,
-                paint: {
-                  'circle-color': [
-                    'step',
-                    ['get', featureCollection.basedon || 'rating'],
-                    featureCollection.points_color || mapConfig.defaultColor,
-                    p25, featureCollection.points_color || mapConfig.defaultColor,
-                    p50, featureCollection.points_color || mapConfig.defaultColor,
-                    p75, featureCollection.points_color || mapConfig.defaultColor
-                  ],
-                  "circle-radius": [
-                    "case",
-                    ["boolean", ["feature-state", "hover"], false],
-                    mapConfig.hoverCircleRadius,
-                    mapConfig.circleRadius,
-                  ],                  'circle-opacity': [
-                    'step',
-                    ['get', featureCollection.basedon || 'rating'],
-                    0.2,
-                    p25, 0.4,
-                    p50, 0.6,
-                    p75, 0.8
-                  ]
-                }
-              });
+              if (!mapRef.current?.getLayer(layerId)) {
+                mapRef.current?.addLayer({
+                  id: layerId,
+                  type: "circle",
+                  source: sourceId,
+                  paint: {
+                    'circle-color': [
+                      'step',
+                      ['get', featureCollection.basedon],
+                      featureCollection.points_color || mapConfig.defaultColor,
+                      p25, featureCollection.points_color || mapConfig.defaultColor,
+                      p50, featureCollection.points_color || mapConfig.defaultColor,
+                      p75, featureCollection.points_color || mapConfig.defaultColor
+                    ],
+                    "circle-radius": [
+                      "case",
+                      ["boolean", ["feature-state", "hover"], false],
+                      mapConfig.hoverCircleRadius,
+                      mapConfig.circleRadius,
+                    ],
+                    'circle-opacity': [
+                      'case',
+                      ['==', featureCollection.basedon, ''],
+                      1,
+                      [
+                        'step',
+                        ['get', featureCollection.basedon],
+                        0.2,
+                        p25, 0.4,
+                        p50, 0.6,
+                        p75, 0.8
+                      ]
+                    ]
+                  }
+                });
+              }
             }
           }
 

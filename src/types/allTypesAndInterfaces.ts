@@ -359,7 +359,7 @@ export interface MapFeatures extends FetchDatasetResponse {
   is_heatmap?: boolean;
   is_grid?: boolean;
   bounds?: Bounds;
-  basedon?: string;
+  basedon: string;
   [key: string]: any;
 }
 
