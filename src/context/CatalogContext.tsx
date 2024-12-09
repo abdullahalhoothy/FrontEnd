@@ -95,7 +95,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [postResMessage, setPostResMessage] = useState<string>("");
   const [postResId, setPostResId] = useState<string>("");
   const [chosenPallet, setChosenPallet] = useState(null);
-  const [selectedBasedon, setSelectedBasedon] = useState<string>("rating");
+  const [selectedBasedon, setSelectedBasedon] = useState<string>("");
   const [layerColors, setLayerColors] = useState({});
   const [visualizationMode, setVisualizationMode] = useState<VisualizationMode>('vertex');
   const [deletedLayers, setDeletedLayers] = useState<{

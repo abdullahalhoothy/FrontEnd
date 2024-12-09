@@ -116,6 +116,16 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     };
   }, [setOpenDropdownIndices[1]]);
 
+  useEffect(() => {
+    if (layerIndex !== undefined) {
+      setGeoPoints((prev) =>
+        prev.map((point, idx) =>
+          idx === layerIndex ? { ...point, basedon: '' } : point
+        )
+      );
+    }
+  }, [layerIndex]);
+
   function handleDisplayChange() {
     updateLayerDisplay(layerIndex, !isDisplay);
     setIsDisplay(!isDisplay);

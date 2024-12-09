@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useCatalogContext } from "../../context/CatalogContext";
 
 interface BasedOnDropdownProps {
@@ -14,16 +14,6 @@ export default function BasedOnDropdown({ layerIndex }: BasedOnDropdownProps) {
   const currentBasedon = geoPoints[layerIndex]?.basedon ?? '';
 
   const layerNames = geoPoints[layerIndex]?.properties;
-
-  useEffect(() => {
-    if (layerIndex !== undefined) {
-      setGeoPoints((prev) =>
-        prev.map((point, idx) =>
-          idx === layerIndex ? { ...point, basedon: '' } : point
-        )
-      );
-    }
-  }, [layerIndex]);
 
   const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     event.stopPropagation();
