@@ -434,26 +434,23 @@ function Container() {
                   id: layerId,
                   type: "circle",
                   source: sourceId,
-                  paint: {
-                    'circle-color': [
-                      'step',
-                      ['get', featureCollection.basedon],
-                      featureCollection.points_color || mapConfig.defaultColor,
-                      p25, featureCollection.points_color || mapConfig.defaultColor,
-                      p50, featureCollection.points_color || mapConfig.defaultColor,
-                      p75, featureCollection.points_color || mapConfig.defaultColor
-                    ],
-                    "circle-radius": [
-                      "case",
-                      ["boolean", ["feature-state", "hover"], false],
-                      mapConfig.hoverCircleRadius,
-                      mapConfig.circleRadius,
-                    ],
-                    'circle-opacity': [
-                      'case',
-                      ['==', featureCollection.basedon, ''],
-                      1,
-                      [
+                  paint: featureCollection.basedon.length > 0 ? 
+                    {
+                      'circle-color': [
+                        'step',
+                        ['get', featureCollection.basedon],
+                        featureCollection.points_color || mapConfig.defaultColor,
+                        p25, featureCollection.points_color || mapConfig.defaultColor,
+                        p50, featureCollection.points_color || mapConfig.defaultColor,
+                        p75, featureCollection.points_color || mapConfig.defaultColor
+                      ],
+                      "circle-radius": [
+                        "case",
+                        ["boolean", ["feature-state", "hover"], false],
+                        mapConfig.hoverCircleRadius,
+                        mapConfig.circleRadius,
+                      ],
+                      'circle-opacity': [
                         'step',
                         ['get', featureCollection.basedon],
                         0.2,
@@ -461,8 +458,17 @@ function Container() {
                         p50, 0.6,
                         p75, 0.8
                       ]
-                    ]
-                  }
+                    } : 
+                    {
+                      'circle-color': featureCollection.points_color || mapConfig.defaultColor,
+                      "circle-radius": [
+                        "case",
+                        ["boolean", ["feature-state", "hover"], false],
+                        mapConfig.hoverCircleRadius,
+                        mapConfig.circleRadius,
+                      ],
+                      'circle-opacity': 1
+                    }
                 });
               }
             }
