@@ -37,7 +37,6 @@ export default function BasedOnDropdown({ layerIndex }: BasedOnDropdownProps) {
       </label>
       <select
         id="ratingDropdown"
-        defaultValue={currentBasedon}
         value={currentBasedon}
         onChange={handleSelectChange}
         className="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-md focus:ring-grey-100 focus:border-grey-100 block w-full p-1"
