@@ -266,6 +266,8 @@ function Container() {
           const sourceId = `circle-source-${index}`;
           const layerId = `circle-layer-${index}`;
 
+          if (!featureCollection.basedon) featureCollection.basedon = "";
+
           console.debug("#fix:basedon - featureCollection: basedon", featureCollection.basedon, featureCollection);
 
           if (!featureCollection.display) continue;
@@ -363,7 +365,13 @@ function Container() {
               }
 
               if (!mapRef.current?.getLayer(`${layerId}-fill`)) {
-                const allDensityValues = grid.features.map(cell => cell?.properties?.density ?? 0);
+                const allDensityValues = grid.features.reduce((acc, cell) => {
+                  const density = cell?.properties?.density;
+                  if (density) {
+                    acc.push(density);
+                  }
+                  return acc;
+                }, [0]);
                 const maxDensity = Math.max(...allDensityValues);
 
                 const p25 = maxDensity * 0.25;
@@ -434,7 +442,7 @@ function Container() {
                   id: layerId,
                   type: "circle",
                   source: sourceId,
-                  paint: featureCollection.basedon.length > 0 ? 
+                  paint: featureCollection.basedon.length > 0 ?
                     {
                       'circle-color': [
                         'step',
@@ -458,7 +466,7 @@ function Container() {
                         p50, 0.6,
                         p75, 0.8
                       ]
-                    } : 
+                    } :
                     {
                       'circle-color': featureCollection.points_color || mapConfig.defaultColor,
                       "circle-radius": [
