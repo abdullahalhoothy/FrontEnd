@@ -60,7 +60,7 @@ function CustomizeLayer() {
     autoFillLegendFormat(reqFetchDataset)
   );
   const [description, setDescription] = useState<string>("");
-  const [name, setName] = useState<string>("");
+  const [name, setName] = useState<string>(autoFillLegendFormat(reqFetchDataset));
   const [error, setError] = useState<string | null>(null);
 
   function handleSecondFormChange(
