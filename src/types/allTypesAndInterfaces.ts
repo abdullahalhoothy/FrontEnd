@@ -434,3 +434,10 @@ export interface CityData {
   name: string;
   borders: CityBorders;
 }
+
+export interface Layer {
+  id: number;
+  name: string;
+  includedTypes: string[];
+  excludedTypes: string[];
+}
