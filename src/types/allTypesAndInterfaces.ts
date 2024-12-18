@@ -216,6 +216,7 @@ export interface LayerState {
     bknd_dataset_id: string;
     prdcer_lyr_id: string;
   } | null;
+  customName?: string;
 }
 
 export interface LayerContextType {
@@ -314,9 +315,12 @@ export interface ReqFetchDataset {
   selectedCountry: string;
   selectedCity: string;
   layers: {
+    name: string;
+    points_color: string;
     id: number;
     includedTypes: string[];
     excludedTypes: string[];
+    layer_name?: string;
   }[];
   includedTypes: string[];
   excludedTypes: string[];
@@ -477,6 +481,7 @@ export interface CityData {
 export interface Layer {
   id: number;
   name: string;
+  layer_name?: string;
   includedTypes: string[];
   excludedTypes: string[];
   display?: boolean;

@@ -313,14 +313,16 @@ export function CatalogProvider(props: { children: ReactNode }) {
 
   function removeLayer(layerIndex: number) {
     setGeoPoints(function (prevGeoPoints) {
-      const removedLayer = prevGeoPoints[layerIndex];
       // Store the deleted layer with its metadata
+      const removedLayer = prevGeoPoints[layerIndex];
       setDeletedLayers(prev => [...prev, {
         layer: removedLayer,
         index: layerIndex,
         timestamp: Date.now()
       }]);
-      return prevGeoPoints.filter((_, index) => index !== layerIndex);
+      
+      // Filter out the layer with the matching layerId
+      return prevGeoPoints.filter(point => point.layerId !== layerIndex);
     });
   }
 

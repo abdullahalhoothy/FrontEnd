@@ -7,35 +7,32 @@ import { useNavigate } from "react-router";
 import SavedIconFeedback from "../SavedIconFeedback/SavedIconFeedback";
 import { LayerCustomization } from "../../types/allTypesAndInterfaces";
 import LayerCustomizationItem from "../LayerCustomizationItem/LayerCustomizationItem";
+import { useCatalogContext } from "../../context/CatalogContext";
+import { HiCheck, HiExclamation } from "react-icons/hi";
 
 function autoFillLegendFormat(data) {
   console.log(data);
 
   if (!data.selectedCountry || !data.selectedCity) return "";
 
-  // Get country abbreviation (e.g., "Saudi Arabia" -> "SA")
   const countryAbbreviation = data.selectedCountry
     .split(" ")
     .map((word) => word[0])
     .join("")
     .toUpperCase();
 
-  // Get city
   const city = data.selectedCity;
 
-  // Format included types with spaces around the "+"
   const included = data.includedTypes
     .map((type) => type.replace("_", " "))
     .join(" + ");
 
-  // Only include "not" if excluded types exist
   const excluded =
     data.excludedTypes.length > 0
       ? " + not " +
       data.excludedTypes.map((type) => type.replace("_", " ")).join(" + not ")
       : "";
 
-  // Combine the formatted data
   const result = `${countryAbbreviation} ${city} ${included}${excluded}`;
 
   return result;
@@ -57,10 +54,16 @@ function CustomizeLayer() {
     layerDataMap,
   } = useLayerContext();
 
-  // Initialize state with empty arrays/objects if undefined
+  const { removeLayer } = useCatalogContext();
+
   const [layerCustomizations, setLayerCustomizations] = useState<LayerCustomization[]>([]);
   const [errors, setErrors] = useState<{ [layerId: number]: string }>({});
   const [collapsedLayers, setCollapsedLayers] = useState<Set<number>>(new Set());
+  const [savingLayers, setSavingLayers] = useState<Set<number>>(new Set());
+  const [savedLayers, setSavedLayers] = useState<Set<number>>(new Set());
+  const [isSavingAll, setIsSavingAll] = useState(false);
+  const [globalSaveError, setGlobalSaveError] = useState<string | null>(null);
+  const [allSaved, setAllSaved] = useState(false);
 
   useEffect(() => {
     if (reqFetchDataset?.layers?.length > 0) {
@@ -83,7 +86,6 @@ function CustomizeLayer() {
     }
   }, [reqFetchDataset]);
 
-  // Handle changes for a specific layer
   const handleLayerChange = (layerId: number, field: keyof LayerCustomization, value: string) => {
     setLayerCustomizations(prev =>
       prev.map(layer =>
@@ -91,15 +93,18 @@ function CustomizeLayer() {
           ? { 
               ...layer, 
               [field]: value,
-              // If field is color, ensure it's properly updated
               ...(field === 'color' ? { color: value } : {})
             }
           : layer
       )
     );
+
+    // Update layer state if the field is 'name'
+    if (field === 'name') {
+      updateLayerState(layerId, { customName: value });
+    }
   };
 
-  // Validate a single layer
   const validateLayer = (layerId: number) => {
     const layer = layerCustomizations.find(l => l.layerId === layerId);
     if (!layer?.name || !layer?.legend) {
@@ -113,36 +118,75 @@ function CustomizeLayer() {
     return true;
   };
 
-  // Save a single layer
   const saveLayer = async (layerId: number) => {
     if (validateLayer(layerId)) {
-      const layerData = layerCustomizations.find(l => l.layerId === layerId);
-      if (layerData) {
-        await handleSaveLayer(layerData);
+      try {
+        setSavingLayers(prev => new Set(prev).add(layerId));
+        const layerData = layerCustomizations.find(l => l.layerId === layerId);
+        if (layerData) {
+          await handleSaveLayer({ layers: [layerData] });
+          setSavedLayers(prev => new Set(prev).add(layerId));
+        }
+      } catch (error) {
+        setErrors(prev => ({
+          ...prev,
+          [layerId]: "Failed to save layer. Please try again."
+        }));
+      } finally {
+        setSavingLayers(prev => {
+          const next = new Set(prev);
+          next.delete(layerId);
+          return next;
+        });
       }
     }
   };
 
-  // Save all layers
   const handleSaveAllLayers = async () => {
     const allValid = layerCustomizations.every(layer => validateLayer(layer.layerId));
     if (allValid) {
-      await handleSaveLayer({ layers: layerCustomizations });
+      try {
+        setIsSavingAll(true);
+        setGlobalSaveError(null);
+        const layerIds = layerCustomizations.map(l => l.layerId);
+        layerIds.forEach(id => setSavingLayers(prev => new Set(prev).add(id)));
+        
+        await handleSaveLayer({ layers: layerCustomizations });
+        
+        setSavedLayers(new Set(layerIds));
+        setAllSaved(true);
+
+      } catch (error) {
+        setGlobalSaveError("Failed to save layers. Please try again.");
+        setErrors(prev => ({
+          ...prev,
+          global: "Failed to save layers. Please try again."
+        }));
+      } finally {
+        setIsSavingAll(false);
+        setSavingLayers(new Set());
+      }
     }
   };
 
-  // Discard a single layer
   const handleDiscardLayer = (layerId: number) => {
-    setLayerCustomizations(prev => prev.filter(l => l.layerId !== layerId));
+    setLayerCustomizations(prev => {
+      const updated = prev.filter(l => l.layerId !== layerId);
+      // If this was the last layer, perform discard all actions
+      if (updated.length === 0) {
+        resetFetchDatasetForm();
+        resetFormStage();
+      }
+      return updated;
+    });
+    removeLayer(layerId);
   };
 
-  // Discard all layers
   const handleDiscardAll = () => {
     resetFetchDatasetForm();
     resetFormStage();
   };
 
-  // Toggle collapse function
   const toggleCollapse = (layerId: number) => {
     setCollapsedLayers(prev => {
       const newSet = new Set(prev);
@@ -163,6 +207,8 @@ function CustomizeLayer() {
             layer={layer}
             isCollapsed={collapsedLayers.has(layer.layerId)}
             error={errors[layer.layerId]}
+            isSaving={savingLayers.has(layer.layerId)}
+            isSaved={savedLayers.has(layer.layerId)}
             onToggleCollapse={toggleCollapse}
             onLayerChange={handleLayerChange}
             onDiscard={handleDiscardLayer}
@@ -170,20 +216,56 @@ function CustomizeLayer() {
           />
         ))}
       </div>
-      {/* Global Controls */}
-      <div className="flex justify-end space-x-3 pt-4 border-t">
-        <button
-          onClick={handleDiscardAll}
-          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-        >
-          Discard All
-        </button>
-        <button
-          onClick={handleSaveAllLayers}
-          className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700"
-        >
-          Save All
-        </button>
+      {/* Global Controls with Enhanced Feedback */}
+      <div className="flex flex-col border-t pt-4">
+        {globalSaveError && (
+          <div className="mb-3 text-sm text-red-600 flex items-center gap-2">
+            <HiExclamation className="h-5 w-5 flex-shrink-0" />
+            <span>{globalSaveError}</span>
+          </div>
+        )}
+        <div className="flex justify-end space-x-3">
+          <button
+            onClick={handleDiscardAll}
+            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm 
+              font-medium text-gray-700 bg-white hover:bg-gray-50 
+              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          >
+            Discard All
+          </button>
+          <button
+            onClick={handleSaveAllLayers}
+            disabled={isSavingAll}
+            className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm 
+              font-medium text-white 
+              ${allSaved ? 'bg-green-700' : globalSaveError ? 'bg-red-600' : 'bg-green-600'} 
+              ${!isSavingAll && 'hover:' + (globalSaveError ? 'bg-red-700' : 'bg-green-700')}
+              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500
+              flex items-center justify-center gap-2 min-w-[100px]`}
+          >
+            {isSavingAll ? (
+              <span className="flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Saving All...
+              </span>
+            ) : allSaved ? (
+              <>
+                <HiCheck className="h-5 w-5" />
+                All Saved
+              </>
+            ) : globalSaveError ? (
+              <>
+                <HiExclamation className="h-5 w-5" />
+                Retry All
+              </>
+            ) : (
+              'Save All'
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

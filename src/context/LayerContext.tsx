@@ -238,16 +238,25 @@ export function LayerProvider(props: { children: ReactNode }) {
       idToken = "";
     }
 
-    // Handle multi-layer fetching
     for (const layer of reqFetchDataset.layers) {
       console.debug("#feat:multi-layer debug", "Fetching data for layer:", layer);
 
+      const defaultName = `${reqFetchDataset.selectedCountry} ${reqFetchDataset.selectedCity} ${
+        layer.includedTypes.map(type => type.replace("_", " ")).join(" + ")
+      }${
+        layer.excludedTypes.length > 0 
+          ? " + not " + layer.excludedTypes.map(type => type.replace("_", " ")).join(" + not ")
+          : ""
+      }`;
+
+      console.debug("#feat:multi-layer debug", "Default name for layer:", defaultName);
       const postData = {
         dataset_country: reqFetchDataset.selectedCountry,
         dataset_city: reqFetchDataset.selectedCity,
         includedTypes: layer.includedTypes,
         excludedTypes: layer.excludedTypes,
         layerId: layer.id,
+        layer_name: layer.name || defaultName,
         action: action,
         search_type: searchType,
         text_search: textSearchInput.trim() || "",

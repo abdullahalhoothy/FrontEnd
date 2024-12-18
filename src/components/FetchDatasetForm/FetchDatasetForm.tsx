@@ -213,7 +213,6 @@ const FetchDatasetForm = () => {
   // Add this helper function
   const addTypeToFirstAvailableLayer = (type: string, setAsExcluded: boolean) => {
     setLayers(prevLayers => {
-      // If no layers exist, create first layer
       if (prevLayers.length === 0) {
         const newLayer: Layer = {
           id: 1,
@@ -221,7 +220,7 @@ const FetchDatasetForm = () => {
           includedTypes: setAsExcluded ? [] : [type],
           excludedTypes: setAsExcluded ? [type] : [],
           display: true,
-          points_color: '#28A745', // Default color
+          points_color: '#28A745',
         };
         return [newLayer];
       }
@@ -236,6 +235,7 @@ const FetchDatasetForm = () => {
         const newLayer: Layer = {
           id: prevLayers.length + 1,
           name: `Layer ${prevLayers.length + 1}`,
+          layer_name: `Layer ${prevLayers.length + 1}`,
           includedTypes: setAsExcluded ? [] : [type],
           excludedTypes: setAsExcluded ? [type] : [],
           display: true,
@@ -382,7 +382,7 @@ const FetchDatasetForm = () => {
   return (
     <>
       <div className="flex-1 flex flex-col justify-between overflow-y-auto ">
-        <div className="w-full pl-4 pr-2 overflow-y-auto ">
+        <div className="w-full p-4 overflow-y-auto ">
           {error && (
             <div className="mt-6 text-red-500 font-semibold">
               {error}
@@ -434,7 +434,7 @@ const FetchDatasetForm = () => {
 
           </div>
 
-          <div className="pt-4">
+          <div className="border-t mt-4 pt-2">
             <label
               className="block mb-2 text-md font-medium text-black"
               htmlFor="searchType"
