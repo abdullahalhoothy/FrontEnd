@@ -5,6 +5,8 @@ import { useLayerContext } from "../../context/LayerContext";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router";
 import SavedIconFeedback from "../SavedIconFeedback/SavedIconFeedback";
+import { LayerCustomization } from "../../types/allTypesAndInterfaces";
+import LayerCustomizationItem from "../LayerCustomizationItem/LayerCustomizationItem";
 
 function autoFillLegendFormat(data) {
   console.log(data);
@@ -30,7 +32,7 @@ function autoFillLegendFormat(data) {
   const excluded =
     data.excludedTypes.length > 0
       ? " + not " +
-        data.excludedTypes.map((type) => type.replace("_", " ")).join(" + not ")
+      data.excludedTypes.map((type) => type.replace("_", " ")).join(" + not ")
       : "";
 
   // Combine the formatted data
@@ -46,174 +48,144 @@ function CustomizeLayer() {
 
   const {
     setReqSaveLayer,
-    incrementFormStage,
     resetFormStage,
     resetFetchDatasetForm,
-    selectedColor,
     showLoaderTopup,
     reqFetchDataset,
     handleSaveLayer,
     saveResponse,
+    layerDataMap,
   } = useLayerContext();
 
-  const [legend, setLegend] = useState<string>(
-    autoFillLegendFormat(reqFetchDataset)
-  );
-  const [description, setDescription] = useState<string>("");
-  const [name, setName] = useState<string>(autoFillLegendFormat(reqFetchDataset));
-  const [error, setError] = useState<string | null>(null);
-
-  function handleSecondFormChange(
-    event: ChangeEvent<
-      HTMLSelectElement | HTMLTextAreaElement | HTMLInputElement
-    >
-  ) {
-    const { name, value } = event.target;
-    switch (name) {
-      case "name":
-        setName(value);
-        break;
-      case "legend":
-        setLegend(value);
-        break;
-      case "description":
-        setDescription(value);
-        break;
-      default:
-        break;
-    }
-  }
-
-  function validateForm() {
-    if (!name || !selectedColor || !legend) {
-      setError("All fields are required.");
-      return false;
-    }
-    setError(null);
-    return true;
-  }
-
-  function handleButtonClick() {
-    if (validateForm()) {
-      const saveLayerData = {
-        legend,
-        description,
-        name,
-      };
-      setReqSaveLayer(saveLayerData);
-      handleSaveLayer(saveLayerData);
-      // incrementFormStage(); // This is not needed now as we are not using the third step in the form anymore
-    }
-  }
-
-  function handleDiscardClick() {
-    resetFetchDatasetForm();
-    resetFormStage();
-  }
+  // Initialize state with empty arrays/objects if undefined
+  const [layerCustomizations, setLayerCustomizations] = useState<LayerCustomization[]>([]);
+  const [errors, setErrors] = useState<{ [layerId: number]: string }>({});
+  const [collapsedLayers, setCollapsedLayers] = useState<Set<number>>(new Set());
 
   useEffect(() => {
-    setLegend(autoFillLegendFormat(reqFetchDataset));
+    if (reqFetchDataset?.layers?.length > 0) {
+      const initialCustomizations = reqFetchDataset.layers.map(layer => ({
+        layerId: layer.id,
+        name: autoFillLegendFormat({
+          ...reqFetchDataset,
+          includedTypes: layer.includedTypes || [],
+          excludedTypes: layer.excludedTypes || [],
+        }),
+        legend: autoFillLegendFormat({
+          ...reqFetchDataset,
+          includedTypes: layer.includedTypes || [],
+          excludedTypes: layer.excludedTypes || [],
+        }),
+        description: '',
+        color: '#28A745',
+      }));
+      setLayerCustomizations(initialCustomizations);
+    }
   }, [reqFetchDataset]);
-  return (
-    <>
-      {!!saveResponse ? (
-        <div className="flex flex-col items-center p-5">
-          <SavedIconFeedback />
-        </div>
-      ) : (
-        <div className="flex flex-col lg:pr-2 w-full h-full overflow-hidden">
-          <div className="w-full lg:h-full px-4 py-4 flex-1 ">
-            {error && (
-              <div className="mt-2 mb-2 text-red-500 font-semibold">
-                {error}
-              </div>
-            )}
-            <div className="mb-4 flex flex-col">
-              <label
-                className="block mb-2 text-md font-medium text-black"
-                htmlFor="name"
-              >
-                Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                className="p-[10px] border border-[#ccc] rounded bg-[#f9f9f9] text-base focus:border-[#007bff] focus:bg-white focus:outline-none"
-                value={name}
-                onChange={handleSecondFormChange}
-                placeholder="Enter Name"
-              />
-            </div>
-            <div className="mb-4 flex flex-col">
-              <label
-                className="block mb-2 text-md font-medium text-black"
-                htmlFor="pointColor"
-              >
-                Point Color
-              </label>
-              <ColorSelect />
-            </div>
-            <div className="mb-4 flex flex-col">
-              <label
-                className="block mb-2 text-md font-medium text-black"
-                htmlFor="legend"
-              >
-                Legend
-              </label>
-              <textarea
-                id="legend"
-                name="legend"
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                rows={3}
-                value={legend}
-                onChange={handleSecondFormChange}
-                placeholder="Enter Legend"
-              />
-            </div>
-            <div className="mb-4 flex flex-col">
-              <label
-                className="block mb-2 text-md font-medium text-black"
-                htmlFor="description"
-              >
-                Description
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                className={`bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
-                rows={5}
-                value={description}
-                onChange={handleSecondFormChange}
-                placeholder="Enter Description"
-              />
-            </div>
-          </div>
-          <div className="w-full lg:h-[7%] flex  px-2 py-2 select-none border-t lg:mb-0 mb-16">
-            <div className="flex lg:h-full w-full space-x-2">
-              <button
-                onClick={handleDiscardClick}
-                className="w-full h-10 bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
-               hover:bg-white transition-all cursor-pointer"
-              >
-                Discard
-              </button>
 
-              <button
-                onClick={(e) => {
-                  if (!isAuthenticated) nav("/auth");
-                  handleButtonClick(e);
-                }}
-                disabled={showLoaderTopup}
-                className="w-full h-10 bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer"
-              >
-                {showLoaderTopup ? "Loading..." : "Save"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+  // Handle changes for a specific layer
+  const handleLayerChange = (layerId: number, field: keyof LayerCustomization, value: string) => {
+    setLayerCustomizations(prev =>
+      prev.map(layer =>
+        layer.layerId === layerId
+          ? { 
+              ...layer, 
+              [field]: value,
+              // If field is color, ensure it's properly updated
+              ...(field === 'color' ? { color: value } : {})
+            }
+          : layer
+      )
+    );
+  };
+
+  // Validate a single layer
+  const validateLayer = (layerId: number) => {
+    const layer = layerCustomizations.find(l => l.layerId === layerId);
+    if (!layer?.name || !layer?.legend) {
+      setErrors(prev => ({
+        ...prev,
+        [layerId]: "Name and legend are required."
+      }));
+      return false;
+    }
+    setErrors(prev => ({ ...prev, [layerId]: '' }));
+    return true;
+  };
+
+  // Save a single layer
+  const saveLayer = async (layerId: number) => {
+    if (validateLayer(layerId)) {
+      const layerData = layerCustomizations.find(l => l.layerId === layerId);
+      if (layerData) {
+        await handleSaveLayer(layerData);
+      }
+    }
+  };
+
+  // Save all layers
+  const handleSaveAllLayers = async () => {
+    const allValid = layerCustomizations.every(layer => validateLayer(layer.layerId));
+    if (allValid) {
+      await handleSaveLayer({ layers: layerCustomizations });
+    }
+  };
+
+  // Discard a single layer
+  const handleDiscardLayer = (layerId: number) => {
+    setLayerCustomizations(prev => prev.filter(l => l.layerId !== layerId));
+  };
+
+  // Discard all layers
+  const handleDiscardAll = () => {
+    resetFetchDatasetForm();
+    resetFormStage();
+  };
+
+  // Toggle collapse function
+  const toggleCollapse = (layerId: number) => {
+    setCollapsedLayers(prev => {
+      const newSet = new Set(prev);
+      prev.has(layerId) ? newSet.delete(layerId) : newSet.add(layerId);
+      return newSet;
+    });
+  };
+
+  return (
+    <div className="flex flex-col p-2 max-h-[100%]">
+      <div className="flex flex-col">
+        <h1 className="text-lg font-bold">Customize Layers</h1>
+      </div>
+      <div className="flex flex-col h-auto overflow-y-scroll space-y-6 p-2">
+        {layerCustomizations.map((layer) => (
+          <LayerCustomizationItem
+            key={layer.layerId}
+            layer={layer}
+            isCollapsed={collapsedLayers.has(layer.layerId)}
+            error={errors[layer.layerId]}
+            onToggleCollapse={toggleCollapse}
+            onLayerChange={handleLayerChange}
+            onDiscard={handleDiscardLayer}
+            onSave={saveLayer}
+          />
+        ))}
+      </div>
+      {/* Global Controls */}
+      <div className="flex justify-end space-x-3 pt-4 border-t">
+        <button
+          onClick={handleDiscardAll}
+          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+        >
+          Discard All
+        </button>
+        <button
+          onClick={handleSaveAllLayers}
+          className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700"
+        >
+          Save All
+        </button>
+      </div>
+    </div>
   );
 }
 

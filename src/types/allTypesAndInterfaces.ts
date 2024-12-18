@@ -208,6 +208,16 @@ export interface RequestType {
   error: Error | null;
 }
 
+export interface LayerState {
+  selectedColor: Color | null;
+  saveResponse: SaveResponse | null;
+  isLoading: boolean;
+  datasetInfo: {
+    bknd_dataset_id: string;
+    prdcer_lyr_id: string;
+  } | null;
+}
+
 export interface LayerContextType {
   reqSaveLayer: {
     legend: string;
@@ -295,6 +305,9 @@ export interface LayerContextType {
 
   selectedCountry: string;
   setSelectedCountry: React.Dispatch<React.SetStateAction<string>>;
+
+  layerStates: { [layerId: number]: LayerState };
+  updateLayerState: (layerId: number, updates: Partial<LayerState>) => void;
 }
 
 export interface ReqFetchDataset {
@@ -494,4 +507,17 @@ export interface LayerSettings {
 
 export interface LayerDataMap {
   [layerId: number]: FetchDatasetResponse;
+}
+
+export interface LayerCustomization {
+  name: string;
+  legend: string;
+  description: string;
+  color: string;
+  layerId: number;
+}
+
+// Update ReqSaveLayer interface
+export interface ReqSaveLayer {
+  layers: LayerCustomization[];
 }

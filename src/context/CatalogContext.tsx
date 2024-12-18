@@ -279,21 +279,19 @@ export function CatalogProvider(props: { children: ReactNode }) {
     localStorage.removeItem("unsavedGeoPoints");
   }
 
-  function updateLayerColor(layerIndex: number | null, newColor: string) {
-    setGeoPoints(function (prevGeoPoints) {
-      const updatedGeoPoints = prevGeoPoints.map(function (geoPoint, index) {
-        if (layerIndex === null || layerIndex === index) {
-          return Object.assign({}, geoPoint, {
-            points_color:
-              typeof newColor === "string"
-                ? newColor.toLowerCase()
-                : geoPoint.points_color,
-          });
+  function updateLayerColor(layerId: number, newColor: string) {
+    setGeoPoints(prevPoints => 
+      prevPoints.map(point => {
+        if (point.layerId === layerId) {
+          return {
+            ...point,
+            points_color: newColor,
+            display: point.display ?? true
+          };
         }
-        return geoPoint;
-      });
-      return updatedGeoPoints;
-    });
+        return point;
+      })
+    );
   }
 
   function updateLayerDisplay(layerIndex: number, display: boolean) {

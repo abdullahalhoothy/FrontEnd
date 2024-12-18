@@ -17,6 +17,8 @@ import {
   City,
   CategoryData,
   LayerDataMap,
+  LayerCustomization,
+  LayerState,
 } from "../types/allTypesAndInterfaces";
 import urls from "../urls.json";
 import { useCatalogContext } from "./CatalogContext";
@@ -99,6 +101,8 @@ export function LayerProvider(props: { children: ReactNode }) {
   const [selectedCountry, setSelectedCountry] = useState<string>("");
   const [selectedCity, setSelectedCity] = useState<string>("");
 
+  const [layerStates, setLayerStates] = useState<{ [layerId: number]: LayerState }>({});
+
   function incrementFormStage() {
     if (createLayerformStage === "initial") {
       setCreateLayerformStage("secondStep");
@@ -107,51 +111,35 @@ export function LayerProvider(props: { children: ReactNode }) {
     }
   }
 
-  async function handleSaveLayer(reqSaveLayer) {
+  async function handleSaveLayer(layerData: LayerCustomization | { layers: LayerCustomization[] }) {
     if (!authResponse || !("idToken" in authResponse)) {
       navigate("/auth");
       setIsError(new Error("User is not authenticated!"));
       return;
     }
 
-    if (!datasetInfo) {
-      setIsError(new Error("Dataset information is missing!"));
-      console.error("Dataset information is missing!");
-      return;
+    if ('layers' in layerData) {
+      // Handle multiple layers
+      for (const layer of layerData.layers) {
+        await saveSingleLayer(layer);
+      }
+    } else {
+      // Handle single layer
+      await saveSingleLayer(layerData);
     }
+  }
 
-    if (!selectedColor) {
-      setIsError(new Error("Selected color is missing!"));
-      console.error("Selected color is missing!");
-      return;
-    }
-
-    const userId = userIdData.user_id;
-
+  async function saveSingleLayer(layerData: LayerCustomization) {
     const postData = {
-      prdcer_layer_name: reqSaveLayer.name,
-      prdcer_lyr_id: datasetInfo.prdcer_lyr_id,
-      bknd_dataset_id: datasetInfo.bknd_dataset_id,
-      points_color: selectedColor.hex,
-      layer_legend: reqSaveLayer.legend,
-      layer_description: reqSaveLayer.description,
+      prdcer_layer_name: layerData.name,
+      prdcer_lyr_id: layerDataMap[layerData.layerId]?.prdcer_lyr_id,
+      bknd_dataset_id: layerDataMap[layerData.layerId]?.bknd_dataset_id,
+      points_color: layerData.color,
+      layer_legend: layerData.legend,
+      layer_description: layerData.description,
       city_name: reqFetchDataset.selectedCity,
       user_id: authResponse.localId,
     };
-
-    setLoading(true);
-
-    // HttpReq<SaveResponse>(
-    //   urls.save_layer,
-    //   setSaveResponse,
-    //   setSaveResponseMsg,
-    //   setSaveReqId,
-    //   setLoading,
-    //   setIsError,
-    //   "post",
-    //   postData,
-    //   authResponse.idToken
-    // );
 
     try {
       const res = await apiRequest({
@@ -164,16 +152,8 @@ export function LayerProvider(props: { children: ReactNode }) {
       setSaveResponseMsg(res.data.message);
       setSaveReqId(res.data.id);
     } catch (error) {
-      setIsError(error);
-    } finally {
-      setLoading(false);
+      setIsError(error instanceof Error ? error : new Error(String(error)));
     }
-
-    setTimeout(() => {
-      resetFormStage();
-      setSaveResponse(null);
-      resetFetchDatasetForm();
-    }, 1000);
   }
 
   function resetFormStage() {
@@ -472,6 +452,34 @@ export function LayerProvider(props: { children: ReactNode }) {
     handleGetCountryCityCategory();
   }, []);
 
+  const updateLayerState = (layerId: number, updates: Partial<LayerState>) => {
+    setLayerStates(prev => ({
+      ...prev,
+      [layerId]: {
+        ...prev[layerId],
+        ...updates
+      }
+    }));
+  };
+
+  useEffect(() => {
+    if (reqFetchDataset?.layers?.length > 0) {
+      const initialStates = reqFetchDataset.layers.reduce((acc, layer) => ({
+        ...acc,
+        [layer.id]: {
+          selectedColor: { 
+            name: 'Green', 
+            hex: layer.points_color || '#28A745' 
+          },
+          saveResponse: null,
+          isLoading: false,
+          datasetInfo: null
+        }
+      }), {});
+      setLayerStates(initialStates);
+    }
+  }, [reqFetchDataset.layers]);
+
   return (
     <LayerContext.Provider
       value={{
@@ -534,6 +542,8 @@ export function LayerProvider(props: { children: ReactNode }) {
         setSelectedCountry,
         selectedCity,
         setSelectedCity,
+        layerStates,
+        updateLayerState,
       }}
     >
       {children}
