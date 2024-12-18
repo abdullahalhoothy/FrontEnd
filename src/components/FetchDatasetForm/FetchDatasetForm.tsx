@@ -22,43 +22,44 @@ const FetchDatasetForm = () => {
   const {
     reqFetchDataset,
     setReqFetchDataset,
-    validateFetchDatasetForm,
-    setCentralizeOnce,
-    setShowLoaderTopup,
-    incrementFormStage,
     handleFetchDataset,
+    validateFetchDatasetForm,
     resetFetchDatasetForm,
+    categories,
+    setCategories,
+    countries,
+    setCountries,
+    cities,
+    handleCountryCitySelection,
+    handleTypeToggle,
+    selectedCity,
+    setSelectedCity,
     searchType,
     setSearchType,
     textSearchInput,
     setTextSearchInput,
+    selectedCountry,
+    setSelectedCountry,
+    setCentralizeOnce,
+    setShowLoaderTopup,
+    incrementFormStage,
+    isError,
+    setIsError,
   } = useLayerContext();
 
   // AUTH CONTEXT
   const { isAuthenticated } = useAuth();
 
   // FETCHED DATA
-  const [countries, setCountries] = useState<string[]>([]);
-  const [cities, setCities] = useState<City[]>([]);
-  const [citiesData, setCitiesData] = useState<{ [country: string]: City[] }>(
-    {}
-  );
-  const [categories, setCategories] = useState<CategoryData>({});
+  const [layers, setLayers] = useState<Layer[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [citiesData, setCitiesData] = useState<{ [country: string]: City[] }>({});
 
   // COLBASE CATEGORY
   const [openedCategories, setOpenedCategories] = useState<string[]>([]);
 
-  // ERROR
-  const [isError, setIsError] = useState<Error | null>(null);
-
   // USER INPUT
-  const [password, setPassword] = useState("");
-  const [selectedCountry, setSelectedCountry] = useState("");
-  const [selectedCity, setSelectedCity] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-
-  // Update layers state with new type
-  const [layers, setLayers] = useState<Layer[]>([]);
 
   // Add ref for the categories section
   const categoriesRef = useRef<HTMLDivElement>(null);
@@ -101,7 +102,11 @@ const FetchDatasetForm = () => {
       });
       setCountries(processCityData(res.data.data, setCitiesData));
     } catch (error) {
-      setIsError(error);
+      if (error instanceof Error) {
+        setIsError(error);
+      } else {
+        setIsError(new Error(String(error)));
+      }
     }
 
     try {
@@ -111,7 +116,11 @@ const FetchDatasetForm = () => {
       });
       setCategories(res.data.data);
     } catch (error) {
-      setIsError(error);
+      if (error instanceof Error) {
+        setIsError(error);
+      } else {
+        setIsError(new Error(String(error)));
+      }
     }
 
     // HttpReq<CategoryData>(
@@ -124,34 +133,6 @@ const FetchDatasetForm = () => {
     // );
   }
 
-  function handleCountryCitySelection(
-    event: React.ChangeEvent<HTMLSelectElement>
-  ) {
-    const { name: changed_select_element, value } = event.target;
-
-    // Update the reqFetchDataset state using the functional update form
-    setReqFetchDataset((prevData) => ({
-      ...prevData, // Spread the previous state
-      [changed_select_element]: value, // Update the field corresponding to the changed select element
-    }));
-
-    // Check if the changed select element is the country selector
-    if (changed_select_element === "selectedCountry") {
-      setSelectedCountry(value);
-      const selectedCountryCities = citiesData[value] || [];
-
-      setCities(selectedCountryCities);
-
-      // Reset the selected city in the reqFetchDataset state
-      setReqFetchDataset((prevData) => ({
-        ...prevData, // Spread the previous state
-        selectedCity: "", // Clear the selected city
-      }));
-    } else {
-      setSelectedCity(value);
-    }
-  }
-
   function handleButtonClick(
     action: string,
     event: React.MouseEvent<HTMLButtonElement>
@@ -159,8 +140,6 @@ const FetchDatasetForm = () => {
     event.preventDefault();
 
     const result = validateFetchDatasetForm();
-
-    console.log("Result", result);
 
     if (result === true) {
       if (action === "full data") {
@@ -170,10 +149,11 @@ const FetchDatasetForm = () => {
       incrementFormStage();
       handleFetchDataset(action);
     } else if (result instanceof Error) {
-      setIsError(result);
+      setError(result.message);
       return false;
     }
   }
+
   function handleClear() {
     setReqFetchDataset((prevData) => ({
       ...prevData,
@@ -233,27 +213,23 @@ const FetchDatasetForm = () => {
   // Add this helper function
   const addTypeToFirstAvailableLayer = (type: string, setAsExcluded: boolean) => {
     setLayers(prevLayers => {
-      // Log the current state
-      console.log('Current layers:', prevLayers);
-      
       // If no layers exist, create first layer
       if (prevLayers.length === 0) {
         const newLayer: Layer = {
           id: 1,
           name: 'Layer 1',
           includedTypes: setAsExcluded ? [] : [type],
-          excludedTypes: setAsExcluded ? [type] : []
+          excludedTypes: setAsExcluded ? [type] : [],
+          display: true,
+          points_color: '#28A745', // Default color
         };
-        console.log('Creating first layer:', newLayer);
         return [newLayer];
       }
 
       // Try to find first layer that doesn't have this type
-      let targetLayerIndex = prevLayers.findIndex(layer => 
+      let targetLayerIndex = prevLayers.findIndex(layer =>
         !layer.includedTypes.includes(type) && !layer.excludedTypes.includes(type)
       );
-
-      console.log('Target layer index:', targetLayerIndex);
 
       // If all existing layers have this type, create new layer
       if (targetLayerIndex === -1) {
@@ -261,32 +237,28 @@ const FetchDatasetForm = () => {
           id: prevLayers.length + 1,
           name: `Layer ${prevLayers.length + 1}`,
           includedTypes: setAsExcluded ? [] : [type],
-          excludedTypes: setAsExcluded ? [type] : []
+          excludedTypes: setAsExcluded ? [type] : [],
+          display: true,
+          points_color: '#28A745', // Default color
         };
-        console.log('Creating new layer:', newLayer);
         return [...prevLayers, newLayer];
       }
 
       // Add to first available layer
-      const updatedLayers = prevLayers.map((layer, index) => {
+      return prevLayers.map((layer, index) => {
         if (index === targetLayerIndex) {
-          const updatedLayer = {
+          return {
             ...layer,
-            includedTypes: setAsExcluded 
-              ? layer.includedTypes 
+            includedTypes: setAsExcluded
+              ? layer.includedTypes
               : [...layer.includedTypes, type],
-            excludedTypes: setAsExcluded 
+            excludedTypes: setAsExcluded
               ? [...layer.excludedTypes, type]
               : layer.excludedTypes
           };
-          console.log('Updating layer:', updatedLayer);
-          return updatedLayer;
         }
         return layer;
       });
-
-      console.log('Updated layers:', updatedLayers);
-      return updatedLayers;
     });
   };
 
@@ -364,13 +336,56 @@ const FetchDatasetForm = () => {
     setLayers(newLayers);
   };
 
+  // Update reqFetchDataset when layers change
+  useEffect(() => {
+    console.debug("#feat:multi-layer debug", "Layers updated:", layers);
+
+    setReqFetchDataset(prev => ({
+      ...prev,
+      layers: layers.map(layer => ({
+        id: layer.id,
+        includedTypes: layer.includedTypes,
+        excludedTypes: layer.excludedTypes
+      })),
+      // Maintain backward compatibility
+      includedTypes: layers.flatMap(layer => layer.includedTypes),
+      excludedTypes: layers.flatMap(layer => layer.excludedTypes)
+    }));
+  }, [layers, setReqFetchDataset]);
+
+  const handleSubmit = async () => {
+    try {
+      const validationResult = validateFetchDatasetForm();
+      if (validationResult !== true) {
+        setError(validationResult.message);
+        return;
+      }
+
+      await handleFetchDataset('sample');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    }
+  };
+
+  const handleReset = () => {
+    resetFetchDatasetForm();
+    setLayers([]);
+    setError(null);
+  };
+
+  useEffect(() => {
+    if (isError) {
+      setError(isError.message);
+    }
+  }, [isError]);
+
   return (
     <>
       <div className="flex-1 flex flex-col justify-between overflow-y-auto ">
         <div className="w-full pl-4 pr-2 overflow-y-auto ">
-          {isError && (
+          {error && (
             <div className="mt-6 text-red-500 font-semibold">
-              {isError.message}
+              {error}
             </div>
           )}
 
@@ -430,10 +445,9 @@ const FetchDatasetForm = () => {
               name="searchType"
               id="searchType"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-              value={searchType}
+              value={searchType || 'category_search'}
               onChange={(e) => {
-                console.log("searchType", e.target.value);
-                setSearchType(e.target.value as any)
+                setSearchType(e.target.value);
               }}
             >
               <option value="category_search">Category Search</option>
@@ -471,12 +485,13 @@ const FetchDatasetForm = () => {
               id="country"
               name="selectedCountry"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-              value={selectedCountry}
-              onChange={handleCountryCitySelection}
+              value={selectedCountry || ''}
+              onChange={(e) => {
+                setSelectedCountry(e.target.value);
+                handleCountryCitySelection(e);
+              }}
             >
-              <option value="" disabled selected hidden>
-                Select a country
-              </option>
+              <option value="" disabled >Select a country</option>
               {countries.map((country) => (
                 <option value={country} key={country}>
                   {country}
@@ -496,13 +511,14 @@ const FetchDatasetForm = () => {
               id="city"
               name="selectedCity"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-              value={selectedCity}
-              onChange={handleCountryCitySelection}
+              value={selectedCity || ''}
+              onChange={(e) => {
+                setSelectedCity(e.target.value);
+                handleCountryCitySelection(e);
+              }}
               disabled={!selectedCountry}
             >
-              <option value="" disabled selected hidden>
-                Select a city
-              </option>
+              <option value="" disabled >Select a city</option>
               {cities.map((city) => (
                 <option key={city.name} value={city.name}>
                   {city.name}
