@@ -206,16 +206,17 @@ export function CatalogProvider(props: { children: ReactNode }) {
     fetchGeoPoints(id, typeOfCard);
   }
 
-  async function handleSaveLayer() {
+  async function handleSaveCatalog() {
     if (!authResponse || !("idToken" in authResponse)) {
       setIsError(new Error("User is not authenticated!"));
       navigate("/auth");
       return;
     }
+
     const layersData = Array.isArray(geoPoints)
       ? geoPoints.map((layer) => ({
           layer_id: layer.prdcer_lyr_id,
-          points_color: layer.points_color,
+          points_color: layer.points_color
         }))
       : [];
 
@@ -227,19 +228,10 @@ export function CatalogProvider(props: { children: ReactNode }) {
       lyrs: layersData,
       user_id: authResponse.localId,
       thumbnail_url: "",
+      message: "Save catalog request",
+      request_info: {}
     };
 
-    // HttpReq(
-    //   urls.save_producer_catalog,
-    //   setSaveResponse,
-    //   setSaveResponseMsg,
-    //   setSaveReqId,
-    //   setIsLoading,
-    //   setIsError,
-    //   "post",
-    //   requestBody,
-    //   authResponse.idToken
-    // );
     try {
       setIsLoading(true);
       const res = await apiRequest({
@@ -249,17 +241,13 @@ export function CatalogProvider(props: { children: ReactNode }) {
         isAuthRequest: true,
       });
       setSaveResponse(res.data.data);
-      setSaveResponseMsg(res.data.message);
-      setSaveReqId(res.data.id);
+      setFormStage("catalog"); // Reset form stage after successful save
+      resetState(); // Reset the form state
     } catch (error) {
-      setIsError(error);
+      setIsError(error instanceof Error ? error : new Error('Failed to save catalog'));
     } finally {
       setIsLoading(false);
     }
-
-    setTimeout(() => {
-      resetFormStage("catalog");
-    }, 1000);
   }
 
   function resetFormStage(resetTo: "catalog") {
@@ -447,7 +435,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
         setDescription,
         setName,
         handleAddClick,
-        handleSaveLayer,
+        handleSaveCatalog,
         resetFormStage,
         selectedContainerType,
         setSelectedContainerType,
