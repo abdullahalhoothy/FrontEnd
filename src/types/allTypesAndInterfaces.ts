@@ -157,6 +157,15 @@ export interface CatalogContextType {
   setLayersColor: React.Dispatch<React.SetStateAction<{}>>;
   isAdvancedMode: {};
   setIsAdvancedMode: React.Dispatch<React.SetStateAction<{}>>;
+
+  layerGroups: LayerGroup[];
+  setLayerGroups: React.Dispatch<React.SetStateAction<LayerGroup[]>>;
+  activeLayerGroupId: string | null;
+  setActiveLayerGroupId: React.Dispatch<React.SetStateAction<string | null>>;
+
+  createLayerGroup(name: string): void;
+  deleteLayerGroup(groupId: string): void;
+  updateLayerGroup(groupId: string, updates: Partial<LayerGroup>): void;
 }
 
 export interface GradientColorBasedOnZone extends MapFeatures {
@@ -197,6 +206,17 @@ export interface RequestType {
   id: string;
   requestMessage: string;
   error: Error | null;
+}
+
+export interface LayerState {
+  selectedColor: Color | null;
+  saveResponse: SaveResponse | null;
+  isLoading: boolean;
+  datasetInfo: {
+    bknd_dataset_id: string;
+    prdcer_lyr_id: string;
+  } | null;
+  customName?: string;
 }
 
 export interface LayerContextType {
@@ -276,11 +296,32 @@ export interface LayerContextType {
   resetFetchDatasetForm(): void;
   selectedCity: string;
   setSelectedCity: (city: string) => void;
+
+  currentLayerGroup: LayerGroup | null;
+  setCurrentLayerGroup: React.Dispatch<React.SetStateAction<LayerGroup | null>>;
+
+  addLayerToGroup(groupId: string, layer: Layer): void;
+  removeLayerFromGroup(groupId: string, layerId: number): void;
+  updateLayerInGroup(groupId: string, layerId: number, updates: Partial<Layer>): void;
+
+  selectedCountry: string;
+  setSelectedCountry: React.Dispatch<React.SetStateAction<string>>;
+
+  layerStates: { [layerId: number]: LayerState };
+  updateLayerState: (layerId: number, updates: Partial<LayerState>) => void;
 }
 
 export interface ReqFetchDataset {
   selectedCountry: string;
   selectedCity: string;
+  layers: {
+    name: string;
+    points_color: string;
+    id: number;
+    includedTypes: string[];
+    excludedTypes: string[];
+    layer_name?: string;
+  }[];
   includedTypes: string[];
   excludedTypes: string[];
 }
@@ -360,6 +401,8 @@ export interface MapFeatures extends FetchDatasetResponse {
   is_grid?: boolean;
   bounds?: Bounds;
   basedon: string;
+  layerGroupId?: string;
+  layerId?: number;
   [key: string]: any;
 }
 
@@ -433,4 +476,53 @@ export interface CityBorders {
 export interface CityData {
   name: string;
   borders: CityBorders;
+}
+
+export interface Layer {
+  id: number;
+  name: string;
+  layer_name?: string;
+  includedTypes: string[];
+  excludedTypes: string[];
+  display?: boolean;
+  points_color?: string;
+  is_heatmap?: boolean;
+  is_grid?: boolean;
+  basedon?: string;
+  layer_legend?: string;
+  layer_description?: string;
+  prdcer_lyr_id?: string;
+}
+
+export interface LayerGroup {
+  id: string;
+  name: string;
+  layers: Layer[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface LayerSettings {
+  display: boolean;
+  points_color: string;
+  is_heatmap: boolean;
+  is_grid: boolean;
+  basedon?: string;
+}
+
+export interface LayerDataMap {
+  [layerId: number]: FetchDatasetResponse;
+}
+
+export interface LayerCustomization {
+  name: string;
+  legend: string;
+  description: string;
+  color: string;
+  layerId: number;
+}
+
+// Update ReqSaveLayer interface
+export interface ReqSaveLayer {
+  layers: LayerCustomization[];
 }

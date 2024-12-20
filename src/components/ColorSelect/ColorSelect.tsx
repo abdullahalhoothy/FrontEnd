@@ -10,13 +10,20 @@ import { colorOptions } from "../../utils/helperFunctions";
 const colorMap = new Map(colorOptions.map(({ name, hex }) => [hex, name]));
 
 interface ColorSelectProps {
-  layerIndex?: number;
+  layerId: number;
+  onColorChange: (color: string) => void;
 }
 
-function ColorSelect({ layerIndex }: ColorSelectProps) {
+function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
   const { sidebarMode } = useUIContext();
   const catalogContext = useCatalogContext();
-  const layerContext = useLayerContext();
+  const {
+    layerStates,
+    updateLayerState,
+    setSelectedColor,
+    selectedColor,
+    showLoaderTopup
+  } = useLayerContext();
 
   const {
     geoPoints,
@@ -30,18 +37,14 @@ function ColorSelect({ layerIndex }: ColorSelectProps) {
     setChosenPallet,
   } = catalogContext;
 
-  const { setSelectedColor, selectedColor } = layerContext;
+  const layerState = layerStates?.[layerId] || {
+    selectedColor: null,
+    isLoading: false
+  };
 
-  const showLoaderTopup = layerContext.showLoaderTopup || false;
-  const dropdownIndex = layerIndex ?? -1;
-  const colorHex =
-    layerIndex !== undefined
-      ? isAdvancedMode[`circle-layer-${layerIndex}`] != true
-        ? geoPoints[layerIndex]?.points_color
-        : "#d4d4d8"
-      : selectedColor?.hex || "";
-
-  const colorName = colorMap.get(colorHex) || ""; // Get the color name from the map
+  const dropdownIndex = layerId ?? -1;
+  const colorHex = layerState?.selectedColor?.hex || "#28A745";
+  const colorName = colorMap.get(colorHex) || "";
 
   const isOpen = openDropdownIndices[0] === dropdownIndex;
 
@@ -56,18 +59,21 @@ function ColorSelect({ layerIndex }: ColorSelectProps) {
   ) {
     event.stopPropagation();
     if (showLoaderTopup) {
-      console.log("Cannot change colors while loading.");
       return;
     }
-    if (layerIndex != undefined) {
-      setIsAdvancedMode((prevState) => ({
-        ...prevState,
-        [`circle-layer-${layerIndex}`]: false, // Toggle the advanced mode for the card with the specific ID
-      }));
-    }
-    setIsRadiusMode(false);
-    updateLayerColor(layerIndex ?? null, hex);
-    setSelectedColor({ name: optionName, hex });
+    
+    // Update layer color in catalog context
+    updateLayerColor(layerId, hex);
+    
+    // Update layer state
+    updateLayerState(layerId, { 
+      selectedColor: { name: optionName, hex } 
+    });
+    
+    // Notify parent component
+    onColorChange(hex);
+    
+    // Close dropdown
     updateDropdownIndex(0, null);
     setChosenPallet(null);
   }
@@ -104,7 +110,7 @@ function ColorSelect({ layerIndex }: ColorSelectProps) {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [setOpenDropdownIndices[0]]);
+  }, [updateDropdownIndex]);
 
   function renderOptions() {
     return colorOptions.map(({ name, hex }) => {
@@ -140,25 +146,16 @@ function ColorSelect({ layerIndex }: ColorSelectProps) {
         }`}
         onClick={toggleDropdown}
       >
-        {sidebarMode !== "catalog" ? (
-          <>
-            <span className="font-bold">{colorName || "Select a color"}</span>
-            <MdKeyboardArrowDown
-              className={`text-2xl ${isOpen ? "rotate-180" : ""}`}
-            />
-          </>
-        ) : (
-          <>
-            <span
-              className={`w-[14px] h-[14px] rounded-full absolute left-[70px] ${
-                sidebarMode === "catalog"
-                  ? "static min-w-[14px] min-h-[14px] ml-[16px]"
-                  : ""
-              }`}
-              style={{ backgroundColor: colorHex }}
-            />
-          </>
-        )}
+        <div className="flex items-center gap-2">
+          <span
+            className="w-5 h-5 rounded-full"
+            style={{ backgroundColor: colorHex }}
+          />
+          <span className="font-medium">{colorName || "Select a color"}</span>
+        </div>
+        <MdKeyboardArrowDown
+          className={`text-2xl ${isOpen ? "rotate-180" : ""}`}
+        />
       </div>
       {isOpen && (
         <div

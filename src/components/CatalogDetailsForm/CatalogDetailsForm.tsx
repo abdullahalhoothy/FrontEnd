@@ -3,6 +3,7 @@
 import { useState, ChangeEvent } from "react";
 import styles from "./CatalogDetailsForm.module.css";
 import { useCatalogContext } from "../../context/CatalogContext";
+import { HiCheck } from "react-icons/hi";
 
 function CatalogDetailsForm() {
   const {
@@ -14,7 +15,10 @@ function CatalogDetailsForm() {
     setName,
     setSubscriptionPrice,
     resetState,
-    setFormStage
+    setFormStage,
+    handleSaveCatalog,
+    isLoading,
+    isError
   } = useCatalogContext();
 
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +35,7 @@ function CatalogDetailsForm() {
 
   function handleButtonClick() {
     if (validateForm()) {
-      setFormStage('save')
+      handleSaveCatalog();
     }
   }
 
@@ -121,21 +125,45 @@ function CatalogDetailsForm() {
 
       </div>
 
-      <div className="w-full flex-col h-[7%] flex  px-2 py-2 select-none border-t">
+      {isError && (
+        <p className="text-red-500 font-semibold px-4">
+          {isError.message}
+        </p>
+      )}
+
+      <div className="w-full flex-col h-[7%] flex px-2 py-2 select-none border-t">
         <div className="flex h-full w-full space-x-2">
           <button
             onClick={handleDiscardClick}
             className="w-full h-10 bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
-                 hover:bg-white transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-slate-100 disabled:cursor-not-allowed">
+                 hover:bg-white transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-slate-100 disabled:cursor-not-allowed"
+            disabled={isLoading}
+          >
             Discard
           </button>
 
           <button
             onClick={handleButtonClick}
             className="w-full h-10 bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] 
-            transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-[#115740] disabled:cursor-not-allowed"
+            transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-[#115740] disabled:cursor-not-allowed gap-2"
+            disabled={isLoading}
           >
-            Save
+            {isLoading ? (
+              <span className="flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Saving
+              </span>
+            ) : saveResponse ? (
+              <>
+                <HiCheck className="h-5 w-5" />
+                Saved
+              </>
+            ) : (
+              'Save'
+            )}
           </button>
         </div>
       </div>

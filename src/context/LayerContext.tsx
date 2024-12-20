@@ -16,6 +16,9 @@ import {
   ReqFetchDataset,
   City,
   CategoryData,
+  LayerDataMap,
+  LayerCustomization,
+  LayerState,
 } from "../types/allTypesAndInterfaces";
 import urls from "../urls.json";
 import { useCatalogContext } from "./CatalogContext";
@@ -42,6 +45,7 @@ export function LayerProvider(props: { children: ReactNode }) {
   const [reqFetchDataset, setReqFetchDataset] = useState<ReqFetchDataset>({
     selectedCountry: "",
     selectedCity: "",
+    layers: [],
     includedTypes: [],
     excludedTypes: [],
   });
@@ -92,6 +96,13 @@ export function LayerProvider(props: { children: ReactNode }) {
   const callCountRef = useRef<number>(0);
   const MAX_CALLS = 10;
 
+  const [layerDataMap, setLayerDataMap] = useState<LayerDataMap>({});
+
+  const [selectedCountry, setSelectedCountry] = useState<string>("");
+  const [selectedCity, setSelectedCity] = useState<string>("");
+
+  const [layerStates, setLayerStates] = useState<{ [layerId: number]: LayerState }>({});
+
   function incrementFormStage() {
     if (createLayerformStage === "initial") {
       setCreateLayerformStage("secondStep");
@@ -100,51 +111,35 @@ export function LayerProvider(props: { children: ReactNode }) {
     }
   }
 
-  async function handleSaveLayer(reqSaveLayer) {
+  async function handleSaveLayer(layerData: LayerCustomization | { layers: LayerCustomization[] }) {
     if (!authResponse || !("idToken" in authResponse)) {
       navigate("/auth");
       setIsError(new Error("User is not authenticated!"));
       return;
     }
 
-    if (!datasetInfo) {
-      setIsError(new Error("Dataset information is missing!"));
-      console.error("Dataset information is missing!");
-      return;
+    if ('layers' in layerData) {
+      // Handle multiple layers
+      for (const layer of layerData.layers) {
+        await saveSingleLayer(layer);
+      }
+    } else {
+      // Handle single layer
+      await saveSingleLayer(layerData);
     }
+  }
 
-    if (!selectedColor) {
-      setIsError(new Error("Selected color is missing!"));
-      console.error("Selected color is missing!");
-      return;
-    }
-
-    const userId = userIdData.user_id;
-
+  async function saveSingleLayer(layerData: LayerCustomization) {
     const postData = {
-      prdcer_layer_name: reqSaveLayer.name,
-      prdcer_lyr_id: datasetInfo.prdcer_lyr_id,
-      bknd_dataset_id: datasetInfo.bknd_dataset_id,
-      points_color: selectedColor.hex,
-      layer_legend: reqSaveLayer.legend,
-      layer_description: reqSaveLayer.description,
+      prdcer_layer_name: layerData.name,
+      prdcer_lyr_id: layerDataMap[layerData.layerId]?.prdcer_lyr_id,
+      bknd_dataset_id: layerDataMap[layerData.layerId]?.bknd_dataset_id,
+      points_color: layerData.color,
+      layer_legend: layerData.legend,
+      layer_description: layerData.description,
       city_name: reqFetchDataset.selectedCity,
       user_id: authResponse.localId,
     };
-
-    setLoading(true);
-
-    // HttpReq<SaveResponse>(
-    //   urls.save_layer,
-    //   setSaveResponse,
-    //   setSaveResponseMsg,
-    //   setSaveReqId,
-    //   setLoading,
-    //   setIsError,
-    //   "post",
-    //   postData,
-    //   authResponse.idToken
-    // );
 
     try {
       const res = await apiRequest({
@@ -157,16 +152,8 @@ export function LayerProvider(props: { children: ReactNode }) {
       setSaveResponseMsg(res.data.message);
       setSaveReqId(res.data.id);
     } catch (error) {
-      setIsError(error);
-    } finally {
-      setLoading(false);
+      setIsError(error instanceof Error ? error : new Error(String(error)));
     }
-
-    setTimeout(() => {
-      resetFormStage();
-      setSaveResponse(null);
-      resetFetchDatasetForm();
-    }, 1000);
   }
 
   function resetFormStage() {
@@ -174,55 +161,57 @@ export function LayerProvider(props: { children: ReactNode }) {
     setCreateLayerformStage("initial");
   }
 
-  function updateGeoJSONDataset(response: FetchDatasetResponse) {
-    // Validate input to ensure it's a valid GeoJSON object
-    if (
-      !response ||
-      typeof response !== "object" ||
-      !Array.isArray(response.features)
-    ) {
+  function updateGeoJSONDataset(response: FetchDatasetResponse, layerId: number) {
+    console.debug("#feat:multi-layer debug", "Updating GeoJSON for layer:", layerId);
+
+    if (!response || typeof response !== "object" || !Array.isArray(response.features)) {
       setIsError(new Error("Input data is not a valid GeoJSON object."));
       return;
     }
-    // Update the accumulated dataset response, merging new features with existing ones
-    setManyFetchDatasetResp(function (prevResponse) {
-      if (prevResponse && typeof prevResponse !== "string") {
-        return {
-          ...prevResponse,
-          features: [...prevResponse.features, ...response.features],
-        };
-      }
-      return {
+
+    // Update features with layer ID
+    const featuresWithLayerId = response.features.map(feature => ({
+      ...feature,
+      layerId,
+    }));
+
+    // Update accumulated dataset response
+    setManyFetchDatasetResp(prevResponse => {
+      if (!prevResponse) return {
         ...response,
-        features: response.features,
+        features: featuresWithLayerId,
+      };
+
+      return {
+        ...prevResponse,
+        features: [...prevResponse.features, ...featuresWithLayerId],
       };
     });
-    // Add the new GeoJSON data to the list of geo points for display
-    setGeoPoints(function (prevGeoPoints) {
-      return [
-        ...prevGeoPoints,
-        {
-          ...response,
-          features: response.features,
-          display: true,
-          points_color: "#28A745",
-          city_name: reqFetchDataset.selectedCity,
-        },
-      ];
+
+    // Update geo points
+    setGeoPoints(prevGeoPoints => {
+      const newGeoPoint = {
+        ...response,
+        features: featuresWithLayerId,
+        display: true,
+        points_color: "#28A745",
+        city_name: reqFetchDataset.selectedCity,
+        layerId,
+      };
+
+      console.debug("#feat:multi-layer debug", "New geo point for layer:", layerId, newGeoPoint);
+      return [...prevGeoPoints, newGeoPoint];
     });
-    setSelectedColor({
-      name: "Green",
-      hex: "#28A745",
-    });
-    // Update dataset info if backend IDs are provided
+
+    // Update dataset info
     if (response.bknd_dataset_id && response.prdcer_lyr_id) {
       setDatasetInfo({
         bknd_dataset_id: response.bknd_dataset_id,
         prdcer_lyr_id: response.prdcer_lyr_id,
       });
     }
-    // Handle pagination by initiating a new fetch if a next page token exists
-    // and the maximum call limit hasn't been reached
+
+    // Handle pagination
     if (response.next_page_token && callCountRef.current < MAX_CALLS) {
       handleFetchDataset("full data", response.next_page_token);
     } else {
@@ -232,6 +221,8 @@ export function LayerProvider(props: { children: ReactNode }) {
   }
 
   async function handleFetchDataset(action: string, pageToken?: string) {
+    console.debug("#feat:multi-layer debug", "Starting fetch for layers:", reqFetchDataset.layers);
+    
     let user_id: string;
     let idToken: string;
 
@@ -247,54 +238,69 @@ export function LayerProvider(props: { children: ReactNode }) {
       idToken = "";
     }
 
-    const postData = {
-      dataset_country: reqFetchDataset.selectedCountry,
-      dataset_city: reqFetchDataset.selectedCity,
+    for (const layer of reqFetchDataset.layers) {
+      console.debug("#feat:multi-layer debug", "Fetching data for layer:", layer);
 
-      includedTypes: reqFetchDataset.includedTypes,
-      excludedTypes: reqFetchDataset.excludedTypes,
-      action: action,
-      search_type: searchType,
-      text_search: textSearchInput.trim() || "",
-      ...(action === "full data" && { password: password }),
-      page_token: pageToken || "",
-      user_id: user_id,
-    };
+      const defaultName = `${reqFetchDataset.selectedCountry} ${reqFetchDataset.selectedCity} ${
+        layer.includedTypes.map(type => type.replace("_", " ")).join(" + ")
+      }${
+        layer.excludedTypes.length > 0 
+          ? " + not " + layer.excludedTypes.map(type => type.replace("_", " ")).join(" + not ")
+          : ""
+      }`;
 
-    if (callCountRef.current >= MAX_CALLS) {
-      setShowLoaderTopup(false);
-      callCountRef.current = 0;
-      return;
-    }
+      console.debug("#feat:multi-layer debug", "Default name for layer:", defaultName);
+      const postData = {
+        dataset_country: reqFetchDataset.selectedCountry,
+        dataset_city: reqFetchDataset.selectedCity,
+        includedTypes: layer.includedTypes,
+        excludedTypes: layer.excludedTypes,
+        layerId: layer.id,
+        layer_name: layer.name || defaultName,
+        action: action,
+        search_type: searchType,
+        text_search: textSearchInput.trim() || "",
+        ...(action === "full data" && { password: password }),
+        page_token: pageToken || "",
+        user_id: user_id,
+      };
 
-    callCountRef.current++;
+      if (callCountRef.current >= MAX_CALLS) {
+        setShowLoaderTopup(false);
+        callCountRef.current = 0;
+        return;
+      }
 
-    // HttpReq<FetchDatasetResponse>(
-    //   urls.fetch_dataset,
-    //   setFetchDatasetResp,
-    //   setPostResMessage,
-    //   setPostResId,
-    //   setLocalLoading,
-    //   setIsError,
-    //   "post",
-    //   postData,
-    //   idToken
-    // );
-    setLocalLoading(true);
-    try {
-      const res = await apiRequest({
-        url: urls.fetch_dataset,
-        method: "post",
-        body: postData,
-        isAuthRequest: true,
-      });
-      setFetchDatasetResp(res.data.data);
-      setPostResMessage(res.data.message);
-      setPostResId(res.data.id);
-    } catch (error) {
-      setIsError(error);
-    } finally {
-      setLocalLoading(false);
+      callCountRef.current++;
+
+      setLocalLoading(true);
+      try {
+        const res = await apiRequest({
+          url: urls.fetch_dataset,
+          method: "post",
+          body: postData,
+          isAuthRequest: true,
+        });
+        
+        console.debug("#feat:multi-layer debug", "Received data for layer:", layer.id, res.data);
+        
+        // Store layer-specific data
+        setLayerDataMap(prev => ({
+          ...prev,
+          [layer.id]: res.data.data
+        }));
+        
+        // Update UI with new data
+        updateGeoJSONDataset(res.data.data, layer.id);
+        
+        setPostResMessage(res.data.message);
+        setPostResId(res.data.id);
+      } catch (error) {
+        console.error("#feat:multi-layer debug", "Error fetching layer:", layer.id, error);
+        setIsError(error instanceof Error ? error : new Error(String(error)));
+      } finally {
+        setLocalLoading(false);
+      }
     }
   }
 
@@ -339,27 +345,31 @@ export function LayerProvider(props: { children: ReactNode }) {
   function handleCountryCitySelection(
     event: React.ChangeEvent<HTMLSelectElement>
   ) {
-    const { name: changed_select_element, value } = event.target;
+    const { name, value } = event.target;
 
-    // Update the reqFetchDataset state using the functional update form
-    setReqFetchDataset((prevData) => ({
-      ...prevData, // Spread the previous state
-      [changed_select_element]: value, // Update the field corresponding to the changed select element
-    }));
-
-    // Check if the changed select element is the country selector
-    if (changed_select_element === "selectedCountry") {
-      // Get the cities for the selected country from the citiesData object
-      // If the country has no cities, use an empty array
+    if (name === "selectedCountry") {
+      // Update country and reset city
+      setSelectedCountry(value);
+      setSelectedCity("");
+      
+      // Get cities for selected country
       const selectedCountryCities = citiesData[value] || [];
-
-      // Update the cities state with the new list of cities
       setCities(selectedCountryCities);
 
-      // Reset the selected city in the reqFetchDataset state
-      setReqFetchDataset((prevData) => ({
-        ...prevData, // Spread the previous state
-        selectedCity: "", // Clear the selected city
+      // Update reqFetchDataset
+      setReqFetchDataset(prev => ({
+        ...prev,
+        selectedCountry: value,
+        selectedCity: "", // Reset city when country changes
+      }));
+    } else if (name === "selectedCity") {
+      // Update city
+      setSelectedCity(value);
+      
+      // Update reqFetchDataset
+      setReqFetchDataset(prev => ({
+        ...prev,
+        selectedCity: value,
       }));
     }
   }
@@ -414,13 +424,15 @@ export function LayerProvider(props: { children: ReactNode }) {
   }, [searchType]);
 
   function resetFetchDatasetForm() {
-    // Reset form data when component unmounts
     setReqFetchDataset({
       selectedCountry: "",
       selectedCity: "",
+      layers: [],
       includedTypes: [],
       excludedTypes: [],
     });
+    setSelectedCountry(""); // Reset country
+    setSelectedCity(""); // Reset city
     setTextSearchInput("");
     setSearchType("category_search");
     setPassword("");
@@ -448,6 +460,34 @@ export function LayerProvider(props: { children: ReactNode }) {
   useEffect(() => {
     handleGetCountryCityCategory();
   }, []);
+
+  const updateLayerState = (layerId: number, updates: Partial<LayerState>) => {
+    setLayerStates(prev => ({
+      ...prev,
+      [layerId]: {
+        ...prev[layerId],
+        ...updates
+      }
+    }));
+  };
+
+  useEffect(() => {
+    if (reqFetchDataset?.layers?.length > 0) {
+      const initialStates = reqFetchDataset.layers.reduce((acc, layer) => ({
+        ...acc,
+        [layer.id]: {
+          selectedColor: { 
+            name: 'Green', 
+            hex: layer.points_color || '#28A745' 
+          },
+          saveResponse: null,
+          isLoading: false,
+          datasetInfo: null
+        }
+      }), {});
+      setLayerStates(initialStates);
+    }
+  }, [reqFetchDataset.layers]);
 
   return (
     <LayerContext.Provider
@@ -505,6 +545,14 @@ export function LayerProvider(props: { children: ReactNode }) {
         handleTypeToggle,
         validateFetchDatasetForm,
         resetFetchDatasetForm,
+        layerDataMap,
+        setLayerDataMap,
+        selectedCountry,
+        setSelectedCountry,
+        selectedCity,
+        setSelectedCity,
+        layerStates,
+        updateLayerState,
       }}
     >
       {children}
