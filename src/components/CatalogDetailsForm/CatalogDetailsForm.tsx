@@ -18,7 +18,8 @@ function CatalogDetailsForm() {
     setFormStage,
     handleSaveCatalog,
     isLoading,
-    isError
+    isError,
+    saveResponse
   } = useCatalogContext();
 
   const [error, setError] = useState<string | null>(null);

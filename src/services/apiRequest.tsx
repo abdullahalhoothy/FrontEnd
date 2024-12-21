@@ -13,6 +13,7 @@ interface AuthResponse {
 
 interface ApiRequestOptions extends AxiosRequestConfig {
   isAuthRequest?: boolean;
+  isFormData?: boolean;
   body?: any;
   options?: AxiosRequestConfig;
 }
@@ -63,25 +64,42 @@ const makeApiCall = async ({
   method,
   body,
   options,
+  isFormData = false,
 }: {
   url: string;
   method: string;
   body?: any;
   options?: AxiosRequestConfig;
+  isFormData?: boolean;
 }) => {
-  // Wrap the body if the method is not GET
-  const wrappedBody =
+  // If it's FormData, don't wrap the body
+  const data = isFormData ? body : (
     method.toUpperCase() !== "GET"
       ? {
           message: "Request from frontend",
           request_info: {},
           request_body: body,
         }
-      : undefined;
+      : undefined
+  );
+
+  // Log the final request details
+  console.log('🚀 Making API request:', {
+    url,
+    method,
+    isFormData,
+    headers: options?.headers,
+    data: isFormData 
+      ? 'FormData: ' + Array.from(body.entries()).map(([key, value]) => 
+          key === 'image' ? `${key}: [Blob]` : `${key}: ${value}`
+        ).join(', ')
+      : data
+  });
+
   return await axiosInstance({
     url,
     method,
-    data: wrappedBody,
+    data,
     ...options,
   });
 };
@@ -92,6 +110,7 @@ const apiRequest = async ({
   body = {},
   options = {},
   isAuthRequest = false,
+  isFormData = false,
 }: ApiRequestOptions): Promise<any> => {
   const authResponse = getAuthResponse();
 
@@ -103,18 +122,18 @@ const apiRequest = async ({
   }
 
   try {
-    const response = await makeApiCall({ url, method, body, options });
+    const response = await makeApiCall({ url, method, body, options, isFormData });
     return response;
   } catch (err) {
     if (isAuthRequest && err.response && err.response.status === 401) {
       try {
-        const refreshToken = authResponse.refreshToken; // Get refresh token from authResponse
+        const refreshToken = authResponse.refreshToken;
         const newToken = await refreshAuthToken(refreshToken);
         addAuthTokenToLocalStorage(newToken);
 
         // Retry the original request with the new token
         setAuthorizationHeader(options, newToken.idToken);
-        const retryResponse = await makeApiCall({ url, method, body, options });
+        const retryResponse = await makeApiCall({ url, method, body, options, isFormData });
         return retryResponse;
       } catch (tokenErr) {
         console.error("Token refresh error:", tokenErr);

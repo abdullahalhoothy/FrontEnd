@@ -109,6 +109,7 @@ function Container() {
         center: mapConfig.center as [number, number],
         attributionControl: true,
         zoom: mapConfig.zoom,
+        preserveDrawingBuffer: true
       });
 
       const stylesControl = new StylesControl(currentStyle, setCurrentStyle);

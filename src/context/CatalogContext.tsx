@@ -18,6 +18,7 @@ import {
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import apiRequest from "../services/apiRequest";
+import html2canvas from "html2canvas";
 
 const CatalogContext = createContext<CatalogContextType | undefined>(undefined);
 
@@ -206,6 +207,23 @@ export function CatalogProvider(props: { children: ReactNode }) {
     fetchGeoPoints(id, typeOfCard);
   }
 
+  async function generateThumbnail(): Promise<string> {
+    const mapContainer = document.getElementById('map-container');
+    if (!mapContainer) {
+      console.warn('Map container not found');
+      return '';
+    }
+
+    try {
+      const canvas = await html2canvas(mapContainer);
+      const thumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+      return thumbnailDataUrl;
+    } catch (error) {
+      console.error('Error generating thumbnail:', error);
+      return '';
+    }
+  }
+
   async function handleSaveCatalog() {
     if (!authResponse || !("idToken" in authResponse)) {
       setIsError(new Error("User is not authenticated!"));
@@ -213,36 +231,61 @@ export function CatalogProvider(props: { children: ReactNode }) {
       return;
     }
 
-    const layersData = Array.isArray(geoPoints)
-      ? geoPoints.map((layer) => ({
-          layer_id: layer.prdcer_lyr_id,
-          points_color: layer.points_color
-        }))
-      : [];
-
-    const requestBody = {
-      prdcer_ctlg_name: name,
-      subscription_price: subscriptionPrice,
-      ctlg_description: description,
-      total_records: 0,
-      lyrs: layersData,
-      user_id: authResponse.localId,
-      thumbnail_url: "",
-      message: "Save catalog request",
-      request_info: {}
-    };
-
     try {
       setIsLoading(true);
+      
+      const thumbnailDataUrl = await generateThumbnail();
+
+      const formData = new FormData();
+
+      if (thumbnailDataUrl) {
+        const thumbnailBlob = await fetch(thumbnailDataUrl).then(r => r.blob());
+        formData.append('image', thumbnailBlob, 'thumbnail.jpg');
+      }
+
+      const requestBody = {
+        message: "Save catalog request",
+        request_info: {},
+        request_body: {
+          prdcer_ctlg_name: name,
+          subscription_price: subscriptionPrice,
+          ctlg_description: description,
+          total_records: 0,
+          lyrs: geoPoints.map(layer => ({
+            layer_id: layer.prdcer_lyr_id,
+            points_color: layer.points_color
+          })),
+          user_id: authResponse.localId,
+          display_elements: geoPoints.map(layer => ({
+            layer_id: layer.layerId,
+            display: layer.display,
+            points_color: layer.points_color,
+            is_heatmap: layer.is_heatmap,
+            is_grid: layer.is_grid
+          })),
+          catalog_layer_options: geoPoints.map(layer => ({
+            layer_id: layer.layerId,
+            is_enabled: layer.is_enabled || true,
+            opacity: layer.opacity || 1
+          }))
+        }
+      };
+
+      formData.append('req', JSON.stringify(requestBody));
+
       const res = await apiRequest({
         url: urls.save_producer_catalog,
         method: "post",
-        body: requestBody,
+        body: formData,
         isAuthRequest: true,
+        isFormData: true,
       });
+
       setSaveResponse(res.data.data);
-      setFormStage("catalog"); // Reset form stage after successful save
-      resetState(); // Reset the form state
+      setSaveResponseMsg(res.data.message);
+      setSaveReqId(res.data.id);
+      setFormStage("catalog");
+      resetState();
     } catch (error) {
       setIsError(error instanceof Error ? error : new Error('Failed to save catalog'));
     } finally {
@@ -480,6 +523,8 @@ export function CatalogProvider(props: { children: ReactNode }) {
         updateLayerGrid,
         deletedLayers,
         restoreLayer,
+        visualizationMode,
+        setVisualizationMode,
       }}
     >
       {children}
