@@ -121,7 +121,8 @@ const BottomDrawer = ({ open, onOpenChange, currentSnap = 0.25, defaultSnap = 0.
                     transition: isDragging ? 'none' : 'transform 0.3s ease',
                     zIndex: 20,
                 }}
-                className="border-2 border-primary border-b-none rounded-t-[10px] h-screen max-h-[97%] mx-[-1px]"
+                className="border-2 border-primary border-b-none rounded-t-[10px]
+                 h-screen max-h-[calc(100%_-_1px)] mx-[-1px]"
 
                 ref={(el) => {
                     if (el && !drawerHeight) {
