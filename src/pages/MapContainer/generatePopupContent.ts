@@ -45,9 +45,8 @@ export function generatePopupContent(
     }
   }
 
-  // Always included fields at the end
-  content += `<div class="popup-content-div popup-content-total-ratings">Total Ratings: ${properties.user_ratings_total}</div>`;
-  content += `<div class="popup-content-div popup-content-rating">Rating: ${properties.rating}</div>`;
+  if(properties.user_ratings_total) content += `<div class="popup-content-div popup-content-total-ratings">Total Ratings: ${properties.user_ratings_total}</div>`;
+  if(properties.rating) content += `<div class="popup-content-div popup-content-rating">Rating: ${properties.rating}</div>`;
 
   if (loading) {
     content += `<div class="flex items-center gap-2 text-sm font-semibold">
