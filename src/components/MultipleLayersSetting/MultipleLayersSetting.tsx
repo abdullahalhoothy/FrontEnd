@@ -44,6 +44,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     setIsAdvancedMode,
     setIsRadiusMode,
     updateLayerGrid,
+    updateLayerColor,
   } = useCatalogContext();
   const layer = geoPoints[layerIndex];
   console.log(layer);
@@ -242,6 +243,47 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     }, 300);
   }
 
+  const handleColorChange = (color: string) => {
+    console.log("#fix: default color - handleColorChange called with color:", color);
+    
+    if (layerIndex !== undefined) {
+      // Update layerColors state
+      setLayerColors(prev => ({
+        ...prev, 
+        [layerIndex]: color
+      }));
+      
+      // Update geoPoints to change the map
+      setGeoPoints(prev => {
+        const updated = [...prev];
+        updated[layerIndex] = {
+          ...updated[layerIndex],
+          points_color: color
+        };
+        return updated;
+      });
+      
+      // Update map color
+      updateLayerColor(layerIndex, color);
+    }
+  };
+
+  useEffect(() => {
+    console.log("#fix: default color - layerColors changed:", layerColors);
+    console.log("#fix: default color - Current layer color:", layerColors[layerIndex]);
+  }, [layerColors]);
+
+  useEffect(() => {
+    const initialColor = layer?.points_color;
+    console.log("#fix: default color - Layer points_color from geoPoints:", initialColor);
+    if (initialColor && !layerColors[layerIndex]) {
+      setLayerColors(prev => ({
+        ...prev,
+        [layerIndex]: initialColor
+      }));
+    }
+  }, [layer, layerIndex, layerColors]);
+
   return (
     <div className="w-full">
       {!isOpen && (
@@ -257,12 +299,13 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
             <FaTrash />
           </button>
 
-          <div className="font-bold text-[#333] w-[105px]">
-            <span className="text-sm text-[#333]">{prdcer_layer_name}</span>
+          <div className="font-bold text-[#333] w-[105px] overflow-hidden">
+            <span className="text-sm text-[#333] block truncate" title={prdcer_layer_name}>
+              {prdcer_layer_name}
+            </span>
           </div>
-
-          <div className={"flex"}>
-            <ColorSelect layerIndex={layerIndex} />
+          <div className="flex">
+            <ColorSelect layerId={layerIndex} onColorChange={handleColorChange} />
             <div className="flex items-center gap-1">
               <input
                 type="checkbox"

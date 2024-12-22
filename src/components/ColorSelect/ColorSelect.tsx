@@ -1,4 +1,4 @@
-import React, { useEffect, MouseEvent as ReactMouseEvent } from "react";
+import { useEffect, MouseEvent as ReactMouseEvent } from "react";
 import styles from "./ColorSelect.module.css";
 import { useCatalogContext } from "../../context/CatalogContext";
 import { useLayerContext } from "../../context/LayerContext";
@@ -35,6 +35,7 @@ function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
     setIsRadiusMode,
     isAdvancedMode,
     setChosenPallet,
+    layerColors,
   } = catalogContext;
 
   const layerState = layerStates?.[layerId] || {
@@ -48,34 +49,47 @@ function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
 
   const isOpen = openDropdownIndices[0] === dropdownIndex;
 
+  // Add debug log for initial color
+  console.log("#fix: default color - Initial color for layer", layerId, ":", colorHex);
+
   useEffect(() => {
-    setSelectedColor(null);
+    console.log("#fix: default color - ColorSelect mounted");
+    console.log("#fix: default color - Initial layerState:", layerState);
+    console.log("#fix: default color - Initial layerId:", layerId);
   }, []);
+
+  useEffect(() => {
+    console.log("#fix: default color - geoPoints for layer", layerId, ":", geoPoints[layerId]);
+    console.log("#fix: default color - geoPoints color:", geoPoints[layerId]?.color);
+    const initialColor = geoPoints[layerId]?.points_color || layerColors[layerId];
+    console.log("#fix: default color - Initializing with points_color:", initialColor);
+    if (initialColor) {
+      updateLayerState(layerId, {
+        selectedColor: {
+          name: colorMap.get(initialColor) || '',
+          hex: initialColor
+        }
+      });
+    }
+  }, [layerId, geoPoints, layerColors]);
 
   function handleOptionClick(
     optionName: string,
     hex: string,
     event: ReactMouseEvent
   ) {
+    console.log("#fix: default color - Color option clicked:", { optionName, hex });
+    console.log("#fix: default color - Previous layerState:", layerState);
+    
     event.stopPropagation();
-    if (showLoaderTopup) {
-      return;
-    }
+    if (showLoaderTopup) return;
     
-    // Update layer color in catalog context
-    updateLayerColor(layerId, hex);
-    
-    // Update layer state
     updateLayerState(layerId, { 
       selectedColor: { name: optionName, hex } 
     });
     
-    // Notify parent component
+    console.log("#fix: default color - Calling onColorChange with:", hex);
     onColorChange(hex);
-    
-    // Close dropdown
-    updateDropdownIndex(0, null);
-    setChosenPallet(null);
   }
 
   function toggleDropdown(event: ReactMouseEvent) {
@@ -111,6 +125,18 @@ function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [updateDropdownIndex]);
+
+  // Add effect to track color changes
+  useEffect(() => {
+    console.log("#fix: default color - Layer state updated for layer", layerId);
+    console.log("#fix: default color - Current color:", colorHex);
+    console.log("#fix: default color - Full layer state:", layerState);
+  }, [layerState, colorHex, layerId]);
+
+  useEffect(() => {
+    console.log("#fix: default color - LayerState updated:", layerState);
+    console.log("#fix: default color - Current colorHex:", colorHex);
+  }, [layerState, colorHex]);
 
   function renderOptions() {
     return colorOptions.map(({ name, hex }) => {
