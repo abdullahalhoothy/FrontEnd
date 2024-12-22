@@ -244,7 +244,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   }
 
   const handleColorChange = (color: string) => {
-    console.log("#fix: default color - handleColorChange called with color:", color);
     
     if (layerIndex !== undefined) {
       // Update layerColors state
@@ -269,13 +268,10 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   };
 
   useEffect(() => {
-    console.log("#fix: default color - layerColors changed:", layerColors);
-    console.log("#fix: default color - Current layer color:", layerColors[layerIndex]);
   }, [layerColors]);
 
   useEffect(() => {
     const initialColor = layer?.points_color;
-    console.log("#fix: default color - Layer points_color from geoPoints:", initialColor);
     if (initialColor && !layerColors[layerIndex]) {
       setLayerColors(prev => ({
         ...prev,

@@ -49,20 +49,8 @@ function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
 
   const isOpen = openDropdownIndices[0] === dropdownIndex;
 
-  // Add debug log for initial color
-  console.log("#fix: default color - Initial color for layer", layerId, ":", colorHex);
-
   useEffect(() => {
-    console.log("#fix: default color - ColorSelect mounted");
-    console.log("#fix: default color - Initial layerState:", layerState);
-    console.log("#fix: default color - Initial layerId:", layerId);
-  }, []);
-
-  useEffect(() => {
-    console.log("#fix: default color - geoPoints for layer", layerId, ":", geoPoints[layerId]);
-    console.log("#fix: default color - geoPoints color:", geoPoints[layerId]?.color);
     const initialColor = geoPoints[layerId]?.points_color || layerColors[layerId];
-    console.log("#fix: default color - Initializing with points_color:", initialColor);
     if (initialColor) {
       updateLayerState(layerId, {
         selectedColor: {
@@ -78,8 +66,6 @@ function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
     hex: string,
     event: ReactMouseEvent
   ) {
-    console.log("#fix: default color - Color option clicked:", { optionName, hex });
-    console.log("#fix: default color - Previous layerState:", layerState);
     
     event.stopPropagation();
     if (showLoaderTopup) return;
@@ -88,7 +74,6 @@ function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
       selectedColor: { name: optionName, hex } 
     });
     
-    console.log("#fix: default color - Calling onColorChange with:", hex);
     onColorChange(hex);
   }
 
@@ -128,14 +113,9 @@ function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
 
   // Add effect to track color changes
   useEffect(() => {
-    console.log("#fix: default color - Layer state updated for layer", layerId);
-    console.log("#fix: default color - Current color:", colorHex);
-    console.log("#fix: default color - Full layer state:", layerState);
   }, [layerState, colorHex, layerId]);
 
   useEffect(() => {
-    console.log("#fix: default color - LayerState updated:", layerState);
-    console.log("#fix: default color - Current colorHex:", colorHex);
   }, [layerState, colorHex]);
 
   function renderOptions() {
@@ -198,4 +178,3 @@ function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
   );
 }
 
-export default ColorSelect;

@@ -89,7 +89,6 @@ const Auth = () => {
       setIsLoading,
       (error: any) => {
         if(!error) return;
-        console.log("#fix: registration","error",error);
         if (error.response?.data?.detail) {
           setError(new Error(error.response.data.detail));
           setAuthMessage(error.response.data.detail);
@@ -219,11 +218,6 @@ const Auth = () => {
       </form>
     );
   };
-
-  useEffect(() => {
-    console.log("#fix: auth", "authMessage ",authMessage);
-  }, [authMessage]);
-  
 
   return (
     <div className="w-full h-full lg:border-l">
