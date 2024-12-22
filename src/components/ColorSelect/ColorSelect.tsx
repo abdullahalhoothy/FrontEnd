@@ -178,3 +178,5 @@ function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
   );
 }
 
+
+export default ColorSelect;

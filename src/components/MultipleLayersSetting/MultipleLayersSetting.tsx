@@ -45,6 +45,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     setIsRadiusMode,
     updateLayerGrid,
     updateLayerColor,
+    resetState,
   } = useCatalogContext();
   const layer = geoPoints[layerIndex];
   console.log(layer);
@@ -141,14 +142,32 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   }
 
   function handleRemoveLayer() {
-    setDeletedTimestamp(Date.now());
-    removeLayer(layerIndex);
-    setShowRestorePrompt(true);
+    // Reset advanced mode only for this layer
+    setIsAdvancedMode(prev => {
+      const newMode = { ...prev };
+      delete newMode[`circle-layer-${layerIndex}`];
+      return newMode;
+    });
 
-    // Auto-hide restore prompt after 5 seconds
-    setTimeout(() => {
-      setShowRestorePrompt(false);
-    }, 5000);
+    // Remove this layer from gradient colors
+    setGradientColorBasedOnZone(prev => 
+      prev.filter(item => item.layerId !== layerIndex)
+    );
+
+    // Remove this layer from geoPoints
+    setGeoPoints(prev => prev.filter((_, index) => index !== layerIndex));
+
+    // Remove this layer's color
+    setLayerColors(prev => {
+      const newColors = { ...prev };
+      delete newColors[layerIndex];
+      return newColors;
+    });
+
+    // Reset chosen pallet only if it was this layer
+    if (chosenPallet === layerIndex) {
+      setChosenPallet(null);
+    }
   }
 
   function toggleDropdown(event: ReactMouseEvent) {
