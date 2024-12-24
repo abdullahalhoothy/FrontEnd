@@ -94,7 +94,7 @@ function CatalogMenu() {
 
   return (
     <div className="flex flex-col justify-between h-full w-full lg:pr-1.5">
-      <div className="flex flex-col justify-start lg:mt-7 mt-3 flex-grow">
+      <div className={`flex flex-col justify-start lg:mt-7 mt-3 ${!showRestorePrompt ? 'flex-grow' : ''}`}>
         <div className="flex justify-between items-center mx-8 my-2">
           <p className={"text-lg font-semibold"}>Datasets</p>
           <button
@@ -106,7 +106,7 @@ function CatalogMenu() {
             + Add Catalog
           </button>
         </div>
-        <div className={"flex justify-between items-center mx-8 my-2 flex-grow"}>
+        <div className={"flex justify-between items-center mx-8 my-2"}>
           <p className={"text-lg font-semibold"}>Layers</p>
           <button
             className={
@@ -147,7 +147,7 @@ function CatalogMenu() {
             </div>
           </div>
         )}
-        <div className="flex flex-col justify-start items-center overflow-y-auto overflow-x-hidden px-4">
+        <div className="flex flex-col flex-grow justify-start items-center overflow-y-auto overflow-x-hidden px-4">
           {safeGeoPoints.map(function (featureCollection, index) {
             return <MultipleLayersSetting key={index} layerIndex={index} />;
           })}
