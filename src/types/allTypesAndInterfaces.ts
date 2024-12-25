@@ -144,6 +144,8 @@ export interface CatalogContextType {
   updateLayerGrid: (layerIndex: number, isGrid: boolean) => void;
   deletedLayers: Array<{ layer: MapFeatures; index: number; timestamp: number }>;
   restoreLayer: (timestamp: number) => void;
+  basedOnLayerId: string | null;
+  setBasedOnLayerId: (id: string) => void;
 }
 
 export interface GradientColorBasedOnZone extends MapFeatures {

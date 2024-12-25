@@ -25,6 +25,8 @@ import { useUIContext } from "../../context/UIContext";
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_KEY;
 
+const DEFAULT_RADIUS_METERS = 750;
+
 const getCityBoundaries = async (cityName: string): Promise<[number, number][] | null> => {
   try {
     const cityRes = await apiRequest({
@@ -334,7 +336,7 @@ function Container() {
                 bounds = turf.bbox(featureCollection).slice(0, 4) as [number, number, number, number];
               }
 
-              const cellSide = (featureCollection.radius_meters || 1000) / 1000;
+              const cellSide = (DEFAULT_RADIUS_METERS) / 1000;
               const options = { units: 'kilometers' as const };
               const grid = turf.squareGrid(bounds, cellSide, options);
 

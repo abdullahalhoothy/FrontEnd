@@ -4,6 +4,7 @@ import {
   MapFeatures,
   ReqGradientColorBasedOnZone,
   SaveResponse,
+  VisualizationMode,
 } from "../types/allTypesAndInterfaces";
 import { HttpReq } from "../services/apiService";
 import urls from "../urls.json";
@@ -104,6 +105,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
     index: number;
     timestamp: number;
   }[]>([]);
+  const [basedOnLayerId, setBasedOnLayerId] = useState<string | null>(null);
 
   useEffect(
     function () {
@@ -525,6 +527,8 @@ export function CatalogProvider(props: { children: ReactNode }) {
         restoreLayer,
         visualizationMode,
         setVisualizationMode,
+        basedOnLayerId,
+        setBasedOnLayerId
       }}
     >
       {children}

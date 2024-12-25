@@ -17,6 +17,7 @@ import urls from "../../urls.json";
 import { useAuth } from "../../context/AuthContext";
 import BasedOnDropdown from "./BasedOnDropdown";
 import apiRequest from "../../services/apiRequest";
+import BasedOnLayerDropdown from "./BasedOnLayerDropdown";
 
 function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   const { layerIndex } = props;
@@ -379,7 +380,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
             <p className="text-sm mb-0 font-medium">Recolor based on metric</p>
 
             <DropdownColorSelect layerIndex={layerIndex} />
-
+            <BasedOnLayerDropdown layerIndex={layerIndex} />
             <BasedOnDropdown layerIndex={layerIndex} />
             <div className="ms-2.5">
               <label

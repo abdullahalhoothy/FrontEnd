@@ -1,0 +1,45 @@
+import React from "react";
+import { useCatalogContext } from "../../context/CatalogContext";
+
+interface BasedOnLayerDropdownProps {
+  layerIndex: number;
+}
+
+export default function BasedOnLayerDropdown({ layerIndex }: BasedOnLayerDropdownProps) {
+  const { basedOnLayerId, setBasedOnLayerId, geoPoints } = useCatalogContext();
+
+  const availableLayers = geoPoints
+    .map(layer => ({
+      id: layer.prdcer_lyr_id,
+      name: layer.prdcer_layer_name || `Layer ${layer.layerId}`
+    }));
+
+  const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    event.stopPropagation();
+    setBasedOnLayerId(event.target.value);
+  };
+
+  return (
+    <div className="ms-2.5 flex flex-col">
+      <label htmlFor="basedOnLayerDropdown" className="text-[11px] my-[2px] text-[#555] whitespace-nowrap text-sm">
+        Compare with Layer
+      </label>
+      <select
+        id="basedOnLayerDropdown"
+        value={basedOnLayerId || ""}
+        onChange={handleSelectChange}
+        className="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-md focus:ring-grey-100 focus:border-grey-100 block w-full p-1"
+      >
+        <option value="" disabled>Select a layer</option>
+        {availableLayers.map(layer => {
+          const isSelf = layer.id === geoPoints[layerIndex]?.prdcer_lyr_id;
+          return (
+            <option key={layer.id} value={layer.id}>
+              {(layer.name.length > 20 ? `${layer.name.substring(0, 12)}...${layer.name.substring(layer.name.length - 12)}` : layer.name).concat(isSelf ? ' (Self)' : '')}
+            </option>
+          )
+        })}
+      </select>
+    </div>
+  );
+}
