@@ -39,6 +39,7 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
     chosenPallet,
     setChosenPallet,
     selectedBasedon,
+    setSelectedBasedon,
     layerColors,
     setLayerColors,
     setGradientColorBasedOnZone,
@@ -46,7 +47,10 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
     setIsRadiusMode,
     updateLayerGrid,
     updateLayerColor,
-    resetState
+    resetState,
+    basedOnLayerId,
+    setIsLoading,
+    gradientColorBasedOnZone
   } = useCatalogContext()
   const layer = geoPoints[layerIndex]
   console.log(layer)
@@ -124,15 +128,15 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
     }
   }, [setOpenDropdownIndices[1]])
 
-  useEffect(() => {
-    if (layerIndex !== undefined) {
-      setGeoPoints(prev =>
-        prev.map((point, idx) =>
-          idx === layerIndex ? { ...point, basedon: '' } : point
-        )
-      )
-    }
-  }, [layerIndex])
+  // useEffect(() => {
+  //   if (layerIndex !== undefined) {
+  //     setGeoPoints(prev =>
+  //       prev.map((point, idx) =>
+  //         idx === layerIndex ? { ...point, basedon: '' } : point
+  //       )
+  //     )
+  //   }
+  // }, [layerIndex])
 
   function handleDisplayChange () {
     updateLayerDisplay(layerIndex, !isDisplay)
@@ -291,10 +295,127 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
     }
   }
 
-  const handleApplyDynamicColor = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault()
-    console.log('apply dynamic color')
-  }
+  const handleApplyDynamicColor = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    
+    // Get all required data
+    const currentLayer = geoPoints[layerIndex];
+    const baseLayer = geoPoints.find(layer => layer.prdcer_lyr_id === basedOnLayerId);
+    const selectedColors = colors[chosenPallet || 0];
+    
+    // Validate all required fields with specific error messages
+    if (!currentLayer) {
+      console.error('Current layer not found');
+      return;
+    }
+    
+    if (!baseLayer) {
+      console.error('Please select a layer to compare with');
+      return;
+    }
+    
+    if (!selectedColors || selectedColors.length === 0) {
+      console.error('Please select a color palette');
+      return;
+    }
+    
+    if (!selectedBasedon) {
+      console.error('Please select a metric to base colors on');
+      return;
+    }
+
+    // Ensure we have valid names
+    const changeName = currentLayer.prdcer_layer_name || `Layer ${currentLayer.layerId}`;
+    const baseName = baseLayer.prdcer_layer_name || `Layer ${baseLayer.layerId}`;
+
+    // Set radius with validation
+    const validRadius = Math.max(100, Math.min(radiusInput || 1000, 100000));
+
+    try {
+      setIsLoading(true);
+      
+      setReqGradientColorBasedOnZone({
+        // Colors for gradient
+        color_grid_choice: selectedColors,
+        
+        // Layer being changed
+        change_lyr_id: currentLayer.prdcer_lyr_id,
+        change_lyr_name: changeName,
+        
+        // Layer being compared against
+        based_on_lyr_id: baseLayer.prdcer_lyr_id,
+        based_on_lyr_name: baseName,
+        
+        // Distance for comparison (with bounds)
+        offset_value: validRadius,
+        
+        // What metric to base colors on
+        color_based_on: selectedBasedon
+      });
+
+      // Wait for the response to be processed
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Check if we have gradient data
+      if (!gradientColorBasedOnZone || gradientColorBasedOnZone.length === 0) {
+        throw new Error('No gradient data received');
+      }
+
+      // Update the layer with gradient response data
+      setGeoPoints(prev => {
+        return prev.map(point => {
+          if (point.prdcer_lyr_id === currentLayer.prdcer_lyr_id) {
+            const gradientData = gradientColorBasedOnZone[0];
+            
+            if (!gradientData) {
+              console.error('Gradient data is undefined');
+              return point;
+            }
+
+            return {
+              ...point,
+              // Update core properties
+              prdcer_layer_name: gradientData.prdcer_layer_name,
+              points_color: gradientData.points_color,
+              layer_legend: gradientData.layer_legend,
+              layer_description: gradientData.layer_description,
+              records_count: gradientData.records_count,
+              
+              // Update features and data
+              features: gradientData.features,
+              properties: gradientData.properties,
+              
+              // Update gradient-specific properties
+              is_zone_lyr: gradientData.is_zone_lyr,
+              sub_lyr_id: gradientData.sub_lyr_id,
+              
+              // Keep track of gradient state
+              is_gradient: true,
+              gradient_based_on: baseLayer.prdcer_lyr_id
+            };
+          }
+          return point;
+        });
+      });
+
+    } catch (error) {
+      console.error('Error applying gradient colors:', error);
+      setIsError(error instanceof Error ? error : new Error('Failed to apply gradient colors'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleMetricChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = event.target.value;
+    setSelectedBasedon(value);
+    
+    setGeoPoints(prev =>
+      prev.map((point, idx) =>
+        idx === layerIndex ? { ...point, basedon: value } : point
+      )
+    );
+  };
 
   useEffect(() => {
     const initialColor = layer?.points_color
@@ -418,7 +539,7 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
             <p className='text-sm mt-2 mb-0 font-medium'>Recolor based on metric</p>
 
             <BasedOnLayerDropdown layerIndex={layerIndex} />
-            <BasedOnDropdown layerIndex={layerIndex} />
+            {/* <BasedOnDropdown layerIndex={layerIndex} /> */}
             <div className="ms-2.5 space-y-2">
               <label
                 className="block text-xs font-medium text-gray-600"
@@ -447,6 +568,8 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
                   className="flex-shrink-0 z-10 inline-flex items-center py-2 px-1 text-sm font-medium text-center 
                             text-gray-900 bg-gray-100 border border-s-0 border-gray-300 rounded-e-lg hover:bg-gray-200 
                             focus:ring-4 focus:outline-none focus:ring-gray-300"
+                  value={selectedBasedon}
+                  onChange={handleMetricChange}
                 >
                   <option value="radius">Radius (m)</option>
                   <option value="drive_time">Drive Time (min)</option>

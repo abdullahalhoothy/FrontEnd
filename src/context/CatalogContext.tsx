@@ -393,15 +393,44 @@ export function CatalogProvider(props: { children: ReactNode }) {
     } else {
       idToken = "";
     }
-    const postData = {
-      prdcer_lyr_id: reqGradientColorBasedOnZone.prdcer_lyr_id,
-      user_id: reqGradientColorBasedOnZone.user_id,
+    /**
+   {
+      "color_grid_choice": [
+        "string"
+      ],
+      "change_lyr_id": "string",
+      "change_lyr_name": "string",
+      "based_on_lyr_id": "string",
+      "based_on_lyr_name": "string",
+      "offset_value": 0,
+      "color_based_on": "string"
+    }
+     */
+
+    console.log(`#feat multicolor: reqGradientColorBasedOnZone ${JSON.stringify(reqGradientColorBasedOnZone)}`);
+
+    const postData: {
+      color_grid_choice: string[];    // Array of colors for the gradient palette
+      change_lyr_id: string;         // ID of the layer being recolored
+      change_lyr_name: string;       // Name of the layer being recolored
+      based_on_lyr_id: string;       // ID of the layer we're comparing against
+      based_on_lyr_name: string;     // Name of the layer we're comparing against
+      offset_value: number;          // Distance/radius value for comparison
+      color_based_on: string;        // Metric to base coloring on (e.g., "rating", "exists")
+    } = {
       color_grid_choice: reqGradientColorBasedOnZone.color_grid_choice,
       change_lyr_id: reqGradientColorBasedOnZone.change_lyr_id,
+      change_lyr_name: reqGradientColorBasedOnZone.change_lyr_name,
       based_on_lyr_id: reqGradientColorBasedOnZone.based_on_lyr_id,
-      radius_offset: reqGradientColorBasedOnZone.radius_offset,
-      color_based_on: reqGradientColorBasedOnZone.color_based_on,
+      based_on_lyr_name: reqGradientColorBasedOnZone.based_on_lyr_name,
+      offset_value: reqGradientColorBasedOnZone.offset_value,
+      color_based_on: reqGradientColorBasedOnZone.color_based_on
     };
+
+    console.log(`#feat multicolor: postData ${JSON.stringify(postData)}`);
+
+    const disabled = false;
+
     // HttpReq<GradientColorBasedOnZone[]>(
     //   urls.gradient_color_based_on_zone,
     //   setGradientColorBasedOnZone,
@@ -413,7 +442,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
     //   postData,
     //   idToken
     // );
-    if (reqGradientColorBasedOnZone.prdcer_lyr_id.length > 0) {
+    if (!disabled && reqGradientColorBasedOnZone.change_lyr_id.length > 0) {
       try {
         setLocalLoading(true);
         const res = await apiRequest({
@@ -422,15 +451,18 @@ export function CatalogProvider(props: { children: ReactNode }) {
           body: postData,
           isAuthRequest: true,
         });
+        console.log(`#feat multicolor: res ${res}`);
+
         setGradientColorBasedOnZone(res.data.data);
         setPostResMessage(res.data.message);
         setPostResId(res.data.id);
       } catch (error) {
-        setIsError(error);
+        setIsError(error instanceof Error ? error : new Error(String(error)));
       } finally {
         setLocalLoading(false);
       }
     }
+    
   }
   const updateDropdownIndex = (index: number, value: number | null) => {
     setOpenDropdownIndices((prev) => {

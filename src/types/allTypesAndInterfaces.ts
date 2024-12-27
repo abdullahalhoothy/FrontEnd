@@ -154,12 +154,12 @@ export interface GradientColorBasedOnZone extends MapFeatures {
 }
 
 export interface ReqGradientColorBasedOnZone {
-  prdcer_lyr_id: string;
-  user_id: string;
   color_grid_choice: string[];
   change_lyr_id: string;
+  change_lyr_name: string;
   based_on_lyr_id: string;
-  radius_offset: number;
+  based_on_lyr_name: string;
+  offset_value: number;
   color_based_on: string;
 }
 
