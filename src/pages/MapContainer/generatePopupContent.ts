@@ -10,8 +10,7 @@ export function generatePopupContent(
 ): string {
   let content = `<div class="popup-content">`;
 
-  // Always included fields at the top
-  content += `<strong class="popup-content-strong">${properties.name}</strong>`;
+  if(properties.name) content += `<strong class="popup-content-strong">${properties.name}</strong>`;
 
   // Dynamically included fields in the middle
   for (const key in properties) {
