@@ -5,7 +5,8 @@ import ColorSelect from '../ColorSelect/ColorSelect'
 import { useCatalogContext } from '../../context/CatalogContext'
 import {
   GradientColorBasedOnZone,
-  MultipleLayersSettingProps
+  MultipleLayersSettingProps,
+  DisplayType
 } from '../../types/allTypesAndInterfaces'
 import DropdownColorSelect from '../ColorSelect/DropdownColorSelect'
 import { MdArrowDropDown } from 'react-icons/md'
@@ -19,11 +20,8 @@ import BasedOnDropdown from './BasedOnDropdown'
 import apiRequest from '../../services/apiRequest'
 import BasedOnLayerDropdown from './BasedOnLayerDropdown'
 
-const DisplayType = {
-  REGULAR: 'regular',
-  HEATMAP: 'heatmap',
-  GRID: 'grid'
-} as const;
+const initialBasedon = 'radius'
+const initialRadius = 1000
 
 function MultipleLayersSetting (props: MultipleLayersSettingProps) {
   const { layerIndex } = props
@@ -96,6 +94,8 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
 
   useEffect(function () {
     handleGetGradientColors()
+    setSelectedBasedon(layer.basedon || initialBasedon )
+    setRadiusInput(layer.radius_meters || initialRadius )
   }, [])
   useEffect(
     function () {

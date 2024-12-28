@@ -517,3 +517,10 @@ export interface GradientGroup {
   legend: string;
   count: number;
 }
+
+
+export const DisplayType = {
+  REGULAR: 'regular',
+  HEATMAP: 'heatmap',
+  GRID: 'grid'
+} as const;
