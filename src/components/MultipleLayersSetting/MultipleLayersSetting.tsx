@@ -19,6 +19,12 @@ import BasedOnDropdown from './BasedOnDropdown'
 import apiRequest from '../../services/apiRequest'
 import BasedOnLayerDropdown from './BasedOnLayerDropdown'
 
+const DisplayType = {
+  REGULAR: 'regular',
+  HEATMAP: 'heatmap',
+  GRID: 'grid'
+} as const;
+
 function MultipleLayersSetting (props: MultipleLayersSettingProps) {
   const { layerIndex } = props
   const {
@@ -80,6 +86,13 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
   const [deletedTimestamp, setDeletedTimestamp] = useState<number | null>(null)
 
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  const [displayType, setDisplayType] = useState(
+    layer.is_gradient ? DisplayType.REGULAR :  // Force REGULAR if gradient
+    isGrid ? DisplayType.GRID : 
+    isHeatmap ? DisplayType.HEATMAP : 
+    DisplayType.REGULAR
+  );
 
   useEffect(function () {
     handleGetGradientColors()
@@ -432,6 +445,20 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
     }
   }, [layer, layerIndex, layerColors])
 
+  const handleDisplayTypeChange = (newType: typeof DisplayType[keyof typeof DisplayType]) => {
+    // Don't allow changes if it's a gradient layer
+    if (layer.is_gradient) return;
+
+    const isHeatmapNew = newType === DisplayType.HEATMAP;
+    const isGridNew = newType === DisplayType.GRID;
+
+    setDisplayType(newType);
+    setIsHeatmap(isHeatmapNew);
+    setIsGrid(isGridNew);
+    updateLayerHeatmap(layerIndex, isHeatmapNew);
+    updateLayerGrid(layerIndex, isGridNew);
+  };
+
   return (
     <div className='w-full'>
       {!isOpen && (
@@ -517,28 +544,68 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
 
             <p className='text-sm mb-0 font-medium'>Change display type</p>
 
-            <div className='flex flex-row gap-4 ms-2.5 text-sm'>
-              <div className='flex items-center gap-1'>
+            <div className={`flex gap-2 ms-2.5 text-sm ${layer.is_gradient ? 'cursor-not-allowed' : ''}`}>
+              <div className='flex items-center gap-2'>
                 <input
-                  type='checkbox'
-                  checked={isHeatmap}
-                  onChange={handleHeatMapChange}
+                  type='radio'
+                  id='regular-display'
+                  name='display-type'
+                  value={DisplayType.REGULAR}
+                  checked={layer.is_gradient || displayType === DisplayType.REGULAR}
+                  onChange={(e) => handleDisplayTypeChange(e.target.value as typeof DisplayType[keyof typeof DisplayType])}
                   className='w-[11px] h-[11px] cursor-pointer accent-[#28a745]'
+                  disabled={layer.is_gradient}
                 />
-                <p className='my-[2px] text-[#555] whitespace-nowrap'>
-                  Heatmap
-                </p>
+                <label 
+                  htmlFor='regular-display' 
+                  className={`my-[2px] whitespace-nowrap cursor-pointer ${
+                    layer.is_gradient ? 'text-gray-400' : 'text-[#555]'
+                  }`}
+                >
+                  Points
+                </label>
               </div>
-              <div className='flex items-center gap-1'>
+
+              <div className='flex items-center gap-2'>
                 <input
-                  type='checkbox'
-                  checked={isGrid}
-                  onChange={handleGridChange}
+                  type='radio'
+                  id='heatmap-display'
+                  name='display-type'
+                  value={DisplayType.HEATMAP}
+                  checked={!layer.is_gradient && displayType === DisplayType.HEATMAP}
+                  onChange={(e) => handleDisplayTypeChange(e.target.value as typeof DisplayType[keyof typeof DisplayType])}
                   className='w-[11px] h-[11px] cursor-pointer accent-[#28a745]'
+                  disabled={layer.is_gradient}
                 />
-                <p className='my-[2px] text-[#555] whitespace-nowrap'>
+                <label 
+                  htmlFor='heatmap-display' 
+                  className={`my-[2px] whitespace-nowrap cursor-pointer ${
+                    layer.is_gradient ? 'text-gray-400' : 'text-[#555]'
+                  }`}
+                >
+                  Heatmap
+                </label>
+              </div>
+
+              <div className='flex items-center gap-2'>
+                <input
+                  type='radio'
+                  id='grid-display'
+                  name='display-type'
+                  value={DisplayType.GRID}
+                  checked={!layer.is_gradient && displayType === DisplayType.GRID}
+                  onChange={(e) => handleDisplayTypeChange(e.target.value as typeof DisplayType[keyof typeof DisplayType])}
+                  className='w-[11px] h-[11px] cursor-pointer accent-[#28a745]'
+                  disabled={layer.is_gradient}
+                />
+                <label 
+                  htmlFor='grid-display' 
+                  className={`my-[2px] whitespace-nowrap cursor-pointer ${
+                    layer.is_gradient ? 'text-gray-400' : 'text-[#555]'
+                  }`}
+                >
                   Grid
-                </p>
+                </label>
               </div>
             </div>
             <p className='text-sm mt-2 mb-0 font-medium'>Recolor based on metric</p>
