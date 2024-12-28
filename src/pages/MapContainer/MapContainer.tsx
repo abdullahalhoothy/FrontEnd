@@ -240,6 +240,69 @@ function Container() {
     return array[index];
   }
 
+  const addGradientLayer = (featureCollection: MapFeatures, sourceId: string, layerId: string) => {
+    if (featureCollection.is_gradient && featureCollection.gradient_groups) {
+      // Create a layer for each gradient group
+      featureCollection.gradient_groups.forEach((group, index) => {
+        const groupLayerId = `${layerId}-gradient-${index}`;
+        
+        // Filter features for this group based on gradient_color property
+        const groupFilter = ['==', ['get', 'gradient_color'], group.color];
+
+        mapRef.current?.addLayer({
+          id: groupLayerId,
+          type: 'circle',
+          source: sourceId,
+          filter: groupFilter,
+          paint: {
+            'circle-radius': mapConfig.circleRadius,
+            'circle-color': group.color,
+            'circle-opacity': mapConfig.circleOpacity,
+            'circle-stroke-width': mapConfig.circleStrokeWidth,
+            'circle-stroke-color': mapConfig.circleStrokeColor
+          }
+        });
+
+        // Add hover effects with proper null checks
+        mapRef.current?.on('mouseenter', groupLayerId, () => {
+          const canvas = mapRef.current?.getCanvas();
+          if (canvas) {
+            canvas.style.cursor = 'pointer';
+          }
+        });
+
+        mapRef.current?.on('mouseleave', groupLayerId, () => {
+          const canvas = mapRef.current?.getCanvas();
+          if (canvas) {
+            canvas.style.cursor = '';
+          }
+        });
+      });
+
+      // Add legend entries
+      const legendContainer = document.getElementById('legend');
+      if (legendContainer && featureCollection.gradient_groups) {
+        const legendTitle = document.createElement('div');
+        legendTitle.className = 'legend-title';
+        legendTitle.textContent = featureCollection.layer_legend || '';
+        
+        const legendItems = featureCollection.gradient_groups.map(group => `
+          <div class="legend-item">
+            <span class="legend-color" style="background-color: ${group.color}"></span>
+            <span class="legend-text">${group.legend} (${group.count} points)</span>
+          </div>
+        `).join('');
+
+        legendContainer.innerHTML += `
+          <div class="legend-group">
+            ${legendTitle.outerHTML}
+            ${legendItems}
+          </div>
+        `;
+      }
+    }
+  };
+
   const addGeoPoints = useCallback(async () => {
     if (!mapRef.current || !styleLoadedRef.current) return;
 
@@ -482,6 +545,10 @@ function Container() {
                     }
                 });
               }
+            }
+
+            if (featureCollection.is_gradient) {
+              addGradientLayer(featureCollection, sourceId, layerId);
             }
           }
 

@@ -383,6 +383,9 @@ export interface MapFeatures extends FetchDatasetResponse {
   basedon: string;
   layerGroupId?: string;
   layerId?: number;
+  gradient_groups?: GradientGroup[];
+  is_gradient?: boolean;
+  gradient_based_on?: string;
   [key: string]: any;
 }
 
@@ -508,3 +511,9 @@ export interface ReqSaveLayer {
 }
 
 export type VisualizationMode = 'vertex' | 'heatmap' | 'grid';
+
+export interface GradientGroup {
+  color: string;
+  legend: string;
+  count: number;
+}

@@ -53,8 +53,6 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
     gradientColorBasedOnZone
   } = useCatalogContext()
   const layer = geoPoints[layerIndex]
-  console.log(layer)
-  console.log(geoPoints)
   const {
     prdcer_layer_name,
     is_zone_lyr,
@@ -269,7 +267,7 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
 
     debounceTimeoutRef.current = setTimeout(() => {
       handleApplyRadius(newRadius)
-    }, 300)
+    }, 600)
   }
 
   const handleColorChange = (color: string) => {
@@ -329,7 +327,7 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
     const baseName = baseLayer.prdcer_layer_name || `Layer ${baseLayer.layerId}`;
 
     // Set radius with validation
-    const validRadius = Math.max(100, Math.min(radiusInput || 1000, 100000));
+    const validRadius = Math.max(1, radiusInput);
 
     try {
       setIsLoading(true);
@@ -361,35 +359,42 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
         throw new Error('No gradient data received');
       }
 
-      // Update the layer with gradient response data
+      // Create a combined layer with all gradient groups
+      const combinedFeatures = gradientColorBasedOnZone.flatMap(group => 
+        group.features.map(feature => ({
+          ...feature,
+          properties: {
+            ...feature.properties,
+            gradient_color: group.points_color,
+            gradient_legend: group.layer_legend,
+          }
+        }))
+      );
+
+      // Update the layer with combined gradient data
       setGeoPoints(prev => {
         return prev.map(point => {
           if (point.prdcer_lyr_id === currentLayer.prdcer_lyr_id) {
-            const gradientData = gradientColorBasedOnZone[0];
+            const baseGradientData = gradientColorBasedOnZone[0]; // Use first group for base properties
             
-            if (!gradientData) {
-              console.error('Gradient data is undefined');
-              return point;
-            }
-
             return {
               ...point,
-              // Update core properties
-              prdcer_layer_name: gradientData.prdcer_layer_name,
-              points_color: gradientData.points_color,
-              layer_legend: gradientData.layer_legend,
-              layer_description: gradientData.layer_description,
-              records_count: gradientData.records_count,
+              // Base properties from first group
+              prdcer_layer_name: baseGradientData.prdcer_layer_name,
+              layer_legend: gradientColorBasedOnZone.map(g => g.layer_legend).join(' | '),
+              layer_description: baseGradientData.layer_description,
+              records_count: gradientColorBasedOnZone.reduce((sum, g) => sum + g.records_count, 0),
               
-              // Update features and data
-              features: gradientData.features,
-              properties: gradientData.properties,
+              // Combined features with their respective colors
+              features: combinedFeatures,
               
-              // Update gradient-specific properties
-              is_zone_lyr: gradientData.is_zone_lyr,
-              sub_lyr_id: gradientData.sub_lyr_id,
+              // Gradient metadata
+              gradient_groups: gradientColorBasedOnZone.map(group => ({
+                color: group.points_color,
+                legend: group.layer_legend,
+                count: group.records_count
+              })),
               
-              // Keep track of gradient state
               is_gradient: true,
               gradient_based_on: baseLayer.prdcer_lyr_id
             };

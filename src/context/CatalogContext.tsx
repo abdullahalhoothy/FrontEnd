@@ -451,11 +451,15 @@ export function CatalogProvider(props: { children: ReactNode }) {
           body: postData,
           isAuthRequest: true,
         });
-        console.log(`#feat multicolor: res ${res}`);
 
-        setGradientColorBasedOnZone(res.data.data);
-        setPostResMessage(res.data.message);
-        setPostResId(res.data.id);
+        if (res.data?.data && Array.isArray(res.data.data)) {
+          // Store all gradient groups
+          setGradientColorBasedOnZone(res.data.data);
+          setPostResMessage(res.data.message);
+          setPostResId(res.data.request_id);
+
+          // Combined features approach is now handled in MultipleLayersSetting
+        }
       } catch (error) {
         setIsError(error instanceof Error ? error : new Error(String(error)));
       } finally {
