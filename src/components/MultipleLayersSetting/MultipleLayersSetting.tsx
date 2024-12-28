@@ -54,6 +54,7 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
     resetState,
     basedOnLayerId,
     setIsLoading,
+    handleColorBasedZone,
     gradientColorBasedOnZone
   } = useCatalogContext()
   const layer = geoPoints[layerIndex]
@@ -217,7 +218,7 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
       })
       setColors(res.data.data)
     } catch (error) {
-      setIsError(error)
+      setIsError(error instanceof Error ? error : new Error(String(error)))
       console.error('error fetching gradient colors', error)
     }
   }
@@ -271,16 +272,23 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
     setIsGrid(!isGrid)
   }
 
-  function handleRadiusInputChange (newRadius: number) {
-    setRadiusInput(newRadius)
+  function handleRadiusInputChange(newRadius: number) {
+    setRadiusInput(newRadius);
+    
+    setGeoPoints(prev => {
+      const updated = [...prev];
+      updated[layerIndex] = {
+        ...updated[layerIndex],
+        radius_meters: newRadius,
+        offset_value: newRadius
+      };
+      return updated;
+    });
 
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current)
-    }
-
-    debounceTimeoutRef.current = setTimeout(() => {
-      handleApplyRadius(newRadius)
-    }, 600)
+    setReqGradientColorBasedOnZone((prev: any) => ({
+      ...prev,
+      offset_value: newRadius
+    }));
   }
 
   const handleColorChange = (color: string) => {
@@ -363,6 +371,8 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
         // What metric to base colors on
         color_based_on: selectedBasedon
       });
+
+      await handleColorBasedZone()
 
       // Wait for the response to be processed
       await new Promise(resolve => setTimeout(resolve, 500));
