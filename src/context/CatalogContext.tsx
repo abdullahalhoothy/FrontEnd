@@ -109,7 +109,19 @@ export function CatalogProvider(props: { children: ReactNode }) {
 
   useEffect(
     function () {
-      handleColorBasedZone();
+      if (!reqGradientColorBasedOnZone.change_lyr_id || 
+          !reqGradientColorBasedOnZone.based_on_lyr_id || 
+          !reqGradientColorBasedOnZone.color_based_on || 
+          !reqGradientColorBasedOnZone.color_grid_choice.length) {
+        return;
+      }
+
+      // Debounce the API call
+      const timeoutId = setTimeout(() => {
+        handleColorBasedZone();
+      }, 200);
+
+      return () => clearTimeout(timeoutId);
     },
     [reqGradientColorBasedOnZone]
   );
@@ -468,6 +480,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
     }
     
   }
+
   const updateDropdownIndex = (index: number, value: number | null) => {
     setOpenDropdownIndices((prev) => {
       const updatedIndices = [...prev];
