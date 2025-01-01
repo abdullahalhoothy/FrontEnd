@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useCatalogContext } from "./CatalogContext";
 import * as turf from "@turf/turf";
-import { Feature } from "../types/allTypesAndInterfaces";
+import { Feature, PolygonFeature } from "../types/allTypesAndInterfaces";
 import excludedPropertiesJson from "../pages/MapContainer/excludedProperties.json";
 
 type ProviderProps = {
@@ -21,15 +21,6 @@ type GeoPoint = {
   percentageInside?: number;
 };
 
-type PolygonFeature = {
-  geometry: {
-    coordinates: [number, number][][];
-    type: string;
-  };
-  properties: {
-    shape?: string;
-  };
-};
 
 type Section = {
   title: string;
@@ -85,6 +76,7 @@ const PolygonsProvider = ({ children }: ProviderProps) => {
     if (!Array.isArray(polygons) || !Array.isArray(geoPoints)) {
       return [] as Section[];
     }
+
 
     const excludedProperties = new Set(excludedPropertiesJson?.excludedProperties || []);
 
@@ -186,8 +178,7 @@ const PolygonsProvider = ({ children }: ProviderProps) => {
       return polygonData;
     });
 
-    // Flatten all sections from all polygons into a single array
-    const allSections: Section[] = processedPolygons.flatMap(polygonData => polygonData.sections);
+    const allSections = processedPolygons.flatMap(polygonData => polygonData.sections);
     return allSections;
   }, [polygons, geoPoints]);
 

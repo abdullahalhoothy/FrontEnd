@@ -22,6 +22,9 @@ export function usePolygonHandlers(
       // Convert center to pixel coordinates
       const pixelPosition = center ? map.project(center as [number, number]) : null;
 
+      // Set the shape property for regular polygons
+      if (!geojson.properties) geojson.properties = {};
+      geojson.properties.shape = 'polygon';
       geojson.isStatisticsPopupOpen = true;
       geojson.pixelPosition = pixelPosition;
       setPolygons(prev => [...prev, geojson]);

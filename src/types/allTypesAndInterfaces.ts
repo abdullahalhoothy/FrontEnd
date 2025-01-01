@@ -525,3 +525,19 @@ export const DisplayType = {
   HEATMAP: 'heatmap',
   GRID: 'grid'
 } as const;
+
+
+export interface PolygonFeature {
+  id: string;
+  type: string;
+  properties: any;
+  geometry: {
+    coordinates: [number, number][][] | number[][][] | any;
+    type: string;
+  };
+  isStatisticsPopupOpen: boolean;
+  pixelPosition: {
+    x: number;
+    y: number;
+  };
+}

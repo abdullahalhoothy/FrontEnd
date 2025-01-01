@@ -18,7 +18,7 @@ import { useMapLayers } from '../../hooks/map/useMapLayers'
 import { usePolygonHandlers } from '../../hooks/map/usePolygonHandlers'
 import { useLegendManager } from '../../hooks/map/useLegendManager'
 import { useMapStyle } from '../../hooks/map/useMapStyle'
-import StatisticsPopups from './StatisticsPopups'
+import StatisticsPopups from '../../components/Map/StatisticsPopups'
 import BenchmarkControl from './BenchmarkControl'
 
 // Main container component that handles map initialization and state

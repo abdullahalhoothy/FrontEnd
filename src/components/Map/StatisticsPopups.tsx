@@ -1,13 +1,14 @@
 import React from "react";
 import { usePolygonsContext } from "../../context/PolygonsContext";
 import StatisticsPopup from "./StatisticsPopup";
+import { PolygonFeature } from "../../types/allTypesAndInterfaces";
 
 export default function StatisticsPopups() {
   const { polygons } = usePolygonsContext();
+  console.debug("polygons", polygons);
   if (!polygons) return null;
-
   const polygonsStatisticsPopups = polygons.filter(
-    (polygon) => polygon.isStatisticsPopupOpen
+    (polygon: PolygonFeature) => polygon.isStatisticsPopupOpen
   );
   return (
     <>
