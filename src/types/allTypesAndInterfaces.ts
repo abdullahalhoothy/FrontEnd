@@ -146,6 +146,7 @@ export interface CatalogContextType {
   restoreLayer: (timestamp: number) => void;
   basedOnLayerId: string | null;
   setBasedOnLayerId: (id: string) => void;
+  updateLayerLegend: (layerId: number, legend: string) => void;
 }
 
 export interface GradientColorBasedOnZone extends MapFeatures {

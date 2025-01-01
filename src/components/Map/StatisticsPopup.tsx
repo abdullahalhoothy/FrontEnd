@@ -51,7 +51,7 @@ export default function StatisticsPopup({ polygon }) {
   const { isMobile } = useUIContext();
 
   return (
-    <>  
+    <>
       {isMobile && <MobileStatisticsPopup polygon={polygon} />}
       {!isMobile && <DesktopStatisticsPopup polygon={polygon} />}
     </>
@@ -118,8 +118,7 @@ function DesktopStatisticsPopup({ polygon }) {
   if (!polygon || !polygon.isStatisticsPopupOpen || !sections) return null;
 
   const polygonSections = sections.find(
-    (section: Section | any) =>
-      section.polygon && section.polygon.id === polygon.id
+    (section) => section.polygon.id === polygon.id
   );
 
   if (!polygonSections) return null;

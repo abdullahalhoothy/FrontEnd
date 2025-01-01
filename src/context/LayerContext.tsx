@@ -25,7 +25,7 @@ import { useCatalogContext } from "./CatalogContext";
 import userIdData from "../currentUserId.json";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { processCityData } from "../utils/helperFunctions";
+import { colorOptions, processCityData, colorMap } from "../utils/helperFunctions";
 import apiRequest from "../services/apiRequest";
 
 const LayerContext = createContext<LayerContextType | undefined>(undefined);
@@ -161,68 +161,63 @@ export function LayerProvider(props: { children: ReactNode }) {
     setCreateLayerformStage("initial");
   }
 
-  function updateGeoJSONDataset(response: FetchDatasetResponse, layerId: number) {
-    console.debug("#feat:multi-layer debug", "Updating GeoJSON for layer:", layerId);
-
-    if (!response || typeof response !== "object" || !Array.isArray(response.features)) {
-      setIsError(new Error("Input data is not a valid GeoJSON object."));
-      return;
-    }
-
-    // Update features with layer ID
-    const featuresWithLayerId = response.features.map(feature => ({
-      ...feature,
+  function updateGeoJSONDataset(response: FetchDatasetResponse, layerId: number, defaultName: string) {
+    console.debug("🔍 [Layer] Updating GeoJSON - Full Response:", {
       layerId,
-    }));
-
-    // Update accumulated dataset response
-    setManyFetchDatasetResp(prevResponse => {
-      if (!prevResponse) return {
-        ...response,
-        features: featuresWithLayerId,
-      };
-
-      return {
-        ...prevResponse,
-        features: [...prevResponse.features, ...featuresWithLayerId],
-      };
+      responseType: response.type,
+      featureCount: response.features?.length,
+      fullResponse: response  // Log full response to see structure
     });
 
-    // Update geo points
-    setGeoPoints(prevGeoPoints => {
-      const newGeoPoint = {
-        ...response,
-        features: featuresWithLayerId,
-        display: true,
-        points_color: "#28A745",
-        city_name: reqFetchDataset.selectedCity,
-        layerId,
-      };
+    // Create new layer point with explicit GeoJSON structure
+    const newPoint = {
+      type: 'FeatureCollection',  // Ensure this is set
+      features: response.features.map(f => ({
+        type: 'Feature',
+        geometry: f.geometry,
+        properties: f.properties,
+        layerId: String(layerId)
+      })),
+      display: true,
+      points_color: "#28A745",
+      layerId: String(layerId),
+      city_name: reqFetchDataset.selectedCity,
+      layer_legend: defaultName,
+      prdcer_layer_name: defaultName,
+      prdcer_lyr_id: response.prdcer_lyr_id,
+      bknd_dataset_id: response.bknd_dataset_id
+    };
 
-      console.debug("#feat:multi-layer debug", "New geo point for layer:", layerId, newGeoPoint);
-      return [...prevGeoPoints, newGeoPoint];
-    });
-
-    // Update dataset info
-    if (response.bknd_dataset_id && response.prdcer_lyr_id) {
-      setDatasetInfo({
-        bknd_dataset_id: response.bknd_dataset_id,
-        prdcer_lyr_id: response.prdcer_lyr_id,
+    setGeoPoints(prevPoints => {
+      // Remove any existing layer with same ID
+      const filteredPoints = prevPoints.filter(p => p.layerId !== String(layerId));
+      const newPoints = [...filteredPoints, newPoint];
+      
+      console.debug("🔍 [Layer] Updated geoPoints", {
+        previousCount: prevPoints.length,
+        newCount: newPoints.length,
+        layerIds: newPoints.map(p => p.layerId)
       });
-    }
-
-    // Handle pagination
-    if (response.next_page_token && callCountRef.current < MAX_CALLS) {
-      handleFetchDataset("full data", response.next_page_token);
-    } else {
-      setShowLoaderTopup(false);
-      callCountRef.current = 0;
-    }
+      
+      return newPoints;
+    });
   }
 
   async function handleFetchDataset(action: string, pageToken?: string) {
-    console.debug("#feat:multi-layer debug", "Starting fetch for layers:", reqFetchDataset.layers);
+    console.debug("🔍 [Layer] Starting fetch dataset", {
+      action,
+      layers: reqFetchDataset.layers
+    });
     
+    if (!Array.isArray(reqFetchDataset?.layers)) {
+      console.error('No layers configured for fetch');
+      return;
+    }
+
+    // Clear existing points before adding new ones
+    setGeoPoints([]);
+    setLayerDataMap({});
+
     let user_id: string;
     let idToken: string;
 
@@ -239,67 +234,63 @@ export function LayerProvider(props: { children: ReactNode }) {
     }
 
     for (const layer of reqFetchDataset.layers) {
-      console.debug("#feat:multi-layer debug", "Fetching data for layer:", layer);
-
-      const defaultName = `${reqFetchDataset.selectedCountry} ${reqFetchDataset.selectedCity} ${
-        layer.includedTypes.map(type => type.replace("_", " ")).join(" + ")
-      }${
-        layer.excludedTypes.length > 0 
-          ? " + not " + layer.excludedTypes.map(type => type.replace("_", " ")).join(" + not ")
-          : ""
-      }`;
-
-      console.debug("#feat:multi-layer debug", "Default name for layer:", defaultName);
-      const postData = {
-        dataset_country: reqFetchDataset.selectedCountry,
-        dataset_city: reqFetchDataset.selectedCity,
-        includedTypes: layer.includedTypes,
-        excludedTypes: layer.excludedTypes,
-        layerId: layer.id,
-        layer_name: layer.name || defaultName,
-        action: action,
-        search_type: searchType,
-        text_search: textSearchInput.trim() || "",
-        ...(action === "full data" && { password: password }),
-        page_token: pageToken || "",
-        user_id: user_id,
-      };
-
-      if (callCountRef.current >= MAX_CALLS) {
-        setShowLoaderTopup(false);
-        callCountRef.current = 0;
-        return;
-      }
-
-      callCountRef.current++;
-
-      setLocalLoading(true);
       try {
+        console.debug("🔍 [Layer] Processing layer request", {
+          layerId: layer.id,
+          includedTypes: layer.includedTypes
+        });
+
+        // Verify this layer ID isn't already processed
+        if (layerDataMap[layer.id]) {
+          console.warn(`Layer ${layer.id} already processed, skipping...`);
+          continue;
+        }
+
+        // Generate default name for layer
+        const defaultName = `${reqFetchDataset.selectedCountry} ${reqFetchDataset.selectedCity} ${
+          layer.includedTypes?.map(type => type.replace("_", " ")).join(" + ") || ''
+        }${
+          layer.excludedTypes?.length > 0 
+            ? " + not " + layer.excludedTypes.map(type => type.replace("_", " ")).join(" + not ")
+            : ""
+        }`;
+
         const res = await apiRequest({
           url: urls.fetch_dataset,
           method: "post",
-          body: postData,
+          body: {
+            dataset_country: reqFetchDataset.selectedCountry,
+            dataset_city: reqFetchDataset.selectedCity,
+            includedTypes: layer.includedTypes || [],
+            excludedTypes: layer.excludedTypes || [],
+            layerId: layer.id,
+            layer_name: defaultName,
+            action: action,
+            search_type: searchType,
+            text_search: textSearchInput?.trim() || "",
+            ...(action === "full data" && { password: password }),
+            page_token: pageToken || "",
+            user_id: user_id,
+          },
           isAuthRequest: true,
         });
-        
-        console.debug("#feat:multi-layer debug", "Received data for layer:", layer.id, res.data);
-        
-        // Store layer-specific data
-        setLayerDataMap(prev => ({
-          ...prev,
-          [layer.id]: res.data.data
-        }));
-        
-        // Update UI with new data
-        updateGeoJSONDataset(res.data.data, layer.id);
-        
-        setPostResMessage(res.data.message);
-        setPostResId(res.data.id);
+
+        if (res?.data?.data) {
+          console.debug("🔍 [Layer] API Response", {
+            layerId: layer.id,
+            responseData: res.data.data
+          });
+          
+          setLayerDataMap(prev => ({
+            ...prev,
+            [layer.id]: res.data.data
+          }));
+          
+          updateGeoJSONDataset(res.data.data, layer.id, defaultName);
+        }
       } catch (error) {
-        console.error("#feat:multi-layer debug", "Error fetching layer:", layer.id, error);
+        console.error(`Error fetching layer ${layer.id}:`, error);
         setIsError(error instanceof Error ? error : new Error(String(error)));
-      } finally {
-        setLocalLoading(false);
       }
     }
   }
@@ -473,21 +464,25 @@ export function LayerProvider(props: { children: ReactNode }) {
 
   useEffect(() => {
     if (reqFetchDataset?.layers?.length > 0) {
-      const initialStates = reqFetchDataset.layers.reduce((acc, layer) => ({
-        ...acc,
-        [layer.id]: {
-          selectedColor: { 
-            name: 'Green', 
-            hex: layer.points_color || '#28A745' 
-          },
-          saveResponse: null,
-          isLoading: false,
-          datasetInfo: null
-        }
-      }), {});
-      setLayerStates(initialStates);
+      // Initialize layer states while preserving existing states
+      setLayerStates(prev => {
+        const initialStates = reqFetchDataset.layers.reduce((acc, layer) => {
+          if (layer && typeof layer.id === 'number') {
+            acc[layer.id] = {
+              ...prev[layer.id], // Preserve existing state if any
+              selectedColor: prev[layer.id]?.selectedColor || null,
+              isLoading: false, // Reset loading state
+              saveResponse: prev[layer.id]?.saveResponse || null,
+              datasetInfo: prev[layer.id]?.datasetInfo || null
+            };
+          }
+          return acc;
+        }, {} as { [key: number]: LayerState });
+
+        return initialStates;
+      });
     }
-  }, [reqFetchDataset.layers]);
+  }, [reqFetchDataset?.layers]);
 
   return (
     <LayerContext.Provider

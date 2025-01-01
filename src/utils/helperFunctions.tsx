@@ -23,6 +23,8 @@ export const colorOptions = [
   { name: "Black", hex: "#343A40" },
 ];
 
+export const colorMap = new Map(colorOptions.map(color => [color.hex, color.name]));
+
 export function isValidColor(color: string): boolean {
   // Check if the color is a valid hex color
   const hexColorRegex = /^#([0-9A-Fa-f]{3}){1,2}$/;

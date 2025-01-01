@@ -29,8 +29,7 @@
 }
 
 .mapboxgl-popup-close-button {
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 18px;
 }
 
 .mapboxgl-popup-content {
@@ -74,4 +73,59 @@
 
 .popup-content-total-ratings {
   color: #999;
+}
+
+.mapboxgl-ctrl-group {
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
+  position: relative;
+  z-index: 1;
+  margin-bottom: 10px !important;
+}
+
+.mapboxgl-ctrl-group button {
+  width: 30px;
+  height: 30px;
+  display: block;
+  padding: 0;
+  outline: none;
+  border: 0;
+  box-sizing: border-box;
+  background-color: transparent;
+  cursor: pointer;
+  position: relative;
+}
+
+.mapboxgl-ctrl-group button + button {
+  border-top: 1px solid #ddd;
+}
+
+.mapboxgl-ctrl {
+  clear: both;
+  pointer-events: auto;
+  transform: translate(0);
+}
+
+.mapboxgl-ctrl-top-right {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.mapboxgl-ctrl-top-right .mapboxgl-ctrl {
+  margin: 0 0 10px 0;
+  float: right;
+}
+
+.mapboxgl-ctrl button .mapboxgl-ctrl-icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-position: center;
 }

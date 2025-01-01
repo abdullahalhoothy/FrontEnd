@@ -11,8 +11,6 @@ import { useCatalogContext } from "../../context/CatalogContext";
 import { HiCheck, HiExclamation } from "react-icons/hi";
 
 function autoFillLegendFormat(data) {
-  console.log(data);
-
   if (!data.selectedCountry || !data.selectedCity) return "";
 
   const countryAbbreviation = data.selectedCountry
@@ -30,12 +28,10 @@ function autoFillLegendFormat(data) {
   const excluded =
     data.excludedTypes.length > 0
       ? " + not " +
-      data.excludedTypes.map((type) => type.replace("_", " ")).join(" + not ")
+        data.excludedTypes.map((type) => type.replace("_", " ")).join(" + not ")
       : "";
 
-  const result = `${countryAbbreviation} ${city} ${included}${excluded}`;
-
-  return result;
+  return `${countryAbbreviation} ${city} ${included}${excluded}`;
 }
 
 function CustomizeLayer() {
@@ -66,29 +62,37 @@ function CustomizeLayer() {
   const [allSaved, setAllSaved] = useState(false);
 
   useEffect(() => {
+    console.debug("#feat:legend debug", "reqFetchDataset:", reqFetchDataset);
+    
     if (reqFetchDataset?.layers?.length > 0) {
-      const initialCustomizations = reqFetchDataset.layers.map(layer => ({
-        layerId: layer.id,
-        name: autoFillLegendFormat({
+      const initialCustomizations = reqFetchDataset.layers.map(layer => {
+        const legendText = autoFillLegendFormat({
           ...reqFetchDataset,
           includedTypes: layer.includedTypes || [],
           excludedTypes: layer.excludedTypes || [],
-        }),
-        legend: autoFillLegendFormat({
-          ...reqFetchDataset,
-          includedTypes: layer.includedTypes || [],
-          excludedTypes: layer.excludedTypes || [],
-        }),
-        description: '',
-        color: '#28A745',
-      }));
+        });
+        
+        console.debug("#feat:legend debug", `Layer ${layer.id} legend:`, legendText);
+        
+        return {
+          layerId: layer.id,
+          name: legendText,
+          legend: legendText,
+          description: '',
+          color: '#28A745',
+        };
+      });
+      
+      console.debug("#feat:legend debug", "initialCustomizations:", initialCustomizations);
       setLayerCustomizations(initialCustomizations);
     }
   }, [reqFetchDataset]);
 
   const handleLayerChange = (layerId: number, field: keyof LayerCustomization, value: string) => {
-    setLayerCustomizations(prev =>
-      prev.map(layer =>
+    console.debug("#feat:legend debug", `Updating layer ${layerId} ${field}:`, value);
+    
+    setLayerCustomizations(prev => {
+      const updated = prev.map(layer =>
         layer.layerId === layerId
           ? { 
               ...layer, 
@@ -96,8 +100,10 @@ function CustomizeLayer() {
               ...(field === 'color' ? { color: value } : {})
             }
           : layer
-      )
-    );
+      );
+      console.debug("#feat:legend debug", "Updated customizations:", updated);
+      return updated;
+    });
 
     // Update layer state if the field is 'name'
     if (field === 'name') {

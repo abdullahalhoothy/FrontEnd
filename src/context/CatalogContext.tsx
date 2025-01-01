@@ -107,16 +107,9 @@ export function CatalogProvider(props: { children: ReactNode }) {
   }[]>([]);
   const [basedOnLayerId, setBasedOnLayerId] = useState<string | null>(null);
 
-  // Restore geoPoints from localStorage
   useEffect(() => {
-    const savedGeoPoints = localStorage.getItem("unsavedGeoPoints");
-    if (savedGeoPoints) {
-      const parsedGeoPoints = JSON.parse(savedGeoPoints);
-      if (parsedGeoPoints && parsedGeoPoints.length > 0) {
-        setGeoPoints(parsedGeoPoints);
-      }
-    }
-  }, []);
+    console.debug("#feat:multi-layer debug", "geoPoints updated:", geoPoints);
+  }, [geoPoints]);
 
   async function fetchGeoPoints(id: string, typeOfCard: string) {
     if (!authResponse || !("idToken" in authResponse)) {
@@ -322,9 +315,11 @@ export function CatalogProvider(props: { children: ReactNode }) {
   }
 
   function updateLayerDisplay(layerIndex: number, display: boolean) {
+    console.debug("#feat:multi-layer debug", `Updating display for layer ${layerIndex} to ${display}`);
     setGeoPoints(function (prevGeoPoints) {
       const updatedGeoPoints = prevGeoPoints.slice();
       updatedGeoPoints[layerIndex].display = display;
+      console.debug("#feat:multi-layer debug", "Updated geoPoints:", updatedGeoPoints);
       return updatedGeoPoints;
     });
     // Bounds will be recalculated via useEffect in MapContainer
@@ -339,17 +334,37 @@ export function CatalogProvider(props: { children: ReactNode }) {
   }
 
   function removeLayer(layerIndex: number) {
-    setGeoPoints(function (prevGeoPoints) {
-      // Store the deleted layer with its metadata
-      const removedLayer = prevGeoPoints[layerIndex];
-      setDeletedLayers(prev => [...prev, {
-        layer: removedLayer,
-        index: layerIndex,
-        timestamp: Date.now()
-      }]);
-      
-      // Filter out the layer with the matching layerId
-      return prevGeoPoints.filter(point => point.layerId !== layerIndex);
+    if (typeof layerIndex === 'undefined' || layerIndex === null) {
+      console.error('Invalid layer index:', layerIndex);
+      return;
+    }
+
+    setGeoPoints(prevGeoPoints => {
+      if (!Array.isArray(prevGeoPoints) || prevGeoPoints.length === 0) {
+        return [];
+      }
+
+      // Find the layer to be removed
+      const removedLayer = prevGeoPoints.find(point => 
+        // Convert both to same type for comparison
+        String(point.layerId) === String(layerIndex)
+      );
+
+      if (removedLayer) {
+        // Store the removed layer in deletedLayers
+        setDeletedLayers(prev => [...prev, {
+          layer: removedLayer,
+          index: layerIndex,
+          timestamp: Date.now()
+        }]);
+
+        // Remove the layer from geoPoints
+        return prevGeoPoints.filter(point => 
+          String(point.layerId) !== String(layerIndex)
+        );
+      }
+
+      return prevGeoPoints;
     });
   }
 
@@ -491,6 +506,16 @@ export function CatalogProvider(props: { children: ReactNode }) {
     });
   }
 
+  const updateLayerLegend = (layerId: number, legend: string) => {
+    setGeoPoints(prevPoints => 
+      prevPoints.map(point => 
+        point.layerId === layerId
+          ? { ...point, layer_legend: legend }
+          : point
+      )
+    );
+  };
+
   return (
     <CatalogContext.Provider
       value={{
@@ -559,7 +584,8 @@ export function CatalogProvider(props: { children: ReactNode }) {
         visualizationMode,
         setVisualizationMode,
         basedOnLayerId,
-        setBasedOnLayerId
+        setBasedOnLayerId,
+        updateLayerLegend
       }}
     >
       {children}
