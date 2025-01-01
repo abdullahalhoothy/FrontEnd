@@ -19,11 +19,12 @@ function ColorSelect ({ layerId, onColorChange }: ColorSelectProps) {
   const {
     layerStates,
     updateLayerState,
-    showLoaderTopup
+    showLoaderTopup,
   } = useLayerContext()
 
   const {
     geoPoints,
+    setGeoPoints,
     openDropdownIndices,
     updateDropdownIndex,
     layerColors
@@ -66,6 +67,14 @@ function ColorSelect ({ layerId, onColorChange }: ColorSelectProps) {
     updateLayerState(layerId, {
       selectedColor: { name: optionName, hex }
     })
+
+    setGeoPoints((prevPoints: any[]) => 
+      prevPoints.map((point: { layerId: string }) => 
+        point.layerId === String(layerId)
+          ? { ...point, points_color: hex }
+          : point
+      )
+    )
 
     onColorChange(hex)
   }
