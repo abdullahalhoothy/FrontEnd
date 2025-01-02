@@ -20,8 +20,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   const logout = () => {
-    setAuthResponse(null);
     localStorage.removeItem("authResponse");
+    setAuthResponse(null);
   };
 
   useEffect(() => {
