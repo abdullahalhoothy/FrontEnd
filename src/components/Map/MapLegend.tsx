@@ -1,9 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { MapFeatures } from '../../types/allTypesAndInterfaces';
+import { MapLegendProps } from '../../types/allTypesAndInterfaces';
 
-interface MapLegendProps {
-  geoPoints: MapFeatures[];
-}
 
 export default function MapLegend({ geoPoints }: MapLegendProps) {
   const legendRef = useRef<HTMLDivElement | null>(null);

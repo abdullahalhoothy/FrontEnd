@@ -541,3 +541,7 @@ export interface PolygonFeature {
     y: number;
   };
 }
+
+export interface MapLegendProps {
+  geoPoints: MapFeatures[];
+}
