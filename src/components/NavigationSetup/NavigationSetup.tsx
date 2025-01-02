@@ -1,10 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { setNavigationHandler } from '../../services/apiRequest';
-
-interface NavigationSetupProps {
-  children: React.ReactNode;
-}
+import { NavigationSetupProps } from '../../types/allTypesAndInterfaces';
 
 const NavigationSetup = ({ children }: NavigationSetupProps) => {
   const navigate = useNavigate();

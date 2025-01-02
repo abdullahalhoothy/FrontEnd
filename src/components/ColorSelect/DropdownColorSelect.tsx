@@ -3,14 +3,12 @@ import React, {
   MouseEvent as ReactMouseEvent,
   useState,
 } from "react";
-import styles from "./ColorSelect.module.css";
+
 import { useCatalogContext } from "../../context/CatalogContext";
 import { useLayerContext } from "../../context/LayerContext";
+import { DropdownColorSelectProps } from "../../types/allTypesAndInterfaces";
 
-interface ColorSelectProps {
-  layerIndex?: number;
-}
-function DropdownColorSelect({ layerIndex }: ColorSelectProps) {
+function DropdownColorSelect({ layerIndex }: DropdownColorSelectProps) {
   const catalogContext = useCatalogContext();
   const layerContext = useLayerContext();
 

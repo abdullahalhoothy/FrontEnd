@@ -12,30 +12,12 @@ import {
 import { useNavigate } from "react-router";
 import urls from "../../../../urls.json";
 import { useAuth } from "../../../../context/AuthContext";
-import { HttpReq } from "../../../../services/apiService";
 import apiRequest from "../../../../services/apiRequest";
+import { UserProfile, PopupInfo } from "../../../../types/allTypesAndInterfaces";
 
-interface UserProfile {
-  user_id: string;
-  username: string;
-  email: string;
-  prdcer?: {
-    prdcer_dataset: Record<string, any>;
-    prdcer_lyrs: Record<string, any>;
-    prdcer_ctlgs: Record<string, any>;
-  };
-}
-
-interface PopupInfo {
-  type: "dataset" | "layer" | "catalog";
-  name: string;
-  data: any;
-}
 
 const ProfileMain: React.FC = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [responseMessage, setResponseMessage] = useState<string>("");
-  const [requestId, setRequestId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [popupInfo, setPopupInfo] = useState<PopupInfo | null>(null);

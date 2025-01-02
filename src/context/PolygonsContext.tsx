@@ -1,60 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useCatalogContext } from "./CatalogContext";
 import * as turf from "@turf/turf";
-import { Feature, PolygonFeature } from "../types/allTypesAndInterfaces";
+import {PolygonFeature, Benchmark, Section, PolygonData, GeoPoint, PolygonContextType, ProviderProps } from "../types/allTypesAndInterfaces";
 import excludedPropertiesJson from "../pages/MapContainer/excludedProperties.json";
-
-type ProviderProps = {
-  children: React.ReactNode;
-};
-
-type GeoPoint = {
-  features: Feature[];
-  avgRating?: number;
-  totalUserRatings?: number;
-  prdcer_layer_name?: string;
-  points_color?: string;
-  layer_legend?: string;
-  layer_description?: string;
-  is_zone_lyr?: string;
-  city_name?: string;
-  percentageInside?: number;
-};
-
-
-type Section = {
-  title: string;
-  points: {
-    layer_name: string;
-    data: {
-      count: number;
-      percentage: number;
-      avg: number | string;
-      area: string;
-    }[];
-  }[];
-};
-
-type PolygonData = {
-  polygon: PolygonFeature;
-  sections: Section[];
-  areas: string[];
-};
-
-type PolygonContextType = {
-  polygons: PolygonFeature[];
-  setPolygons: React.Dispatch<React.SetStateAction<PolygonFeature[]>>;
-  sections: Section[];
-  benchmarks: Benchmark[];
-  setBenchmarks: React.Dispatch<React.SetStateAction<Benchmark[]>>;
-  isBenchmarkControlOpen: boolean;
-  setIsBenchmarkControlOpen: React.Dispatch<React.SetStateAction<boolean>>;
-};
-
-type Benchmark = {
-  title: string;
-  value: number | "";
-};
 
 const PolygonsContext = createContext<PolygonContextType>({} as PolygonContextType);
 

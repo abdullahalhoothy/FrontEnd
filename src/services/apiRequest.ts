@@ -1,23 +1,12 @@
 import axios, { AxiosRequestConfig } from "axios";
 import urls from "../urls.json";
+import { ApiRequestOptions, IAuthResponse } from "../types/allTypesAndInterfaces";
 
 const baseUrl = urls.REACT_APP_API_URL;
 
 const axiosInstance = axios.create({
   baseURL: baseUrl, // Replace with your actual base URL
 });
-
-interface AuthResponse {
-  idToken: string;
-  refreshToken: string;
-}
-
-interface ApiRequestOptions extends AxiosRequestConfig {
-  isAuthRequest?: boolean;
-  isFormData?: boolean;
-  body?: any;
-  options?: AxiosRequestConfig;
-}
 
 // move this to auth module
 export const addAuthTokenToLocalStorage = (token: object) => {
@@ -35,7 +24,7 @@ export const addAuthTokenToLocalStorage = (token: object) => {
   }
 };
 
-const getAuthResponse = (): AuthResponse | null => {
+const getAuthResponse = (): IAuthResponse | null => {
   const storedResponse = localStorage.getItem("authResponse");
   return storedResponse ? JSON.parse(storedResponse) : null;
 };
