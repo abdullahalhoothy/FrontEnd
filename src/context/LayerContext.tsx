@@ -19,6 +19,7 @@ import {
   LayerDataMap,
   LayerCustomization,
   LayerState,
+  MapFeatures,
 } from "../types/allTypesAndInterfaces";
 import urls from "../urls.json";
 import { useCatalogContext } from "./CatalogContext";
@@ -162,16 +163,8 @@ export function LayerProvider(props: { children: ReactNode }) {
   }
 
   function updateGeoJSONDataset(response: FetchDatasetResponse, layerId: number, defaultName: string) {
-    console.debug("🔍 [Layer] Updating GeoJSON - Full Response:", {
-      layerId,
-      responseType: response.type,
-      featureCount: response.features?.length,
-      fullResponse: response  // Log full response to see structure
-    });
-
-    // Create new layer point with explicit GeoJSON structure
     const newPoint = {
-      type: 'FeatureCollection',  // Ensure this is set
+      type: 'FeatureCollection',
       features: response.features.map(f => ({
         type: 'Feature',
         geometry: f.geometry,
@@ -188,27 +181,16 @@ export function LayerProvider(props: { children: ReactNode }) {
       bknd_dataset_id: response.bknd_dataset_id
     };
 
-    setGeoPoints(prevPoints => {
+    setGeoPoints((prevPoints: MapFeatures[] | MapFeatures | any) => {
       // Remove any existing layer with same ID
-      const filteredPoints = prevPoints.filter(p => p.layerId !== String(layerId));
+      const filteredPoints = prevPoints.filter((p: MapFeatures) => String(p.layerId) !== String(layerId));
       const newPoints = [...filteredPoints, newPoint];
-      
-      console.debug("🔍 [Layer] Updated geoPoints", {
-        previousCount: prevPoints.length,
-        newCount: newPoints.length,
-        layerIds: newPoints.map(p => p.layerId)
-      });
       
       return newPoints;
     });
   }
 
-  async function handleFetchDataset(action: string, pageToken?: string) {
-    console.debug("🔍 [Layer] Starting fetch dataset", {
-      action,
-      layers: reqFetchDataset.layers
-    });
-    
+  async function handleFetchDataset(action: string, pageToken?: string) {    
     if (!Array.isArray(reqFetchDataset?.layers)) {
       console.error('No layers configured for fetch');
       return;
@@ -236,12 +218,7 @@ export function LayerProvider(props: { children: ReactNode }) {
 
       for (const layer of reqFetchDataset.layers) {
         try {
-          console.debug("🔍 [Layer] Processing layer request", {
-            layerId: layer.id,
-            includedTypes: layer.includedTypes
-          });
-
-          // Verify this layer ID isn't already processed
+          // Verify that this layer ID isn't already processed
           if (layerDataMap[layer.id]) {
             console.warn(`Layer ${layer.id} already processed, skipping...`);
             continue;
@@ -277,11 +254,6 @@ export function LayerProvider(props: { children: ReactNode }) {
           });
 
           if (res?.data?.data) {
-            console.debug("🔍 [Layer] API Response", {
-              layerId: layer.id,
-              responseData: res.data.data
-            });
-            
             setLayerDataMap(prev => ({
               ...prev,
               [layer.id]: res.data.data

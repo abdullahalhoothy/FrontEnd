@@ -40,10 +40,6 @@ function Container () {
   // Initialize map and features
   const isStyleLoaded = useMapInitialization(mapRef, mapContainerRef, currentStyle)
 
-  // Add debug logs
-  console.log('MapContainer: Current map instance:', mapRef.current)
-  console.log('MapContainer: Style loaded:', isStyleLoaded)
-
   // Map instance for hooks
   const map = mapRef.current
 

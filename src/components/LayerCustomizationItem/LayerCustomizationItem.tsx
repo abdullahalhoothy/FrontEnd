@@ -26,7 +26,6 @@ function LayerCustomizationItem({
     isSaving,
     isSaved,
 }: LayerCustomizationItemProps) {
-    console.debug("#feat:legend debug", "LayerCustomizationItem received layer:", layer);
 
     const getHeaderStyle = (hexColor: string) => ({
         backgroundColor: `${hexColor || '#28A745'}10`,

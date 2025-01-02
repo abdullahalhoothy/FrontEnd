@@ -17,8 +17,6 @@ export function useMapControls(
   useEffect(() => {
     if (!map) return;
 
-    console.log('useMapControls: Starting to add controls');
-
     let controls: {
       styles?: StylesControl,
       navigation?: mapboxgl.NavigationControl,
@@ -28,22 +26,18 @@ export function useMapControls(
 
     const addControls = () => {
       if (controlsAdded.current) {
-        console.log('useMapControls: Controls already added');
         return;
       }
-
-      console.log('useMapControls: Adding controls');
 
       try {
         // Add styles control first
         controls.styles = new StylesControl(currentStyle, setCurrentStyle);
         map.addControl(controls.styles, 'top-right');
-        console.log('useMapControls: Added styles control');
 
         // Add navigation control second
         controls.navigation = new mapboxgl.NavigationControl();
         map.addControl(controls.navigation, 'top-right');
-        console.log('useMapControls: Added navigation control');
+
 
         // Initialize and add draw control third
         draw.current = new MapboxDraw({
@@ -85,24 +79,20 @@ export function useMapControls(
         map.addControl(draw.current);
         controlsAdded.current = true;
       } catch (error) {
-        console.error('useMapControls: Error adding controls:', error);
+        console.error('Error adding controls:', error);
       }
     };
 
     // Try to add controls immediately if map is ready
     const attemptToAddControls = () => {
       if (map.loaded() && map.isStyleLoaded()) {
-        console.log('useMapControls: Map and style are loaded, adding controls');
         addControls();
       } else {
-        console.log('useMapControls: Map or style not ready, waiting...');
         map.once('load', () => {
-          console.log('useMapControls: Map load event fired');
           if (map.isStyleLoaded()) {
             addControls();
           } else {
             map.once('style.load', () => {
-              console.log('useMapControls: Style load event fired');
               addControls();
             });
           }
@@ -113,7 +103,6 @@ export function useMapControls(
     attemptToAddControls();
 
     return () => {
-      console.log('#fix: switch mode - Starting cleanup');
       if (controlsAdded.current && map) {
         try {
           // Remove draw control first
@@ -124,7 +113,7 @@ export function useMapControls(
                 map.removeControl(draw.current);
               }
             } catch (err) {
-              console.warn('#fix: switch mode - Non-fatal draw cleanup error:', err);
+              console.warn('Non-fatal draw cleanup error:', err);
             } finally {
               // Always null the reference
               draw.current = null;
@@ -137,13 +126,13 @@ export function useMapControls(
               try {
                 map.removeControl(controls[key]);
               } catch (err) {
-                console.warn(`#fix: switch mode - Non-fatal ${key} control cleanup error:`, err);
+                console.warn(`Non-fatal ${key} control cleanup error:`, err);
               }
             }
           });
 
         } catch (error) {
-          console.warn('#fix: switch mode - Control cleanup error:', error);
+          console.warn('Control cleanup error:', error);
         } finally {
           controls = {};
           controlsAdded.current = false;

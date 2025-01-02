@@ -62,7 +62,6 @@ function CustomizeLayer() {
   const [allSaved, setAllSaved] = useState(false);
 
   useEffect(() => {
-    console.debug("#feat:legend debug", "reqFetchDataset:", reqFetchDataset);
     
     if (reqFetchDataset?.layers?.length > 0) {
       const initialCustomizations = reqFetchDataset.layers.map(layer => {
@@ -72,7 +71,6 @@ function CustomizeLayer() {
           excludedTypes: layer.excludedTypes || [],
         });
         
-        console.debug("#feat:legend debug", `Layer ${layer.id} legend:`, legendText);
         
         return {
           layerId: layer.id,
@@ -83,13 +81,11 @@ function CustomizeLayer() {
         };
       });
       
-      console.debug("#feat:legend debug", "initialCustomizations:", initialCustomizations);
       setLayerCustomizations(initialCustomizations);
     }
   }, [reqFetchDataset]);
 
   const handleLayerChange = (layerId: number, field: keyof LayerCustomization, value: string) => {
-    console.debug("#feat:legend debug", `Updating layer ${layerId} ${field}:`, value);
     
     setLayerCustomizations(prev => {
       const updated = prev.map(layer =>
@@ -101,7 +97,6 @@ function CustomizeLayer() {
             }
           : layer
       );
-      console.debug("#feat:legend debug", "Updated customizations:", updated);
       return updated;
     });
 

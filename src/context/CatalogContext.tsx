@@ -107,10 +107,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
   }[]>([]);
   const [basedOnLayerId, setBasedOnLayerId] = useState<string | null>(null);
 
-  useEffect(() => {
-    console.debug("#feat:multi-layer debug", "geoPoints updated:", geoPoints);
-  }, [geoPoints]);
-
   async function fetchGeoPoints(id: string, typeOfCard: string) {
     if (!authResponse || !("idToken" in authResponse)) {
       setIsError(new Error("User is not authenticated!"));
@@ -315,11 +311,9 @@ export function CatalogProvider(props: { children: ReactNode }) {
   }
 
   function updateLayerDisplay(layerIndex: number, display: boolean) {
-    console.debug("#feat:multi-layer debug", `Updating display for layer ${layerIndex} to ${display}`);
     setGeoPoints(function (prevGeoPoints) {
       const updatedGeoPoints = prevGeoPoints.slice();
       updatedGeoPoints[layerIndex].display = display;
-      console.debug("#feat:multi-layer debug", "Updated geoPoints:", updatedGeoPoints);
       return updatedGeoPoints;
     });
     // Bounds will be recalculated via useEffect in MapContainer

@@ -338,9 +338,7 @@ const FetchDatasetForm = () => {
 
   // Update reqFetchDataset when layers change
   useEffect(() => {
-    console.debug("#feat:multi-layer debug", "Layers updated:", layers);
-
-    setReqFetchDataset(prev => ({
+    setReqFetchDataset((prev:any) => ({
       ...prev,
       layers: layers.map(layer => ({
         id: layer.id,

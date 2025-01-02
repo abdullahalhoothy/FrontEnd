@@ -5,7 +5,6 @@ import { PolygonFeature } from "../../types/allTypesAndInterfaces";
 
 export default function StatisticsPopups() {
   const { polygons } = usePolygonsContext();
-  console.debug("polygons", polygons);
   if (!polygons) return null;
   const polygonsStatisticsPopups = polygons.filter(
     (polygon: PolygonFeature) => polygon.isStatisticsPopupOpen

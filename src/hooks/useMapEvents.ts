@@ -13,7 +13,6 @@ export function useMapEvents(map: mapboxgl.Map | null, geoPoints: MapFeatures[])
     if (features.length) {
       const clickedFeature = features[0];
       // Handle feature click
-      console.debug('Clicked feature:', clickedFeature);
     }
   }, [map, geoPoints]);
 
