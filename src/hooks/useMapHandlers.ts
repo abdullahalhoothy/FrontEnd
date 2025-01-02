@@ -1,16 +1,16 @@
-import { Map as MapboxMap } from 'mapbox-gl';
-import { useCallback } from 'react';
+// import { Map as MapboxMap } from 'mapbox-gl';
+// import { useCallback } from 'react';
 
-export function useMapHandlers() {
-  const initializeMapHandlers = useCallback((map: MapboxMap) => {
-    map.on('load', () => {
-      console.debug('Map loaded');
-    });
+// export function useMapHandlers() {
+//   const initializeMapHandlers = useCallback((map: MapboxMap) => {
+//     map.on('load', () => {
+//       console.debug('Map loaded');
+//     });
 
-    map.on('error', (e) => {
-      console.error('Map error:', e);
-    });
-  }, []);
+//     map.on('error', (e) => {
+//       console.error('Map error:', e);
+//     });
+//   }, []);
 
-  return { initializeMapHandlers };
-} 
+//   return { initializeMapHandlers };
+// } 
