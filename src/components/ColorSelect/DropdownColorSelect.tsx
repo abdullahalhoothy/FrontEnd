@@ -53,10 +53,6 @@ function DropdownColorSelect({ layerIndex }: ColorSelectProps) {
 
   function toggleDropdown(event: ReactMouseEvent) {
     event.stopPropagation();
-    if (showLoaderTopup) {
-      console.log("Cannot open dropdown while loading.");
-      return;
-    }
     if (isOpen) {
       updateDropdownIndex(2, null);
     } else {

@@ -221,77 +221,84 @@ export function LayerProvider(props: { children: ReactNode }) {
     let user_id: string;
     let idToken: string;
 
-    if (authResponse && "idToken" in authResponse) {
-      user_id = authResponse.localId;
-      idToken = authResponse.idToken;
-    } else if (action == "full data") {
-      navigate("/auth");
-      setIsError(new Error("User is not authenticated!"));
-      return;
-    } else {
-      user_id = "0000";
-      idToken = "";
-    }
-
-    for (const layer of reqFetchDataset.layers) {
-      try {
-        console.debug("🔍 [Layer] Processing layer request", {
-          layerId: layer.id,
-          includedTypes: layer.includedTypes
-        });
-
-        // Verify this layer ID isn't already processed
-        if (layerDataMap[layer.id]) {
-          console.warn(`Layer ${layer.id} already processed, skipping...`);
-          continue;
-        }
-
-        // Generate default name for layer
-        const defaultName = `${reqFetchDataset.selectedCountry} ${reqFetchDataset.selectedCity} ${
-          layer.includedTypes?.map(type => type.replace("_", " ")).join(" + ") || ''
-        }${
-          layer.excludedTypes?.length > 0 
-            ? " + not " + layer.excludedTypes.map(type => type.replace("_", " ")).join(" + not ")
-            : ""
-        }`;
-
-        const res = await apiRequest({
-          url: urls.fetch_dataset,
-          method: "post",
-          body: {
-            dataset_country: reqFetchDataset.selectedCountry,
-            dataset_city: reqFetchDataset.selectedCity,
-            includedTypes: layer.includedTypes || [],
-            excludedTypes: layer.excludedTypes || [],
-            layerId: layer.id,
-            layer_name: defaultName,
-            action: action,
-            search_type: searchType,
-            text_search: textSearchInput?.trim() || "",
-            ...(action === "full data" && { password: password }),
-            page_token: pageToken || "",
-            user_id: user_id,
-          },
-          isAuthRequest: true,
-        });
-
-        if (res?.data?.data) {
-          console.debug("🔍 [Layer] API Response", {
-            layerId: layer.id,
-            responseData: res.data.data
-          });
-          
-          setLayerDataMap(prev => ({
-            ...prev,
-            [layer.id]: res.data.data
-          }));
-          
-          updateGeoJSONDataset(res.data.data, layer.id, defaultName);
-        }
-      } catch (error) {
-        console.error(`Error fetching layer ${layer.id}:`, error);
-        setIsError(error instanceof Error ? error : new Error(String(error)));
+    try {
+      if (authResponse && "idToken" in authResponse) {
+        user_id = authResponse.localId;
+        idToken = authResponse.idToken;
+      } else if (action == "full data") {
+        navigate("/auth");
+        setIsError(new Error("User is not authenticated!"));
+        return;
+      } else {
+        user_id = "0000";
+        idToken = "";
       }
+
+      for (const layer of reqFetchDataset.layers) {
+        try {
+          console.debug("🔍 [Layer] Processing layer request", {
+            layerId: layer.id,
+            includedTypes: layer.includedTypes
+          });
+
+          // Verify this layer ID isn't already processed
+          if (layerDataMap[layer.id]) {
+            console.warn(`Layer ${layer.id} already processed, skipping...`);
+            continue;
+          }
+
+          // Generate default name for layer
+          const defaultName = `${reqFetchDataset.selectedCountry} ${reqFetchDataset.selectedCity} ${
+            layer.includedTypes?.map(type => type.replace("_", " ")).join(" + ") || ''
+          }${
+            layer.excludedTypes?.length > 0 
+              ? " + not " + layer.excludedTypes.map(type => type.replace("_", " ")).join(" + not ")
+              : ""
+          }`;
+
+          const res = await apiRequest({
+            url: urls.fetch_dataset,
+            method: "post",
+            body: {
+              dataset_country: reqFetchDataset.selectedCountry,
+              dataset_city: reqFetchDataset.selectedCity,
+              includedTypes: layer.includedTypes || [],
+              excludedTypes: layer.excludedTypes || [],
+              layerId: layer.id,
+              layer_name: defaultName,
+              action: action,
+              search_type: searchType,
+              text_search: textSearchInput?.trim() || "",
+              ...(action === "full data" && { password: password }),
+              page_token: pageToken || "",
+              user_id: user_id,
+            },
+            isAuthRequest: true,
+          });
+
+          if (res?.data?.data) {
+            console.debug("🔍 [Layer] API Response", {
+              layerId: layer.id,
+              responseData: res.data.data
+            });
+            
+            setLayerDataMap(prev => ({
+              ...prev,
+              [layer.id]: res.data.data
+            }));
+            
+            updateGeoJSONDataset(res.data.data, layer.id, defaultName);
+          }
+        } catch (error) {
+          console.error(`Error fetching layer ${layer.id}:`, error);
+          setIsError(error instanceof Error ? error : new Error(String(error)));
+        }
+      }
+    } catch (error) {
+      setIsError(error instanceof Error ? error : new Error(String(error)));
+    } finally {
+      // Set loader back to false after all operations complete
+      setShowLoaderTopup(false);
     }
   }
 
@@ -430,23 +437,23 @@ export function LayerProvider(props: { children: ReactNode }) {
     setGeoPoints([]);
   }
 
-  useEffect(
-    function () {
-      if (isError) {
-        setShowLoaderTopup(false);
-        callCountRef.current = 0;
-      }
-    },
-    [isError]
-  );
-  useEffect(
-    function () {
-      if (FetchDatasetResp) {
-        updateGeoJSONDataset(FetchDatasetResp);
-      }
-    },
-    [FetchDatasetResp]
-  );
+  // useEffect(
+  //   function () {
+  //     if (isError) {
+  //       setShowLoaderTopup(false);
+  //       callCountRef.current = 0;
+  //     }
+  //   },
+  //   [isError]
+  // );
+  // useEffect(
+  //   function () {
+  //     if (FetchDatasetResp) {
+  //       updateGeoJSONDataset(FetchDatasetResp);
+  //     }
+  //   },
+  //   [FetchDatasetResp]
+  // );
 
   useEffect(() => {
     handleGetCountryCityCategory();

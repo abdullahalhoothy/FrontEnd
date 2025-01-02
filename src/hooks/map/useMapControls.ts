@@ -20,7 +20,7 @@ export function useMapControls(
     console.log('useMapControls: Starting to add controls');
 
     let controls: {
-      styles?: typeof StylesControl,
+      styles?: StylesControl,
       navigation?: mapboxgl.NavigationControl,
       circle?: CircleControl,
       draw?: MapboxDraw
@@ -58,15 +58,15 @@ export function useMapControls(
           modes: {
             ...MapboxDraw.modes,
             simple_select: { 
-              ...MapboxDraw.modes.simple_select, 
-              dragMove() {} 
+              ...MapboxDraw.modes.simple_select as any,
+              onDragMove: () => {}
             },
             direct_select: {
-              ...MapboxDraw.modes.direct_select,
-              dragVertex(state, e, delta) {
+              ...MapboxDraw.modes.direct_select as any,
+              onDragVertex: (state: any, e: any, delta: any) => {
                 const feature = state.feature;
                 if (feature.properties?.shape !== 'circle') {
-                  MapboxDraw.modes.direct_select.dragVertex.call(
+                  (MapboxDraw.modes.direct_select as any).onDragVertex.call(
                     this,
                     state,
                     e,
@@ -113,25 +113,41 @@ export function useMapControls(
     attemptToAddControls();
 
     return () => {
-      console.log('useMapControls: Cleaning up controls');
-      if (controlsAdded.current) {
-        Object.values(controls).forEach(control => {
-          if (control) {
+      console.log('#fix: switch mode - Starting cleanup');
+      if (controlsAdded.current && map) {
+        try {
+          // Remove draw control first
+          if (draw.current) {
             try {
-              map.removeControl(control);
-            } catch (error) {
-              console.error('Error removing control:', error);
+              // Force cleanup of draw control
+              if (map.hasControl(draw.current)) {
+                map.removeControl(draw.current);
+              }
+            } catch (err) {
+              console.warn('#fix: switch mode - Non-fatal draw cleanup error:', err);
+            } finally {
+              // Always null the reference
+              draw.current = null;
             }
           }
-        });
-        if (draw.current) {
-          try {
-            map?.removeControl(draw.current);
-          } catch (error) {
-            console.error('Error removing draw control:', error);
-          }
+
+          // Remove other controls
+          ['circle', 'navigation', 'styles'].forEach(key => {
+            if (controls[key] && map.hasControl(controls[key])) {
+              try {
+                map.removeControl(controls[key]);
+              } catch (err) {
+                console.warn(`#fix: switch mode - Non-fatal ${key} control cleanup error:`, err);
+              }
+            }
+          });
+
+        } catch (error) {
+          console.warn('#fix: switch mode - Control cleanup error:', error);
+        } finally {
+          controls = {};
+          controlsAdded.current = false;
         }
-        controlsAdded.current = false;
       }
     };
   }, [map, currentStyle, setCurrentStyle, isMobile]);
