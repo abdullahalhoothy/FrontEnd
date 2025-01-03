@@ -2,27 +2,21 @@ import mapboxgl, { LngLat, MapMouseEvent } from "mapbox-gl";
 import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import * as turf from "@turf/turf";
 
-class CircleControl implements mapboxgl.IControl {
-  private _map: mapboxgl.Map | undefined;
-  private draw: MapboxDraw;
-  private isDrawing: boolean;
-  private isMobile: boolean;
-  private _drawCirclesButton: HTMLButtonElement | null;
-  private _container: HTMLDivElement | undefined;
+type CircleControlProps = {
+  draw: MapboxDraw;
+  isMobile: boolean;
+};
 
-  constructor(map: mapboxgl.Map, draw: MapboxDraw, isMobile: boolean) {
-    this._map = map;
-    this.draw = draw;
-    this.isDrawing = false;
-    this.isMobile = isMobile;
-    this._drawCirclesButton = null;
-  }
+function CircleControl(props: CircleControlProps) {
+  const { draw, isMobile } = props;
+  let _map: mapboxgl.Map;
+  let _container: HTMLDivElement;
+  let _drawCirclesButton: HTMLButtonElement;
+  let isDrawing = false;
 
-  // Method to create the control button
-  private _createButton = (text: string, title: string, clickHandler: () => void) => {
+  const createButton = (title: string, clickHandler: () => void): HTMLButtonElement => {
     const button = document.createElement("button");
-    button.className =
-      "mapboxgl-ctrl-icon !flex !items-center !justify-center";
+    button.className = "mapboxgl-ctrl-icon !flex !items-center !justify-center";
     button.type = "button";
     button.innerHTML = `
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" color="#000000" fill="none">
@@ -32,7 +26,7 @@ class CircleControl implements mapboxgl.IControl {
     button.style.width = "29px";
     button.style.height = "29px";
     
-    if (this.isMobile) {
+    if (isMobile) {
       button.addEventListener("touchend", clickHandler);
     } else {
       button.addEventListener("click", clickHandler);
@@ -40,61 +34,16 @@ class CircleControl implements mapboxgl.IControl {
     return button;
   };
 
-  // Start drawing the circles
-  startDrawing = () => {
-    if (this._map) {
-      // Toggle drawing state
-      this.isDrawing = !this.isDrawing;
-      
-      if (this.isDrawing) {
-        // Activate button style
-        this._drawCirclesButton.classList.add('mapbox-gl-draw_ctrl-draw-btn');
-        this._drawCirclesButton.classList.add('active');
-        this._map.getCanvas().style.cursor = "crosshair";
-        
-        if (this.isMobile) {
-          this._map.once("touchend", this.handleCenterClick.bind(this));
-        } else {
-          this._map.once("click", this.handleCenterClick.bind(this));
-        }
-      } else {
-        // Deactivate button style
-        this._drawCirclesButton.classList.remove('mapbox-gl-draw_ctrl-draw-btn');
-        this._drawCirclesButton.classList.remove('active');
-        this._map.getCanvas().style.cursor = "";
-        
-        // Remove event listeners
-        this._map.off("click", this.handleCenterClick);
-        this._map.off("touchend", this.handleCenterClick);
-      }
-    }
-  };
-
-  // Handle center click to draw circles
-  handleCenterClick = (e: MapMouseEvent) => {
-    if (e.lngLat && this._map) {
-      const center = e.lngLat;
-      this._map.getCanvas().style.cursor = "";
-      // Reset drawing state
-      this.isDrawing = false;
-      if (this._drawCirclesButton) {
-        this._drawCirclesButton.classList.remove('mapbox-gl-draw_ctrl-draw-btn');
-        this._drawCirclesButton.classList.remove('active');
-      }
-      this.createCircles(center);
-    }
-  };
-
-  // Create the circles with the given center
-  createCircles = (center: LngLat) => {
-    const radii = [1, 3, 5];
+  const createCircles = (center: LngLat): void => {
+    const radii = [1, 3, 5]; // kilometers
     const features = radii.map((radius) => {
       const circle = turf.circle([center.lng, center.lat], radius, {
         units: "kilometers",
       });
       return circle.geometry.coordinates;
     });
-    const multiPolygon = {
+
+    const multiPolygon: GeoJSON.Feature = {
       type: "Feature",
       geometry: {
         type: "MultiPolygon",
@@ -105,49 +54,80 @@ class CircleControl implements mapboxgl.IControl {
       },
     };
 
-    const featureIds = this.draw.add(multiPolygon);
-    multiPolygon.id = featureIds[0];
+    const featureIds = draw.add(multiPolygon as any);
+    (multiPolygon as any).id = featureIds[0];
 
-    this._map.fire("draw.create", { features: [multiPolygon] });
-
-    this.draw.changeMode("direct_select", { featureIds: featureIds });
+    _map.fire("draw.create", { features: [multiPolygon] });
+    draw.changeMode("direct_select", { featureIds });
   };
 
-  // Delete the selected circle
-  deleteSelected = () => {
-    const selectedFeatures = this.draw.getSelected();
+  const handleCenterClick = (e: MapMouseEvent): void => {
+    const center = e.lngLat;
+    _map.getCanvas().style.cursor = "";
+    
+    // Reset drawing state
+    isDrawing = false;
+    _drawCirclesButton.classList.remove('mapbox-gl-draw_ctrl-draw-btn', 'active');
+    
+    createCircles(center);
+  };
+
+  const startDrawing = (): void => {
+    // Toggle drawing state
+    isDrawing = !isDrawing;
+    
+    if (isDrawing) {
+      // Activate button style
+      _drawCirclesButton.classList.add('mapbox-gl-draw_ctrl-draw-btn', 'active');
+      _map.getCanvas().style.cursor = "crosshair";
+      
+      const eventType = isMobile ? "touchend" : "click";
+      _map.once(eventType, handleCenterClick);
+    } else {
+      // Deactivate button style
+      _drawCirclesButton.classList.remove('mapbox-gl-draw_ctrl-draw-btn', 'active');
+      _map.getCanvas().style.cursor = "";
+      
+      // Remove event listeners
+      _map.off("click", handleCenterClick);
+      _map.off("touchend", handleCenterClick);
+    }
+  };
+
+  const deleteSelected = (): void => {
+    const selectedFeatures = draw.getSelected();
     if (selectedFeatures.features.length > 0) {
-      this.draw.delete(selectedFeatures.features[0].id);
+      const featureId = selectedFeatures.features[0].id;
+      if (featureId) {
+        draw.delete(featureId);
+      }
     }
   };
 
-  // Add control to the map
-  onAdd(map: mapboxgl.Map): HTMLElement {
-    this._map = map;
-    this._container = document.createElement("div");
-    this._container.className = "mapboxgl-ctrl mapboxgl-ctrl-group";
+  return {
+    onAdd(map: mapboxgl.Map): HTMLElement {
+      _map = map;
+      _container = document.createElement("div");
+      _container.className = "mapboxgl-ctrl mapboxgl-ctrl-group";
 
-    this._drawCirclesButton = this._createButton(
-      "",
-      "Draw 1km, 3km, 5km Circles",
-      this.startDrawing.bind(this)
-    );
-    this._container.appendChild(this._drawCirclesButton);
+      _drawCirclesButton = createButton(
+        "Draw 1km, 3km, 5km Circles",
+        startDrawing
+      );
+      _container.appendChild(_drawCirclesButton);
 
-    return this._container;
-  }
+      return _container;
+    },
 
-  // Remove control from the map
-  onRemove(): void {
-    if (this._map) {
-      this._map.getCanvas().style.cursor = "";
-      this._map.off("click", this.handleCenterClick);
-      this._map.off("touchend", this.handleCenterClick);
-    }
-    this._container?.parentNode?.removeChild(this._container);
-    this._map = undefined;
-  }
+    onRemove(): void {
+      _map.getCanvas().style.cursor = "";
+      _map.off("click", handleCenterClick);
+      _map.off("touchend", handleCenterClick);
+      _container?.parentNode?.removeChild(_container);
+    },
+
+    deleteSelected
+  };
 }
 
-// Export the CircleControl function
 export { CircleControl };

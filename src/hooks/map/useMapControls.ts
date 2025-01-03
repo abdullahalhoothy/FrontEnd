@@ -16,11 +16,10 @@ export function useMapControls(
 
   useEffect(() => {
     if (!map) return;
-
     let controls: {
-      styles?: StylesControl,
+      styles?: typeof StylesControl,
       navigation?: mapboxgl.NavigationControl,
-      circle?: CircleControl,
+      circle?: typeof CircleControl,
       draw?: MapboxDraw
     } = {};
 
@@ -72,7 +71,7 @@ export function useMapControls(
           }
         });
 
-        controls.circle = new CircleControl(map, draw.current, isMobile);
+        controls.circle = new CircleControl({ currentMap: map, draw: draw.current, isMobile });
         map.addControl(controls.circle, 'top-right');
         
         
