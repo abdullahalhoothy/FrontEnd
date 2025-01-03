@@ -1,19 +1,7 @@
 import { FaCaretDown, FaCaretRight } from "react-icons/fa";
-import { CategoryData } from "../../types/allTypesAndInterfaces";
+import { CategoriesBrowserSubCategoriesProps } from "../../types/allTypesAndInterfaces";
 import { formatSubcategoryName } from "../../utils/helperFunctions";
 
-interface CategoriesBrowserSubCategoriesProps {
-    categories: CategoryData;
-    openedCategories: string[];
-    onToggleCategory: (category: string) => void;
-    getTypeCounts: (type: string) => {
-        includedCount: number[];
-        excludedCount: number[];
-    };
-    onRemoveType: (type: string, layerId: number, isExcluded: boolean) => void;
-    onAddToIncluded: (type: string) => void;
-    onAddToExcluded: (type: string) => void;
-}
 
 const CategoriesBrowserSubCategories = ({
     categories,

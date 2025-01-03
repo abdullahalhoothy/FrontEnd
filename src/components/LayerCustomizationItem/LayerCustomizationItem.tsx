@@ -1,19 +1,7 @@
-import React from 'react';
 import ColorSelect from "../ColorSelect/ColorSelect";
-import { LayerCustomization } from "../../types/allTypesAndInterfaces";
+import { LayerCustomizationItemProps } from "../../types/allTypesAndInterfaces";
 import { HiCheck, HiExclamation } from "react-icons/hi";
 
-interface LayerCustomizationItemProps {
-    layer: LayerCustomization;
-    isCollapsed: boolean;
-    error?: string;
-    onToggleCollapse: (layerId: number) => void;
-    onLayerChange: (layerId: number, field: keyof LayerCustomization, value: string) => void;
-    onDiscard: (layerId: number) => void;
-    onSave: (layerId: number) => void;
-    isSaving?: boolean;
-    isSaved?: boolean;
-}
 
 function LayerCustomizationItem({
     layer,
@@ -26,6 +14,7 @@ function LayerCustomizationItem({
     isSaving,
     isSaved,
 }: LayerCustomizationItemProps) {
+
     const getHeaderStyle = (hexColor: string) => ({
         backgroundColor: `${hexColor || '#28A745'}10`,
         borderLeft: `4px solid ${hexColor || '#28A745'}`

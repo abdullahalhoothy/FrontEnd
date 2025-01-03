@@ -5,13 +5,11 @@ import { useLayerContext } from '../../context/LayerContext'
 import { useUIContext } from '../../context/UIContext'
 import { MdKeyboardArrowDown } from 'react-icons/md'
 import { colorOptions } from '../../utils/helperFunctions'
+import { ColorSelectProps } from '../../types/allTypesAndInterfaces';
 
 const colorMap = new Map(colorOptions.map(({ name, hex }) => [hex, name]))
 
-interface ColorSelectProps {
-  layerId: number
-  onColorChange: (color: string) => void
-}
+
 
 function ColorSelect ({ layerId, onColorChange }: ColorSelectProps) {
   const { sidebarMode } = useUIContext()
@@ -19,11 +17,12 @@ function ColorSelect ({ layerId, onColorChange }: ColorSelectProps) {
   const {
     layerStates,
     updateLayerState,
-    showLoaderTopup
+    showLoaderTopup,
   } = useLayerContext()
 
   const {
     geoPoints,
+    setGeoPoints,
     openDropdownIndices,
     updateDropdownIndex,
     layerColors
@@ -66,6 +65,14 @@ function ColorSelect ({ layerId, onColorChange }: ColorSelectProps) {
     updateLayerState(layerId, {
       selectedColor: { name: optionName, hex }
     })
+
+    setGeoPoints((prevPoints: any[]) => 
+      prevPoints.map((point: { layerId: string }) => 
+        point.layerId === String(layerId)
+          ? { ...point, points_color: hex }
+          : point
+      )
+    )
 
     onColorChange(hex)
   }

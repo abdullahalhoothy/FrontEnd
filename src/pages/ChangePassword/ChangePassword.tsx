@@ -59,17 +59,15 @@ const ChangePassword: React.FC = () => {
         body: data,
         isAuthRequest: true,
       });
+      if (res.status === 200) {
+        navigate("/auth");
+      }
     } catch (error) {
-      setError(error);
+      setError(error instanceof Error ? error : new Error(String(error)));
     } finally {
       setLoading(false);
     }
   };
-
-  if (!isAuthenticated) {
-    navigate("/auth");
-    return null;
-  }
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
