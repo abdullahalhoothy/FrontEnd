@@ -59,3 +59,5 @@ export function useMapInitialization(
 
   return isStyleLoaded;
 } 
+
+export const defaultMapConfig = mapConfig

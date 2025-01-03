@@ -1,7 +1,11 @@
 import { useEffect } from 'react'
 import mapboxgl from 'mapbox-gl'
 import { useCatalogContext } from '../../context/CatalogContext'
-import mapConfig from '../../mapConfig.json'
+import { defaultMapConfig } from './useMapInitialization'
+import {  colorOptions } from '../../utils/helperFunctions'
+
+ const defaultCircleStrokeWidth = 1
+ const defaultCircleStrokeColor = '#fff'
 
 export function useMapLayers (map: mapboxgl.Map | null) {
   const { geoPoints } = useCatalogContext()
@@ -66,11 +70,11 @@ export function useMapLayers (map: mapboxgl.Map | null) {
               type: 'circle',
               source: sourceId,
               paint: {
-                'circle-radius': mapConfig.circleRadius,
-                'circle-color': featureCollection.points_color || '#28A745',
-                'circle-opacity': 0.8,
-                'circle-stroke-width': 1,
-                'circle-stroke-color': '#fff'
+                'circle-radius': defaultMapConfig.circleRadius,
+                'circle-color': featureCollection.points_color || colorOptions[1].hex,
+                'circle-opacity': defaultMapConfig.circleOpacity,
+                'circle-stroke-width': defaultCircleStrokeWidth,
+                'circle-stroke-color': defaultCircleStrokeColor
               }
             })
 

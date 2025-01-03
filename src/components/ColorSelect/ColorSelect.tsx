@@ -4,12 +4,8 @@ import { useCatalogContext } from '../../context/CatalogContext'
 import { useLayerContext } from '../../context/LayerContext'
 import { useUIContext } from '../../context/UIContext'
 import { MdKeyboardArrowDown } from 'react-icons/md'
-import { colorOptions } from '../../utils/helperFunctions'
+import { colorOptions, colorMap } from '../../utils/helperFunctions'
 import { ColorSelectProps } from '../../types/allTypesAndInterfaces';
-
-const colorMap = new Map(colorOptions.map(({ name, hex }) => [hex, name]))
-
-
 
 function ColorSelect ({ layerId, onColorChange }: ColorSelectProps) {
   const { sidebarMode } = useUIContext()
