@@ -13,9 +13,7 @@ export function useMapInitialization(
   const [isStyleLoaded, setIsStyleLoaded] = useState(false);
 
   useEffect(() => {
-    console.log('useMapInitialization: Effect triggered')
     if (!mapContainerRef.current || mapRef.current) {
-      console.log('useMapInitialization: Early return - container:', !!mapContainerRef.current, 'existing map:', !!mapRef.current)
       return
     }
 
@@ -29,7 +27,6 @@ export function useMapInitialization(
     }
 
     // Initialize map
-    console.log('useMapInitialization: Creating new map instance')
     mapRef.current = new mapboxgl.Map({
       container: mapContainerRef.current,
       style: currentStyle,
@@ -40,19 +37,14 @@ export function useMapInitialization(
     });
 
     mapRef.current.on('style.load', () => {
-      console.log('useMapInitialization: Style loaded')
       setIsStyleLoaded(true);
     });
 
-    console.log('useMapInitialization: Map instance created')
-
     return () => {
-      console.log('useMapInitialization: Cleanup triggered')
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
         setIsStyleLoaded(false);
-        console.log('useMapInitialization: Map instance removed')
       }
     };
   }, [currentStyle, mapContainerRef]);
