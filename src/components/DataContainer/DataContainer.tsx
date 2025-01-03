@@ -71,12 +71,8 @@ function DataContainer() {
 
     async function fetchUserLayers() {
       setLoading(true);
-      if (!authResponse || !("idToken" in authResponse)) {
-        navigate("/auth");
-        return;
-      }
 
-      const body = { user_id: authResponse.localId };
+      const body = { user_id: authResponse?.localId };
       // HttpReq<UserLayer[]>(
       //   urls.user_layers,
       //   setUserLayersData,
@@ -107,12 +103,8 @@ function DataContainer() {
 
     async function fetchUserCatalogs() {
       setLoading(true);
-      if (!authResponse || !("idToken" in authResponse)) {
-        navigate("/auth");
-        return;
-      }
 
-      const body = { user_id: authResponse.localId };
+      const body = { user_id: authResponse?.localId };
       // HttpReq<Catalog[]>(
       //   urls.user_catalogs,
       //   setUserCatalogsData,

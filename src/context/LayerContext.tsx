@@ -113,12 +113,6 @@ export function LayerProvider(props: { children: ReactNode }) {
   }
 
   async function handleSaveLayer(layerData: LayerCustomization | { layers: LayerCustomization[] }) {
-    if (!authResponse || !("idToken" in authResponse)) {
-      navigate("/auth");
-      setIsError(new Error("User is not authenticated!"));
-      return;
-    }
-
     if ('layers' in layerData) {
       // Handle multiple layers
       for (const layer of layerData.layers) {

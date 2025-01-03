@@ -38,12 +38,6 @@ export default function PaymentMethods() {
   }, [location.search]);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("/auth");
-    }
-  }, [isAuthenticated, navigate]);
-
-  useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {

@@ -108,11 +108,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [basedOnLayerId, setBasedOnLayerId] = useState<string | null>(null);
 
   async function fetchGeoPoints(id: string, typeOfCard: string) {
-    if (!authResponse || !("idToken" in authResponse)) {
-      setIsError(new Error("User is not authenticated!"));
-      navigate("/auth");
-      return;
-    }
     const apiJsonRequest =
       typeOfCard === "layer"
         ? {
@@ -210,12 +205,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
   }
 
   async function handleSaveCatalog() {
-    if (!authResponse || !("idToken" in authResponse)) {
-      setIsError(new Error("User is not authenticated!"));
-      navigate("/auth");
-      return;
-    }
-
     try {
       setIsLoading(true);
       
