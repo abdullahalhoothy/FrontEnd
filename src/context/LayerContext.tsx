@@ -133,7 +133,7 @@ export function LayerProvider(props: { children: ReactNode }) {
       layer_legend: layerData.legend,
       layer_description: layerData.description,
       city_name: reqFetchDataset.selectedCity,
-      user_id: authResponse.localId,
+      user_id: authResponse?.localId,
     };
 
     try {
@@ -157,28 +157,42 @@ export function LayerProvider(props: { children: ReactNode }) {
   }
 
   function updateGeoJSONDataset(response: FetchDatasetResponse, layerId: number, defaultName: string) {
-    const newPoint = {
-      type: 'FeatureCollection',
-      features: response.features.map(f => ({
-        type: 'Feature',
-        geometry: f.geometry,
-        properties: f.properties,
-        layerId: String(layerId)
-      })),
-      display: true,
-      points_color: "#28A745",
-      layerId: String(layerId),
-      city_name: reqFetchDataset.selectedCity,
-      layer_legend: defaultName,
-      prdcer_layer_name: defaultName,
-      prdcer_lyr_id: response.prdcer_lyr_id,
-      bknd_dataset_id: response.bknd_dataset_id
-    };
-
     setGeoPoints((prevPoints: MapFeatures[] | MapFeatures | any) => {
-      // Remove any existing layer with same ID
+      // Find existing point collection for this layer
+      const existingPoint = prevPoints.find((p: MapFeatures) => String(p.layerId) === String(layerId));
+      
+      // Create new point with accumulated features
+      const newPoint = {
+        type: 'FeatureCollection',
+        features: [
+          ...(existingPoint?.features || []),  // Keep existing features if any
+          ...response.features.map(f => ({
+            type: 'Feature',
+            geometry: f.geometry,
+            properties: f.properties,
+            layerId: String(layerId)
+          }))
+        ],
+        display: true,
+        points_color: "#28A745",
+        layerId: String(layerId),
+        city_name: reqFetchDataset.selectedCity,
+        layer_legend: defaultName,
+        prdcer_layer_name: defaultName,
+        prdcer_lyr_id: response.prdcer_lyr_id,
+        bknd_dataset_id: response.bknd_dataset_id
+      };
+
       const filteredPoints = prevPoints.filter((p: MapFeatures) => String(p.layerId) !== String(layerId));
       const newPoints = [...filteredPoints, newPoint];
+      
+      if (response.next_page_token && callCountRef.current < MAX_CALLS) {
+        callCountRef.current++;
+        handleFetchDataset("full data", response.next_page_token);
+      } else {
+        setShowLoaderTopup(false);
+        callCountRef.current = 0;
+      }
       
       return newPoints;
     });
@@ -403,23 +417,12 @@ export function LayerProvider(props: { children: ReactNode }) {
     setGeoPoints([]);
   }
 
-  // useEffect(
-  //   function () {
-  //     if (isError) {
-  //       setShowLoaderTopup(false);
-  //       callCountRef.current = 0;
-  //     }
-  //   },
-  //   [isError]
-  // );
-  // useEffect(
-  //   function () {
-  //     if (FetchDatasetResp) {
-  //       updateGeoJSONDataset(FetchDatasetResp);
-  //     }
-  //   },
-  //   [FetchDatasetResp]
-  // );
+  useEffect(() => {
+    if (isError) {
+      setShowLoaderTopup(false);
+      callCountRef.current = 0;
+    }
+  }, [isError]);
 
   useEffect(() => {
     handleGetCountryCityCategory();
