@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import { MapFeatures } from '../../types/allTypesAndInterfaces';
-import mapConfig from '../../mapConfig.json';
 
 export function useLegendManager(geoPoints: MapFeatures[]) {
   const legendRef = useRef<HTMLDivElement | null>(null);
