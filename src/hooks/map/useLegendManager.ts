@@ -1,18 +1,24 @@
 import { useEffect, useRef } from 'react';
-import { MapFeatures } from '../../types/allTypesAndInterfaces';
+import { useCatalogContext } from '../../context/CatalogContext';
+import { useMapContext } from '../../context/MapContext';
+import MapLegend from '../../components/Map/MapLegend';
 
-export function useLegendManager(geoPoints: MapFeatures[]) {
+export function useLegendManager() {
+  const { geoPoints } = useCatalogContext()
+  const { shouldInitializeFeatures } = useMapContext();
   const legendRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    if (!shouldInitializeFeatures) return;
+
     if (!legendRef.current) {
       legendRef.current = document.createElement("div");
       legendRef.current.className = "absolute bottom-[10px] right-[10px] z-10 bg-white border shadow min-w-[200px] rounded-md overflow-y-auto max-h-[calc(100vh-200px)]";
     }
-  }, []);
+  }, [shouldInitializeFeatures]);
 
   useEffect(() => {
-    if (!legendRef.current || !geoPoints.length) return;
+    if (!shouldInitializeFeatures || !legendRef.current || !geoPoints.length) return;
 
     const hasAtLeastOneValidName = geoPoints.some(point => 
       point.layer_legend || (point.is_gradient && point.gradient_groups)
@@ -24,18 +30,14 @@ export function useLegendManager(geoPoints: MapFeatures[]) {
     }
 
     // Update legend content
-    updateLegendContent(legendRef.current, geoPoints);
+    MapLegend(legendRef.current, geoPoints);
 
     return () => {
       legendRef.current?.remove();
     };
   }, [geoPoints]);
 
-  return legendRef;
+  if (legendRef.current) {
+    document.body.appendChild(legendRef.current);
+  };
 }
-
-function updateLegendContent(legendElement: HTMLDivElement, geoPoints: MapFeatures[]) {
-  // Legend update logic here (moved from the component)
-  legendElement.innerHTML = `<h4 class="text-sm font-semibold text-gray-900 border-b p-2">Legend</h4>`;
-  // ... rest of the legend update logic
-} 
