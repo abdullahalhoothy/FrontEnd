@@ -1,9 +1,16 @@
 import { useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
-import { MapFeatures } from '../../types/allTypesAndInterfaces';
+import { useCatalogContext } from '../../context/CatalogContext';
+import { useMapContext } from '../../context/MapContext';
 
-export function useMapBounds(map: mapboxgl.Map | null, geoPoints: MapFeatures[]) {
+export function useMapBounds() {
+  const { mapRef, shouldInitializeFeatures } = useMapContext();
+  const { geoPoints } = useCatalogContext();
+
   useEffect(() => {
+    if (!shouldInitializeFeatures) return;
+
+    const map = mapRef.current;
     if (!map || !geoPoints.length) return;
 
     const bounds = new mapboxgl.LngLatBounds();
@@ -16,5 +23,5 @@ export function useMapBounds(map: mapboxgl.Map | null, geoPoints: MapFeatures[])
     });
 
     map.fitBounds(bounds, { padding: 50 });
-  }, [map, geoPoints]);
+  }, [mapRef, geoPoints]);
 } 

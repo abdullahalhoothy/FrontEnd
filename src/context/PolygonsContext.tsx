@@ -19,6 +19,9 @@ const PolygonsProvider = ({ children }: ProviderProps) => {
   const [polygons, setPolygons] = useState<PolygonFeature[]>([]);
   const [benchmarks, setBenchmarks] = useState<Benchmark[]>([]);
   const [isBenchmarkControlOpen, setIsBenchmarkControlOpen] = useState(false);
+  const [currentStyle, setCurrentStyle] = useState(
+    'mapbox://styles/mapbox/streets-v11'
+  )
 
   const sections = useMemo(() => {
     if (!Array.isArray(polygons) || !Array.isArray(geoPoints)) {
@@ -151,6 +154,8 @@ const PolygonsProvider = ({ children }: ProviderProps) => {
         setBenchmarks,
         isBenchmarkControlOpen,
         setIsBenchmarkControlOpen,
+        currentStyle,
+        setCurrentStyle
       }}
     >
       {children}

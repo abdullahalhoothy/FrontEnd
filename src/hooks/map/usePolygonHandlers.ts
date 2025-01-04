@@ -1,13 +1,16 @@
 import { useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
 import * as turf from '@turf/turf';
+import { usePolygonsContext } from '../../context/PolygonsContext';
+import { useMapContext } from '../../context/MapContext';
 
-export function usePolygonHandlers(
-  map: mapboxgl.Map | null,
-  setPolygons: React.Dispatch<React.SetStateAction<any[]>>
-) {
+export function usePolygonHandlers() {
+  const { mapRef, shouldInitializeFeatures } = useMapContext();
+  const map = mapRef.current;
+  const { setPolygons } = usePolygonsContext();
+
   useEffect(() => {
-    if (!map) return;
+    if (!shouldInitializeFeatures || !map) return;
 
     const handleDrawCreate = (e: any) => {
       const geojson = e.features[0];
@@ -72,5 +75,5 @@ export function usePolygonHandlers(
       map.off('draw.update', handleDrawUpdate);
       map.off('draw.delete', handleDrawDelete);
     };
-  }, [map, setPolygons]);
+  }, [mapRef, setPolygons, shouldInitializeFeatures]);
 } 

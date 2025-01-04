@@ -3,15 +3,18 @@ import mapboxgl from 'mapbox-gl'
 import { useCatalogContext } from '../../context/CatalogContext'
 import { defaultMapConfig } from './useMapInitialization'
 import {  colorOptions } from '../../utils/helperFunctions'
+import { useMapContext } from '../../context/MapContext'
 
  const defaultCircleStrokeWidth = 1
  const defaultCircleStrokeColor = '#fff'
 
-export function useMapLayers (map: mapboxgl.Map | null) {
+export function useMapLayers () {
+  const { mapRef, shouldInitializeFeatures } = useMapContext()
+  const map = mapRef.current
   const { geoPoints } = useCatalogContext()
 
   useEffect(() => {
-    if (!map) return
+    if (!shouldInitializeFeatures || !map) return
 
     const addLayers = () => {
       // Only proceed if style is fully loaded
@@ -136,5 +139,5 @@ export function useMapLayers (map: mapboxgl.Map | null) {
         map.off('style.load', styleChangeHandler)
       }
     }
-  }, [map, geoPoints])
+  }, [mapRef, geoPoints, shouldInitializeFeatures])
 }

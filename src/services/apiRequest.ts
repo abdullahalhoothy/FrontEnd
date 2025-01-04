@@ -1,6 +1,6 @@
 import axios, { AxiosRequestConfig } from "axios";
 import urls from "../urls.json";
-import { ApiRequestOptions, IAuthResponse } from "../types/allTypesAndInterfaces";
+import { ApiRequestOptions, AuthResponse, IAuthResponse } from "../types/allTypesAndInterfaces";
 
 const baseUrl = urls.REACT_APP_API_URL;
 
@@ -48,6 +48,7 @@ const refreshAuthToken = async (refreshToken: string): Promise<AuthResponse> => 
     });
     
     if (!res.data?.idToken) {
+      handleAuthError()
       throw new Error("Invalid token refresh response");
     }
     

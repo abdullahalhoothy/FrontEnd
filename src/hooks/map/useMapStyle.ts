@@ -1,14 +1,16 @@
 import { useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
-import { MapFeatures } from '../../types/allTypesAndInterfaces';
-
-export function useMapStyle(
-  map: mapboxgl.Map | null,
-  currentStyle: string,
-  setGeoPoints: (updater: (prev: MapFeatures[]) => MapFeatures[]) => void
-) {
+import { useCatalogContext } from '../../context/CatalogContext';
+import { usePolygonsContext } from '../../context/PolygonsContext';
+import { useMapContext } from '../../context/MapContext';
+export function useMapStyle() {
+  const { mapRef, shouldInitializeFeatures } = useMapContext();
+  const map = mapRef.current;
+  const { setGeoPoints } = useCatalogContext()
+  const {currentStyle} = usePolygonsContext()
+    
   useEffect(() => {
-    if (!map) return;
+    if (!shouldInitializeFeatures || !map) return;
 
     const handleStyleLoad = () => {
       setGeoPoints(prevGeoPoints => 
@@ -21,5 +23,5 @@ export function useMapStyle(
     return () => {
       map?.off('styledata', handleStyleLoad);
     };
-  }, [map, currentStyle, setGeoPoints]);
+  }, [mapRef, currentStyle, shouldInitializeFeatures, setGeoPoints]);
 } 

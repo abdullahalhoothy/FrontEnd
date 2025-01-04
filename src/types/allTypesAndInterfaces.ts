@@ -593,6 +593,8 @@ export type PolygonContextType = {
   setBenchmarks: React.Dispatch<React.SetStateAction<Benchmark[]>>;
   isBenchmarkControlOpen: boolean;
   setIsBenchmarkControlOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  currentStyle: string;
+  setCurrentStyle: React.Dispatch<React.SetStateAction<string>>;
 };
 
 export type Benchmark = {
@@ -703,3 +705,13 @@ export interface LayerDisplaySubCategoriesProps {
   onToggleTypeInLayer: (type: string) => void;
   onNameChange: (layerIndex: number, newName: string) => void;
 } 
+
+
+export type MapContextType = {
+  mapRef: React.MutableRefObject<mapboxgl.Map | null>;
+  mapContainerRef: React.MutableRefObject<HTMLDivElement | null>;
+  drawRef: React.MutableRefObject<MapboxDraw | null>;
+  isStyleLoaded: boolean;
+  setIsStyleLoaded: (loaded: boolean) => void;
+  shouldInitializeFeatures: boolean;
+};

@@ -314,7 +314,7 @@ const MobileStatisticsPopup = ({ polygon }) => {
 
   if (!polygon || !polygon.isStatisticsPopupOpen || !sections) return null;
 
-  const polygonSections = sections.find((section) => section.polygon.id === polygon.id);
+  const polygonSections = sections.find((section) => section.polygon && section.polygon.id === polygon.id);
 
   if (!polygonSections) return null;
   if (polygonSections.sections.length === 0) return null;

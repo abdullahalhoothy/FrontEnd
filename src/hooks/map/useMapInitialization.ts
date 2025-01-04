@@ -1,16 +1,14 @@
 import { useEffect, MutableRefObject, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import mapConfig from '../../mapConfig.json';
-
+import { usePolygonsContext } from '../../context/PolygonsContext';
+import { useMapContext } from '../../context/MapContext';
 // Set Mapbox access token
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_KEY;
 
-export function useMapInitialization(
-  mapRef: MutableRefObject<mapboxgl.Map | null>,
-  mapContainerRef: MutableRefObject<HTMLDivElement | null>,
-  currentStyle: string
-) {
-  const [isStyleLoaded, setIsStyleLoaded] = useState(false);
+export function useMapInitialization() {
+  const { currentStyle } = usePolygonsContext()
+  const { mapRef, mapContainerRef, isStyleLoaded, setIsStyleLoaded } = useMapContext();
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) {

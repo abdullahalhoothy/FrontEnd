@@ -4,22 +4,25 @@ import { StylesControl } from '../../components/Map/StylesControl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import { CircleControl } from '../../components/Map/CircleControl';
 import { useUIContext } from '../../context/UIContext';
+import { usePolygonsContext } from '../../context/PolygonsContext';
+import { useMapContext } from '../../context/MapContext';
 
-export function useMapControls(
-  map: mapboxgl.Map | null, 
-  currentStyle: string,
-  setCurrentStyle: (style: string) => void
-) {
-  const controlsAdded = useRef(false);
-  const draw = useRef<MapboxDraw | null>(null);
+export function useMapControls() {
+  const { mapRef, drawRef, shouldInitializeFeatures } = useMapContext();
   const { isMobile } = useUIContext();
-
+  const { currentStyle, setCurrentStyle } = usePolygonsContext();
+  const controlsAdded = useRef(false);
+  
   useEffect(() => {
+    if (!shouldInitializeFeatures) return;
+    
+    const map = mapRef.current;
     if (!map) return;
+
     let controls: {
-      styles?: typeof StylesControl,
+      styles?: mapboxgl.IControl,
       navigation?: mapboxgl.NavigationControl,
-      circle?: typeof CircleControl,
+      circle?: mapboxgl.IControl,
       draw?: MapboxDraw
     } = {};
 
@@ -37,45 +40,26 @@ export function useMapControls(
         controls.navigation = new mapboxgl.NavigationControl();
         map.addControl(controls.navigation, 'top-right');
 
-
-        // Initialize and add draw control third
-        draw.current = new MapboxDraw({
+        // Initialize draw control
+        drawRef.current = new MapboxDraw({
           displayControlsDefault: false,
           controls: {
             point: false,
             line_string: false,
             polygon: true,
             trash: true
-          },
-          defaultMode: 'simple_select',
-          modes: {
-            ...MapboxDraw.modes,
-            simple_select: { 
-              ...MapboxDraw.modes.simple_select as any,
-              onDragMove: () => {}
-            },
-            direct_select: {
-              ...MapboxDraw.modes.direct_select as any,
-              onDragVertex: (state: any, e: any, delta: any) => {
-                const feature = state.feature;
-                if (feature.properties?.shape !== 'circle') {
-                  (MapboxDraw.modes.direct_select as any).onDragVertex.call(
-                    this,
-                    state,
-                    e,
-                    delta
-                  );
-                }
-              }
-            }
           }
         });
 
-        controls.circle = new CircleControl({ currentMap: map, draw: draw.current, isMobile });
+        // Add circle control
+        controls.circle = new CircleControl({ 
+          draw: drawRef.current,
+          isMobile 
+        });
         map.addControl(controls.circle, 'top-right');
         
-        
-        map.addControl(draw.current);
+        // Add draw control last
+        map.addControl(drawRef.current);
         controlsAdded.current = true;
       } catch (error) {
         console.error('Error adding controls:', error);
@@ -105,17 +89,17 @@ export function useMapControls(
       if (controlsAdded.current && map) {
         try {
           // Remove draw control first
-          if (draw.current) {
+          if (drawRef.current) {
             try {
               // Force cleanup of draw control
-              if (map.hasControl(draw.current)) {
-                map.removeControl(draw.current);
+              if (map.hasControl(drawRef.current)) {
+                map.removeControl(drawRef.current);
               }
             } catch (err) {
               console.warn('Non-fatal draw cleanup error:', err);
             } finally {
               // Always null the reference
-              draw.current = null;
+              drawRef.current = null;
             }
           }
 
@@ -138,5 +122,5 @@ export function useMapControls(
         }
       }
     };
-  }, [map, currentStyle, setCurrentStyle, isMobile]);
+  }, [mapRef, drawRef, currentStyle, setCurrentStyle, isMobile, shouldInitializeFeatures]);
 } 
