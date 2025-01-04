@@ -3,7 +3,7 @@ import { usePolygonsContext } from "../../context/PolygonsContext";
 import * as turf from "@turf/turf";
 import { useUIContext } from "../../context/UIContext";
 
-function calculatePercentageDifference(number, benchmark) {
+function calculatePercentageDifference(number: number, benchmark: number) {
   if (!number || !benchmark) return 0;
   if (typeof number !== "number" || typeof benchmark !== "number") return 0;
   const difference = Math.abs(number - benchmark);
@@ -12,7 +12,7 @@ function calculatePercentageDifference(number, benchmark) {
   return percentageDifference.toFixed(0);
 }
 
-function CloseButton({ polygon }) {
+function CloseButton({ polygon }: { polygon: any }) {
   const { polygons, setPolygons } = usePolygonsContext();
   const closePopup = () => {
     const updatedPolygons = polygons.map((p) => {
@@ -46,26 +46,24 @@ function CloseButton({ polygon }) {
   );
 }
 
-export default function StatisticsPopup({ polygon }) {
+export default function StatisticsPopup({ polygon }: { polygon: any }) {
 
   const { isMobile } = useUIContext();
 
   return (
-    <>  
-      {isMobile && <MobileStatisticsPopup polygon={polygon} />}
-      {!isMobile && <DesktopStatisticsPopup polygon={polygon} />}
-    </>
-  );
+        isMobile && <MobileStatisticsPopup polygon={polygon}/> || <DesktopStatisticsPopup polygon={polygon} />
+ );
 }
 
 
-function DesktopStatisticsPopup({ polygon }) {
+function DesktopStatisticsPopup({ polygon }: { polygon: any }) {
   const {
     sections,
     benchmarks,
     isBenchmarkControlOpen,
     setIsBenchmarkControlOpen,
   } = usePolygonsContext();
+
   const [popupPosition, setPopupPosition] = useState({
     x: polygon.pixelPosition ? polygon.pixelPosition.x : 0,
     y: polygon.pixelPosition ? polygon.pixelPosition.y : 0,
@@ -117,32 +115,29 @@ function DesktopStatisticsPopup({ polygon }) {
 
   if (!polygon || !polygon.isStatisticsPopupOpen || !sections) return null;
 
-  const polygonSections = sections.find(
-    (section: Section | any) =>
-      section.polygon && section.polygon.id === polygon.id
-  );
-
-  if (!polygonSections) return null;
-  if (polygonSections.sections.length === 0) return null;
-
   return (
     <div
-      className={`bg-white rounded-lg border shadow-sm lg:max-h-96 overflow-auto absolute p-4 z-10 ${polygonSections.polygon.properties.shape === "circle"
-        ? "min-w-[64rem]"
-        : "min-w-[32rem]"
-        }`}
+      className={`bg-white rounded-lg border shadow-sm lg:max-h-96 overflow-auto absolute p-4 z-10 min-w-[32rem]`}
       style={{
         position: "absolute",
         left: `${popupPosition.x}px`,
         top: `${popupPosition.y}px`,
         cursor: "move",
-        zIndex: 1000, // Ensure the popup is above the map
+        zIndex: 1000,
       }}
       onMouseDown={handleMouseDown}
     >
       <div className="bg-white mx-auto font-sans">
         <div className="flex justify-between items-center mb-4">
-          <div></div>
+          <div>
+            <img
+              src="/slocator.png"
+              alt="Logo"
+              width={40}
+              height={40}
+              className="w-16 h-16 rounded"
+            />
+          </div>
           <div className="flex space-x-1">
             <CloseButton polygon={polygon} />
           </div>
@@ -150,137 +145,54 @@ function DesktopStatisticsPopup({ polygon }) {
         <table className="w-full text-xs border-collapse">
           <thead>
             <tr>
-              <th
-                className="text-left font-normal text-blue-600 w-1/4"
-                colSpan={2}
-              >
-                <img
-                  src="/slocator.png"
-                  alt="Logo"
-                  width={40}
-                  height={40}
-                  className="w-16 h-16 rounded"
-                />
+              <th className="text-left font-normal text-blue-600 w-1/4" colSpan={2}>
+                Area {(turf.area(polygon) / 100000).toFixed(3)} km²
               </th>
               <th className="w-3/4 p-0" colSpan={9}>
-                <div
-                  className={`flex ${polygonSections.polygon.properties.shape === "circle"
-                    ? "justify-between"
-                    : "justify-end"
-                    }`}
-                >
-                  {polygonSections.areas.map((area, index) => {
-                    return (
-                      <div
-                        key={area}
-                        className={`font-normal space-y-0.5 overflow-hidden ${polygonSections.polygon.properties.shape === "circle"
-                          ? "w-[32%]"
-                          : "w-[64%]"
-                          }`}
-                      >
-                        <div className="bg-blue-600 text-white text-center mb-1 h-12 w-full flex items-center justify-center ">
-                          {area === "Unknown"
-                            ? `Area ${(turf.area(polygon) / 100000).toFixed(
-                              3
-                            )} km²`
-                            : area}
-                        </div>
-                        <div className="flex justify-between text-xs gap-0.5">
-                          <span className="bg-blue-600 text-white p-1.5 w-1/4 text-center">
-                            Count
-                          </span>
-                          <span className="bg-blue-600 text-white p-1.5 w-1/4 text-center">
-                            %
-                          </span>
-                          <span className="bg-blue-600 text-white p-1.5 w-1/4 text-center">
-                            Avg
-                          </span>
-                          <span className="bg-blue-600 text-white p-1.5 w-auto text-center text-nowrap">
-                            vs Benchmark
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div className="flex justify-between text-xs gap-0.5">
+                  <span className="bg-blue-600 text-white p-1.5 w-1/4 text-center">Count</span>
+                  <span className="bg-blue-600 text-white p-1.5 w-1/4 text-center">%</span>
+                  <span className="bg-blue-600 text-white p-1.5 w-1/4 text-center">Avg</span>
+                  <span className="bg-blue-600 text-white p-1.5 w-auto text-center text-nowrap">vs Benchmark</span>
                 </div>
               </th>
             </tr>
           </thead>
           <tbody>
-            {polygonSections.sections.map((section, sectionIndex) => {
+            {sections.map((section) => {
               const benchmark = benchmarks.find(
-                (benchmark) => benchmark.title === section.title
+                (b) => b.title === section.title
               );
               return (
-                <React.Fragment key={section.category}>
+                <React.Fragment key={section.title}>
                   <tr className="border-b-[3px] border-blue-600 mb-2">
-                    <td
-                      colSpan={11}
-                      className="font-bold text-blue-600 py-1 px-1 text-base capitalize"
-                    >
+                    <td colSpan={11} className="font-bold text-blue-600 py-1 px-1 text-base capitalize">
                       {section.title.split("_").join(" ")}
                     </td>
                   </tr>
                   {section.points.map((point, itemIndex) => (
-                    <tr
-                      key={`${section.title}-${point.layer_name}`}
-                      className={`${itemIndex % 2 === 0 ? "bg-gray-50" : "bg-white"
-                        }`}
-                    >
+                    <tr key={`${section.title}-${point.layer_name}`} className={itemIndex % 2 === 0 ? "bg-gray-50" : "bg-white"}>
                       <td className="py-1 px-1 w-1/4" colSpan={2}>
                         {point.layer_name}
                       </td>
                       <td className="w-3/4 p-0" colSpan={9}>
-                        <div
-                          className={`flex overflow-hidden ${polygonSections.polygon.properties.shape ===
-                            "circle"
-                            ? "justify-between"
-                            : "justify-end"
-                            }`}
-                        >
+                        <div className="flex justify-between">
                           {point.data.map((data) => (
-                            <div
-                              key={`${point.layer_name}-${data.area}km`}
-                              className={`flex items-center ${polygonSections.polygon.properties.shape ===
-                                "circle"
-                                ? "w-[32%]"
-                                : "w-[64%]"
-                                }`}
-                            >
-                              <div className="text-right py-1 px-1.5 w-1/4">
-                                {data.count}
-                              </div>
-                              <div className="text-right py-1 px-1.5 w-1/4">
-                                {data.percentage}%
-                              </div>
-                              <div className="text-right py-1 px-2 w-1/4">
-                                {data.avg}
-                              </div>
-                              <div className="text-right min-w-[84px] w-auto h-full">
-                                {benchmark?.value === "" && (
+                            <div key={`${point.layer_name}-${data.area}`} className="flex items-center w-full">
+                              <div className="text-right py-1 px-1.5 w-1/4">{data.count}</div>
+                              <div className="text-right py-1 px-1.5 w-1/4">{data.percentage}%</div>
+                              <div className="text-right py-1 px-2 w-1/4">{data.avg}</div>
+                              <div className="text-right min-w-[84px] w-auto">
+                                {benchmark?.value === "" ? (
                                   <button
-                                    className="text-nowrap h-full"
-                                    onClick={() =>
-                                      setIsBenchmarkControlOpen(
-                                        !isBenchmarkControlOpen
-                                      )
-                                    }
+                                    className="text-blue-500 underline"
+                                    onClick={() => setIsBenchmarkControlOpen(!isBenchmarkControlOpen)}
                                   >
                                     Set Benchmark
                                   </button>
-                                )}
-                                {benchmark?.value !== "" && (
-                                  <div
-                                    className={`text-center h-full flex items-center justify-center p-1 ${benchmark?.value > data.avg
-                                      ? "bg-red-50 text-red-500"
-                                      : "bg-blue-50 text-blue-500"
-                                      }`}
-                                  >
-                                    {calculatePercentageDifference(
-                                      data.avg,
-                                      benchmark?.value
-                                    )}
-                                    %
+                                ) : (
+                                  <div className={`text-center p-1 ${benchmark?.value > data.avg ? "text-red-600" : "text-blue-600"}`}>
+                                    {calculatePercentageDifference(data.avg, benchmark?.value)}%
                                   </div>
                                 )}
                               </div>
@@ -314,7 +226,7 @@ const MobileStatisticsPopup = ({ polygon }) => {
 
   if (!polygon || !polygon.isStatisticsPopupOpen || !sections) return null;
 
-  const polygonSections = sections.find((section) => section.polygon && section.polygon.id === polygon.id);
+    const polygonSections = sections.find((section) => section.polygon && section.polygon.id === polygon.id);
 
   if (!polygonSections) return null;
   if (polygonSections.sections.length === 0) return null;

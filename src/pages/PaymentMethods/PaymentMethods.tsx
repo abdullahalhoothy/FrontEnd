@@ -4,14 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import urls from "../../urls.json";
 import apiRequest from "../../services/apiRequest";
 import { PiX } from "react-icons/pi";
-
-interface PaymentMethod {
-  id: number;
-  type: string;
-  lastFour: string;
-  expiry: string;
-  isDefault?: boolean;
-}
+import { PaymentMethod, DialogProps } from "../../types/allTypesAndInterfaces";
 
 const paymentBrandIcons = {
   visa: "/card-brands/visa.svg",
@@ -43,12 +36,6 @@ export default function PaymentMethods() {
       setShowSuccessMessage(true);
     }
   }, [location.search]);
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("/auth");
-    }
-  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -445,17 +432,6 @@ function ActionDropdown({
       )}
     </div>
   );
-}
-
-interface DialogProps {
-  isOpen: boolean;
-  title: string;
-  message: string;
-  confirmText?: string;
-  cancelText?: string;
-  submitting?: boolean;
-  onConfirm: () => void;
-  onCancel: () => void;
 }
 
 function Dialog({

@@ -1,14 +1,7 @@
 import { Layer } from "../../types/allTypesAndInterfaces";
 import { formatSubcategoryName } from "../../utils/helperFunctions";
 import { IoSyncCircle, IoClose } from "react-icons/io5";
-
-interface LayerDisplaySubCategoriesProps {
-    layer: Layer;
-    layerIndex: number;
-    onRemoveType: (type: string, layerId: number, isExcluded: boolean) => void;
-    onToggleTypeInLayer: (type: string, layerId: number, setAsExcluded: boolean) => void;
-    onNameChange: (index: number, newName: string) => void;
-}
+import { LayerDisplaySubCategoriesProps } from "../../types/allTypesAndInterfaces";
 
 const LayerDisplaySubCategories = ({
     layer,

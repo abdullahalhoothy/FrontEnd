@@ -1,3 +1,4 @@
+import { AxiosRequestConfig } from "axios";
 import React, { ReactNode } from "react";
 
 export interface ModalProps {
@@ -146,6 +147,7 @@ export interface CatalogContextType {
   restoreLayer: (timestamp: number) => void;
   basedOnLayerId: string | null;
   setBasedOnLayerId: (id: string) => void;
+  updateLayerLegend: (layerId: number, legend: string) => void;
 }
 
 export interface GradientColorBasedOnZone extends MapFeatures {
@@ -524,3 +526,192 @@ export const DisplayType = {
   HEATMAP: 'heatmap',
   GRID: 'grid'
 } as const;
+
+
+export interface PolygonFeature {
+  id: string;
+  type: string;
+  properties: any;
+  geometry: {
+    coordinates: [number, number][][] | number[][][] | any;
+    type: string;
+  };
+  isStatisticsPopupOpen: boolean;
+  pixelPosition: {
+    x: number;
+    y: number;
+  };
+}
+
+export interface MapLegendProps {
+  geoPoints: MapFeatures[];
+}
+
+
+export type ProviderProps = {
+  children: React.ReactNode;
+};
+
+export type GeoPoint = {
+  features: Feature[];
+  avgRating?: number;
+  totalUserRatings?: number;
+  prdcer_layer_name?: string;
+  points_color?: string;
+  layer_legend?: string;
+  layer_description?: string;
+  is_zone_lyr?: string;
+  city_name?: string;
+  percentageInside?: number;
+};
+
+
+export type Section = {
+  title: string;
+  points: {
+    layer_name: string;
+    data: {
+      count: number;
+      percentage: number;
+      avg: number | string;
+      area: string;
+    }[];
+  }[];
+};
+
+export type PolygonData = {
+  polygon: PolygonFeature;
+  sections: Section[];
+  areas: string[];
+};
+
+export type PolygonContextType = {
+  polygons: PolygonFeature[];
+  setPolygons: React.Dispatch<React.SetStateAction<PolygonFeature[]>>;
+  sections: Section[];
+  benchmarks: Benchmark[];
+  setBenchmarks: React.Dispatch<React.SetStateAction<Benchmark[]>>;
+  isBenchmarkControlOpen: boolean;
+  setIsBenchmarkControlOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  currentStyle: string;
+  setCurrentStyle: React.Dispatch<React.SetStateAction<string>>;
+};
+
+export type Benchmark = {
+  title: string;
+  value: number | "";
+};
+
+
+export interface IAuthResponse {
+  idToken: string;
+  refreshToken: string;
+}
+
+export interface ApiRequestOptions extends AxiosRequestConfig {
+  isAuthRequest?: boolean;
+  isFormData?: boolean;
+  body?: any;
+  options?: AxiosRequestConfig;
+}
+
+export interface CategoriesBrowserSubCategoriesProps {
+  categories: CategoryData;
+  openedCategories: string[];
+  onToggleCategory: (category: string) => void;
+  getTypeCounts: (type: string) => {
+      includedCount: number[];
+      excludedCount: number[];
+  };
+  onRemoveType: (type: string, layerId: number, isExcluded: boolean) => void;
+  onAddToIncluded: (type: string) => void;
+  onAddToExcluded: (type: string) => void;
+}
+
+export interface ColorSelectProps {
+  layerId: number
+  onColorChange: (color: string) => void
+}
+
+export interface DropdownColorSelectProps {
+  layerIndex?: number;
+}
+
+export interface LayerCustomizationItemProps {
+    layer: LayerCustomization;
+    isCollapsed: boolean;
+    error?: string;
+    onToggleCollapse: (layerId: number) => void;
+    onLayerChange: (layerId: number, field: keyof LayerCustomization, value: string) => void;
+    onDiscard: (layerId: number) => void;
+    onSave: (layerId: number) => void;
+    isSaving?: boolean;
+    isSaved?: boolean;
+}
+
+export interface UserProfile {
+  user_id: string;
+  username: string;
+  email: string;
+  prdcer?: {
+    prdcer_dataset: Record<string, any>;
+    prdcer_lyrs: Record<string, any>;
+    prdcer_ctlgs: Record<string, any>;
+  };
+}
+
+export interface PopupInfo {
+  type: "dataset" | "layer" | "catalog";
+  name: string;
+  data: any;
+}
+
+
+export interface PaymentMethod {
+  id: number;
+  type: string;
+  lastFour: string;
+  expiry: string;
+  isDefault?: boolean;
+}
+
+export interface DialogProps {
+  isOpen: boolean;
+  title: string;
+  message: string;
+  confirmText?: string;
+  cancelText?: string;
+  submitting?: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+export interface NavigationSetupProps {
+  children: React.ReactNode;
+}
+
+export interface BasedOnLayerDropdownProps {
+  layerIndex: number;
+}
+
+export interface BasedOnDropdownProps {
+  layerIndex: number;
+}
+
+export interface LayerDisplaySubCategoriesProps {
+  layer: Layer;
+  layerIndex: number;
+  onRemoveType: (type: string) => void;
+  onToggleTypeInLayer: (type: string) => void;
+  onNameChange: (layerIndex: number, newName: string) => void;
+} 
+
+
+export type MapContextType = {
+  mapRef: React.MutableRefObject<mapboxgl.Map | null>;
+  mapContainerRef: React.MutableRefObject<HTMLDivElement | null>;
+  drawRef: React.MutableRefObject<MapboxDraw | null>;
+  isStyleLoaded: boolean;
+  setIsStyleLoaded: (loaded: boolean) => void;
+  shouldInitializeFeatures: boolean;
+};

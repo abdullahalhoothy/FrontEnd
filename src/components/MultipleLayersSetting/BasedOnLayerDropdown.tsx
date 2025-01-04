@@ -1,9 +1,6 @@
 import React from "react";
 import { useCatalogContext } from "../../context/CatalogContext";
-
-interface BasedOnLayerDropdownProps {
-  layerIndex: number;
-}
+import { BasedOnLayerDropdownProps } from "../../types/allTypesAndInterfaces";
 
 export default function BasedOnLayerDropdown({ layerIndex }: BasedOnLayerDropdownProps) {
   const { basedOnLayerId, setBasedOnLayerId, geoPoints } = useCatalogContext();
