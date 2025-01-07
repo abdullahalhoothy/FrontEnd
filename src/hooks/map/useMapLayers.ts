@@ -2,14 +2,19 @@ import { useEffect } from 'react'
 import mapboxgl from 'mapbox-gl'
 import { useCatalogContext } from '../../context/CatalogContext'
 import { defaultMapConfig } from './useMapInitialization'
-import {  colorOptions } from '../../utils/helperFunctions'
+import { colorOptions } from '../../utils/helperFunctions'
 import { useMapContext } from '../../context/MapContext'
-
- const defaultCircleStrokeWidth = 1
- const defaultCircleStrokeColor = '#fff'
+import apiRequest from '../../services/apiRequest'
+import urls from '../../urls.json'
+import { generatePopupContent } from '../../pages/MapContainer/generatePopupContent'
+import { CustomProperties }  from '../../types/allTypesAndInterfaces'
+import { useUIContext } from '../../context/UIContext'
+const defaultCircleStrokeWidth = 1
+const defaultCircleStrokeColor = '#fff'
 
 export function useMapLayers () {
   const { mapRef, shouldInitializeFeatures } = useMapContext()
+  const { isMobile } = useUIContext()
   const map = mapRef.current
   const { geoPoints } = useCatalogContext()
 
@@ -81,14 +86,126 @@ export function useMapLayers () {
               }
             })
 
-            // Add hover effects
-            map.on('mouseenter', layerId, () => {
-              map.getCanvas().style.cursor = 'pointer'
-            })
+            // Add hover interaction variables
+            let hoveredStateId: number | null = null
+            let popup: mapboxgl.Popup | null = null
+            let isOverPopup = false
+            let isOverPoint = false
 
-            map.on('mouseleave', layerId, () => {
+            const handleMouseOverOrTouchStart = async (
+              e: mapboxgl.MapMouseEvent & mapboxgl.EventData | mapboxgl.MapTouchEvent & mapboxgl.EventData
+            ) => {
+              if (!map) return
+              isOverPoint = true
               map.getCanvas().style.cursor = ''
-            })
+
+              if (e.features && e.features.length > 0) {
+                if (hoveredStateId !== null) {
+                  map.setFeatureState(
+                    { source: sourceId, id: hoveredStateId },
+                    { hover: false }
+                  )
+                }
+
+                hoveredStateId = e.features[0].id as number
+                map.setFeatureState(
+                  { source: sourceId, id: hoveredStateId },
+                  { hover: true }
+                )
+
+                const coordinates = (
+                  e.features[0].geometry as any
+                ).coordinates.slice()
+                const properties = e.features[0].properties as CustomProperties
+
+                // Show loading spinner in the popup
+                const loadingContent = generatePopupContent(
+                  properties,
+                  coordinates,
+                  true,
+                  false
+                )
+
+                if (popup) {
+                  popup.remove()
+                }
+
+                popup = new mapboxgl.Popup({
+                  closeButton: window.innerWidth <= 768 // Mobile check
+                })
+                  .setLngLat(coordinates)
+                  .setHTML(loadingContent)
+                  .addTo(map)
+
+                const [lng, lat] = coordinates
+
+                try {
+                  //TODO: Restore StreetView once 403 error is fixed in the backend
+
+                  /*const response = await apiRequest({
+                    url: urls.check_street_view,
+                    method: 'POST',
+                    body: { lat, lng }
+                  })*/
+                  
+                  const updatedContent = generatePopupContent(
+                    properties,
+                    coordinates,
+                    false,
+                    false
+                  )
+                  popup?.setHTML(updatedContent)
+                } catch (error) {
+                  console.error('Error fetching street view:', error)
+                  popup?.setHTML(
+                    generatePopupContent(properties, coordinates, false, false)
+                  )
+                }
+
+                // Add popup element events
+                if (popup) {
+                const popupElement = popup.getElement()
+                popupElement.addEventListener('mouseenter', () => {
+                  isOverPopup = true
+                })
+                popupElement.addEventListener('mouseleave', () => {
+                  isOverPopup = false
+                  if (!isOverPoint && popup) {
+                    popup.remove()
+                      popup = null
+                    }
+                  }
+                )}
+              }
+            }
+
+            const handleMouseLeave = () => {
+              if (!map) return
+              isOverPoint = false
+              map.getCanvas().style.cursor = ''
+
+              setTimeout(() => {
+                if (!isOverPopup && !isOverPoint && popup) {
+                  popup.remove()
+                  popup = null
+                }
+              }, 500)
+
+              if (hoveredStateId !== null) {
+                map.setFeatureState(
+                  { source: sourceId, id: hoveredStateId },
+                  { hover: false }
+                )
+              }
+              hoveredStateId = null
+            }
+
+            if (isMobile) {
+              map.on('touchstart', layerId, handleMouseOverOrTouchStart)
+            } else {
+              map.on('mouseenter', layerId, handleMouseOverOrTouchStart)
+              map.on('mouseleave', layerId, handleMouseLeave)
+            }
 
           } catch (error) {
             console.error('Error adding layer:', error)
