@@ -27,7 +27,7 @@ export function usePolygonHandlers() {
 
       // Set the shape property for regular polygons
       if (!geojson.properties) geojson.properties = {};
-      geojson.properties.shape = 'polygon';
+      geojson.properties.shape = geojson.properties.shape ? geojson.properties.shape : "polygon";
       geojson.isStatisticsPopupOpen = true;
       geojson.pixelPosition = pixelPosition;
       setPolygons(prev => [...prev, geojson]);
