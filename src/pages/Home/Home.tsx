@@ -2,10 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { FaBoxOpen, FaLayerGroup } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
-import FetchDatasetForm from "../../components/FetchDatasetForm/FetchDatasetForm";
-import CatalogForm from "../../components/CatalogFormLoader/CatalogFormLoader";
 import LayerFormLoader from "../../components/LayerFormLoader/LayerFormLoader";
-import CatalogMenu from "../../components/CatalogMenu/CatalogMenu";
 import CatalogFormLoader from "../../components/CatalogFormLoader/CatalogFormLoader";
 import DataContainer from "../../components/DataContainer/DataContainer";
 import { useUIContext } from "../../context/UIContext";
@@ -48,7 +45,7 @@ const Home = () => {
 
   useEffect(() => {
     if (!isAuthenticated && selectedTab === "CATALOG") nav("/auth");
-  }, [selectedTab]);
+  }, [selectedTab]);  
 
   const { isMobile, setIsDrawerOpen, isDrawerOpen } = useUIContext();
   return (
@@ -75,11 +72,12 @@ export function HomeContent() {
 
   const [selectedTab, setSelectedTab] = useState<"LAYER" | "CATALOG">("LAYER");
 
+  const { setSelectedContainerType } = useCatalogContext();
   const handleTabSwitch = (tab: "LAYER" | "CATALOG") => {
     setSelectedTab(tab);
+    setSelectedContainerType(tab === "CATALOG" ? "Catalogue" : "Layer");
   };
 
-  const { setSelectedContainerType } = useCatalogContext();
 
   // useEffect(() => {
   //   if (!hasOpened) {
