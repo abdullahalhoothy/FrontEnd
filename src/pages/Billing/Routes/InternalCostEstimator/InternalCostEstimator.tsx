@@ -40,11 +40,13 @@ function InternalCostEstimator() {
 
     if (validateFetchDatasetForm()) {
       setIsLoading(true);
+      //TODO: Further improve when working on the "OR" feature
       const requestBody = {
-        included_categories: reqFetchDataset.includedTypes,
-        excluded_categories: reqFetchDataset.excludedTypes,
+        //included_categories: reqFetchDataset.includedTypes,
+        //excluded_categories: reqFetchDataset.excludedTypes,
+        boolean_query: reqFetchDataset.includedTypes?.join(" OR "),
         city_name: reqFetchDataset.selectedCity,
-        country: reqFetchDataset.selectedCountry,
+        country_name: reqFetchDataset.selectedCountry,
       };
 
       HttpReq<CostEstimate>(
