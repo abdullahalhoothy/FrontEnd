@@ -4,8 +4,6 @@ import { useCatalogContext } from '../../context/CatalogContext'
 import { defaultMapConfig } from './useMapInitialization'
 import { colorOptions } from '../../utils/helperFunctions'
 import { useMapContext } from '../../context/MapContext'
-import apiRequest from '../../services/apiRequest'
-import urls from '../../urls.json'
 import { generatePopupContent } from '../../pages/MapContainer/generatePopupContent'
 import { CustomProperties }  from '../../types/allTypesAndInterfaces'
 import { useUIContext } from '../../context/UIContext'
@@ -251,10 +249,34 @@ export function useMapLayers () {
       console.warn('Waiting for initial style load')
     }
 
-    return () => {
-      if (map) {
-        map.off('style.load', styleChangeHandler)
+    // Clean up function to remove all layers and sources
+    const cleanupLayers = () => {
+      if (!map.isStyleLoaded()) return;
+
+      try {
+        const style = map.getStyle();
+        if (!style || !style.layers) return;
+
+        // Remove all circle layers and their sources
+        style.layers.forEach((layer: any) => {
+          if (layer.id.startsWith('circle-layer-')) {
+            const sourceId = `circle-source-${layer.id.split('-')[2]}`;
+            if (map.getLayer(layer.id)) {
+              map.removeLayer(layer.id);
+            }
+            if (map.getSource(sourceId)) {
+              map.removeSource(sourceId);
+            }
+          }
+        });
+      } catch (error) {
+        console.error('Error during cleanup:', error);
       }
-    }
+    };
+
+    // Cleanup on unmount or when geoPoints changes
+    return () => {
+      cleanupLayers();
+    };
   }, [mapRef, geoPoints, shouldInitializeFeatures])
 }
