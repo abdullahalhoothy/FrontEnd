@@ -8,6 +8,7 @@ export function useLegendManager() {
   const { shouldInitializeFeatures } = useMapContext();
   const legendRef = useRef<HTMLDivElement | null>(null);
 
+  // Effect to create legend element
   useEffect(() => {
     if (!shouldInitializeFeatures) return;
 
@@ -17,27 +18,34 @@ export function useLegendManager() {
     }
   }, [shouldInitializeFeatures]);
 
+  // Effect to manage legend content and visibility
   useEffect(() => {
-    if (!shouldInitializeFeatures || !legendRef.current || !geoPoints.length) return;
-
-    const hasAtLeastOneValidName = geoPoints.some(point => 
-      point.layer_legend || (point.is_gradient && point.gradient_groups)
-    );
-    
-    if (!hasAtLeastOneValidName) {
+    // Clean up any existing legend
+    if (legendRef.current) {
       legendRef.current.remove();
+    }
+
+    // Only proceed if we should show the legend
+    if (!shouldInitializeFeatures || !geoPoints.length) {
       return;
     }
 
-    // Update legend content
-    MapLegend(legendRef.current, geoPoints);
+    const hasAtLeastOneValidName = geoPoints.some(point => 
+      point.display && (point.layer_legend || (point.is_gradient && point.gradient_groups))
+    );
+    
+    if (!hasAtLeastOneValidName) {
+      return;
+    }
+
+    // Create and update legend
+    if (legendRef.current) {
+      MapLegend(legendRef.current, geoPoints);
+      document.body.appendChild(legendRef.current);
+    }
 
     return () => {
       legendRef.current?.remove();
     };
-  }, [geoPoints]);
-
-  if (legendRef.current) {
-    document.body.appendChild(legendRef.current);
-  };
+  }, [geoPoints, shouldInitializeFeatures]);
 }

@@ -241,14 +241,16 @@ export function LayerProvider(props: { children: ReactNode }) {
               : ""
           }`;
 
+          //TODO: Further improve when working on the "OR" feature
           const res = await apiRequest({
             url: urls.fetch_dataset,
             method: "post",
             body: {
-              dataset_country: reqFetchDataset.selectedCountry,
-              dataset_city: reqFetchDataset.selectedCity,
-              includedTypes: layer.includedTypes || [],
-              excludedTypes: layer.excludedTypes || [],
+              country_name: reqFetchDataset.selectedCountry,
+              city_name: reqFetchDataset.selectedCity,
+              //includedTypes: layer.includedTypes || [],
+              //excludedTypes: layer.excludedTypes || [],
+              boolean_query: layer.includedTypes?.join(" OR "),
               layerId: layer.id,
               layer_name: defaultName,
               action: action,

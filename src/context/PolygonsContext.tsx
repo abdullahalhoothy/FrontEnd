@@ -129,9 +129,8 @@ const PolygonsProvider = ({ children }: ProviderProps) => {
       return polygonData;
     });
 
-    const allSections = processedPolygons.flatMap(polygonData => polygonData.sections);
-    return allSections;
-  }, [polygons, geoPoints]);
+    return processedPolygons;
+  }, [polygons, geoPoints]); 
 
   useEffect(() => {
     const newBenchmarks: Benchmark[] = [...benchmarks];
