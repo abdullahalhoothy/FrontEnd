@@ -24,8 +24,7 @@ import html2canvas from "html2canvas";
 const CatalogContext = createContext<CatalogContextType | undefined>(undefined);
 
 export function CatalogProvider(props: { children: ReactNode }) {
-  const { authResponse } = useAuth(); // Add this line
-  const navigate = useNavigate();
+  const { authResponse } = useAuth();
   const { children } = props;
 
   const [formStage, setFormStage] = useState<
@@ -83,11 +82,14 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [reqGradientColorBasedOnZone, setReqGradientColorBasedOnZone] =
     useState<ReqGradientColorBasedOnZone>({
       prdcer_lyr_id: "",
+      change_lyr_name: "",
+      based_on_lyr_name: "",
       user_id: "",
       color_grid_choice: [],
       change_lyr_id: "",
       based_on_lyr_id: "",
-      radius_offset: 0,
+      coverage_value: 0,
+      coverage_property: "",
       color_based_on: "",
     });
   const [gradientColorBasedOnZone, setGradientColorBasedOnZone] = useState<
@@ -106,7 +108,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
     timestamp: number;
   }[]>([]);
   const [basedOnLayerId, setBasedOnLayerId] = useState<string | null>(null);
-
+  const [basedOnProperty, setBasedOnProperty] = useState<string | null>(null);
   async function fetchGeoPoints(id: string, typeOfCard: string) {
     const apiJsonRequest =
       typeOfCard === "layer"
@@ -385,37 +387,26 @@ export function CatalogProvider(props: { children: ReactNode }) {
     } else {
       idToken = "";
     }
-    /**
-   {
-      "color_grid_choice": [
-        "string"
-      ],
-      "change_lyr_id": "string",
-      "change_lyr_name": "string",
-      "based_on_lyr_id": "string",
-      "based_on_lyr_name": "string",
-      "offset_value": 0,
-      "color_based_on": "string"
-    }
-     */
 
     console.log(`#feat multicolor: reqGradientColorBasedOnZone ${JSON.stringify(reqGradientColorBasedOnZone)}`);
 
     const postData: {
-      color_grid_choice: string[];    // Array of colors for the gradient palette
-      change_lyr_id: string;         // ID of the layer being recolored
-      change_lyr_name: string;       // Name of the layer being recolored
-      based_on_lyr_id: string;       // ID of the layer we're comparing against
-      based_on_lyr_name: string;     // Name of the layer we're comparing against
-      offset_value: number;          // Distance/radius value for comparison
-      color_based_on: string;        // Metric to base coloring on (e.g., "rating", "exists")
+      color_grid_choice: string[], // Array of colors for the gradient palette
+      change_lyr_id: string, // ID of the layer being recolored
+      change_lyr_name: string, // Name of the layer being recolored
+      based_on_lyr_id: string, // ID of the layer we're comparing against
+      based_on_lyr_name: string, // Name of the layer we're comparing against
+      coverage_value: number, // Distance/radius value for comparison
+      coverage_property: string, // Property to base coloring on (e.g., "population_density", "number_of_ratings")
+      color_based_on: string // Metric to measure distance (e.g., "driving_time", "radius")
     } = {
       color_grid_choice: reqGradientColorBasedOnZone.color_grid_choice,
       change_lyr_id: reqGradientColorBasedOnZone.change_lyr_id,
       change_lyr_name: reqGradientColorBasedOnZone.change_lyr_name,
       based_on_lyr_id: reqGradientColorBasedOnZone.based_on_lyr_id,
       based_on_lyr_name: reqGradientColorBasedOnZone.based_on_lyr_name,
-      offset_value: reqGradientColorBasedOnZone.offset_value,
+      coverage_value: reqGradientColorBasedOnZone.coverage_value,
+      coverage_property: reqGradientColorBasedOnZone.coverage_property,
       color_based_on: reqGradientColorBasedOnZone.color_based_on
     };
 
@@ -423,17 +414,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
 
     const disabled = false;
 
-    // HttpReq<GradientColorBasedOnZone[]>(
-    //   urls.gradient_color_based_on_zone,
-    //   setGradientColorBasedOnZone,
-    //   setPostResMessage,
-    //   setPostResId,
-    //   setLocalLoading,
-    //   setIsError,
-    //   "post",
-    //   postData,
-    //   idToken
-    // );
     if (!disabled && reqGradientColorBasedOnZone.change_lyr_id.length > 0) {
       try {
         setLocalLoading(true);
@@ -568,6 +548,8 @@ export function CatalogProvider(props: { children: ReactNode }) {
         setVisualizationMode,
         basedOnLayerId,
         setBasedOnLayerId,
+        basedOnProperty,
+        setBasedOnProperty,
         updateLayerLegend
       }}
     >
