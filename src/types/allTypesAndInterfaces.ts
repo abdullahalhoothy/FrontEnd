@@ -146,7 +146,9 @@ export interface CatalogContextType {
   deletedLayers: Array<{ layer: MapFeatures; index: number; timestamp: number }>;
   restoreLayer: (timestamp: number) => void;
   basedOnLayerId: string | null;
+  basedOnProperty: string | null;
   setBasedOnLayerId: (id: string) => void;
+  setBasedOnProperty: (id: string) => void;
   updateLayerLegend: (layerId: number, legend: string) => void;
 }
 
@@ -156,12 +158,15 @@ export interface GradientColorBasedOnZone extends MapFeatures {
 }
 
 export interface ReqGradientColorBasedOnZone {
+  prdcer_lyr_id: string;
+  user_id: string;
   color_grid_choice: string[];
   change_lyr_id: string;
   change_lyr_name: string;
   based_on_lyr_id: string;
   based_on_lyr_name: string;
-  offset_value: number;
+  coverage_value: number;
+  coverage_property: string;
   color_based_on: string;
 }
 
