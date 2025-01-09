@@ -16,6 +16,7 @@ import { RiCloseCircleLine } from 'react-icons/ri'
 import { HttpReq } from '../../services/apiService'
 import urls from '../../urls.json'
 import { useAuth } from '../../context/AuthContext'
+import BasedOnDropdown from './BasedOnDropdown'
 import apiRequest from '../../services/apiRequest'
 import BasedOnLayerDropdown from './BasedOnLayerDropdown'
 
@@ -52,8 +53,6 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
     updateLayerColor,
     resetState,
     basedOnLayerId,
-    basedOnProperty,
-    setBasedOnProperty,
     setIsLoading,
     handleColorBasedZone,
     gradientColorBasedOnZone
@@ -258,8 +257,7 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
         color_grid_choice: colors[chosenPallet || 0],
         change_lyr_id,
         based_on_lyr_id: prdcer_lyr_id,
-        coverage_value: newRadius || 1000,
-        coverage_property: basedOnProperty,
+        radius_offset: newRadius || 1000,
         color_based_on: selectedBasedon
       })
     }
@@ -334,11 +332,6 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
       console.error('Please select a layer to compare with');
       return;
     }
-
-    if (!basedOnProperty) {
-      console.error('Please select a metric to compare based on');
-      return;
-    }
     
     if (!selectedColors || selectedColors.length === 0) {
       console.error('Please select a color palette');
@@ -371,12 +364,9 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
         // Layer being compared against
         based_on_lyr_id: baseLayer.prdcer_lyr_id,
         based_on_lyr_name: baseName,
-
-        // Metric being compared based on
-        coverage_property: basedOnProperty,
-
+        
         // Distance for comparison (with bounds)
-        coverage_value: validRadius,
+        offset_value: validRadius,
         
         // What metric to base colors on
         color_based_on: selectedBasedon

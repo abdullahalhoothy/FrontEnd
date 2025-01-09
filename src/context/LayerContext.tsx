@@ -411,7 +411,6 @@ export function LayerProvider(props: { children: ReactNode }) {
       includedTypes: [],
       excludedTypes: [],
     });
-    setLayerDataMap({});
     setSelectedCountry(""); // Reset country
     setSelectedCity(""); // Reset city
     setTextSearchInput("");
