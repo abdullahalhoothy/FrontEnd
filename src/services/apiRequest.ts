@@ -45,6 +45,7 @@ const refreshAuthToken = async (refreshToken: string): Promise<AuthResponse> => 
         refresh_token: refreshToken,
         grant_type: "refresh_token",
       },
+      isFormData: true,
     });
     
     if (!res.data?.idToken) {
