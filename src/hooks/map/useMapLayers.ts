@@ -1,16 +1,69 @@
 import { useEffect } from 'react'
-import mapboxgl from 'mapbox-gl'
+import mapboxgl, { GeoJSONSource } from 'mapbox-gl'
 import { useCatalogContext } from '../../context/CatalogContext'
 import { defaultMapConfig } from './useMapInitialization'
 import { colorOptions } from '../../utils/helperFunctions'
+import * as turf from '@turf/turf'
 import { useMapContext } from '../../context/MapContext'
 import { generatePopupContent } from '../../pages/MapContainer/generatePopupContent'
-import { CustomProperties }  from '../../types/allTypesAndInterfaces'
+import { CustomProperties } from '../../types/allTypesAndInterfaces'
 import { useUIContext } from '../../context/UIContext'
+
 const defaultCircleStrokeWidth = 1
 const defaultCircleStrokeColor = '#fff'
+const DEFAULT_RADIUS_METERS = 750
 
-export function useMapLayers () {
+const getGridPaint = (basedonLength: boolean, pointsColor: string, p25: number, p50: number, p75: number) => ({
+  'fill-color': pointsColor || defaultMapConfig.defaultColor,
+  'fill-opacity': basedonLength ? [
+    'case',
+    ['==', ['get', 'density'], 0],
+    0,
+    ['step', ['get', 'density'], 0.2, p25, 0.4, p50, 0.6, p75, 0.8]
+  ] : [
+    'case',
+    ['==', ['get', 'density'], 0],
+    0,
+    1
+  ],
+  'fill-outline-color': [
+    'case',
+    ['==', ['get', 'density'], 0],
+    'rgba(0,0,0,0)',
+    '#000'
+  ]
+})
+
+const getHeatmapPaint = (basedon: string, pointsColor?: string) => ({
+  'heatmap-weight': [
+    'interpolate',
+    ['linear'],
+    ['get', basedon || 'heatmap_weight'],
+    0, 0,
+    5, 1
+  ],
+  'heatmap-color': [
+    'interpolate',
+    ['linear'],
+    ['heatmap-density'],
+    0, 'rgba(33,102,172,0)',
+    0.2, pointsColor || defaultMapConfig.defaultColor,
+    0.4, 'rgb(209,229,240)',
+    0.6, 'rgb(253,219,199)',
+    0.8, 'rgb(239,138,98)',
+    1, 'rgb(178,24,43)'
+  ]
+})
+
+const getCirclePaint = (pointsColor: string) => ({
+  'circle-radius': defaultMapConfig.circleRadius,
+  'circle-color': pointsColor || colorOptions[1].hex,
+  'circle-opacity': defaultMapConfig.circleOpacity,
+  'circle-stroke-width': defaultCircleStrokeWidth,
+  'circle-stroke-color': defaultCircleStrokeColor
+})
+
+export function useMapLayers() {
   const { mapRef, shouldInitializeFeatures } = useMapContext()
   const { isMobile } = useUIContext()
   const map = mapRef.current
@@ -20,7 +73,6 @@ export function useMapLayers () {
     if (!shouldInitializeFeatures || !map) return
 
     const addLayers = () => {
-      // Only proceed if style is fully loaded
       if (!map.isStyleLoaded()) {
         console.warn('Style not loaded, waiting...')
         return
@@ -31,8 +83,16 @@ export function useMapLayers () {
         geoPoints.forEach((_, index) => {
           const layerId = `circle-layer-${index}`
           const sourceId = `circle-source-${index}`
+          const gridLayerId = `${layerId}-grid`
+          const gridSourceId = `${sourceId}-grid`
 
           try {
+            if (map.getLayer(gridLayerId)) {
+              map.removeLayer(gridLayerId)
+            }
+            if (map.getSource(gridSourceId)) {
+              map.removeSource(gridSourceId)
+            }
             if (map.getLayer(layerId)) {
               map.removeLayer(layerId)
             }
@@ -40,23 +100,22 @@ export function useMapLayers () {
               map.removeSource(sourceId)
             }
           } catch (err) {
-            console.warn(
-              'Non-fatal layer cleanup error:',
-              err
-            )
+            console.warn('Non-fatal layer cleanup error:', err)
           }
         })
 
         // Add new layers
         geoPoints.forEach((featureCollection, index) => {
-          if (
-            !featureCollection.type ||
-            !Array.isArray(featureCollection.features)
-          ) {
-            console.error(
-              '🗺️ [Map] Invalid GeoJSON structure:',
-              featureCollection
-            )
+          console.log("#fix: heatmap/grid, Layer config:", {
+            index,
+            isHeatmap: featureCollection.is_heatmap,
+            isGrid: featureCollection.is_grid,
+            type: featureCollection.type,
+            features: featureCollection.features?.length
+          })
+
+          if (!featureCollection.type || !Array.isArray(featureCollection.features)) {
+            console.error('🗺️ [Map] Invalid GeoJSON structure:', featureCollection)
             return
           }
 
@@ -71,19 +130,75 @@ export function useMapLayers () {
               generateId: true
             })
 
-            // Add layer
-            map.addLayer({
-              id: layerId,
-              type: 'circle',
-              source: sourceId,
-              paint: {
-                'circle-radius': defaultMapConfig.circleRadius,
-                'circle-color': featureCollection.points_color || colorOptions[1].hex,
-                'circle-opacity': defaultMapConfig.circleOpacity,
-                'circle-stroke-width': defaultCircleStrokeWidth,
-                'circle-stroke-color': defaultCircleStrokeColor
-              }
-            })
+            if (featureCollection.is_grid) {
+              // Calculate bounds from features
+              const bounds = turf.bbox(featureCollection)
+              
+              // Create grid
+              const cellSide = DEFAULT_RADIUS_METERS / 1000
+              const options = { units: 'kilometers' as const }
+              const grid = turf.squareGrid(bounds, cellSide, options)
+
+              // Calculate density for each cell
+              grid.features = grid.features.map(cell => {
+                const pointsWithin = turf.pointsWithinPolygon(featureCollection, cell)
+                const density = featureCollection.basedon?.length > 0
+                  ? pointsWithin.features.reduce((sum, point) => {
+                      const value = point.properties[featureCollection.basedon]
+                      return sum + (typeof value === 'number' ? value : 0)
+                    }, 0)
+                  : pointsWithin.features.length
+
+                return {
+                  ...cell,
+                  properties: { ...cell.properties, density }
+                }
+              })
+
+              // Add grid source
+              const gridSourceId = `${sourceId}-grid`
+              map.addSource(gridSourceId, {
+                type: 'geojson',
+                data: grid
+              })
+
+              // Calculate density values for styling
+              const allDensityValues = grid.features.map(f => f.properties?.density || 0)
+              const maxDensity = Math.max(...allDensityValues, 1)
+              
+              const p25 = maxDensity * 0.25
+              const p50 = maxDensity * 0.5
+              const p75 = maxDensity * 0.75
+
+              // Add grid layer
+              const gridLayerId = `${layerId}-grid`
+              map.addLayer({
+                id: gridLayerId,
+                type: 'fill',
+                source: gridSourceId,
+                paint: getGridPaint(
+                  featureCollection.basedon?.length > 0,
+                  featureCollection.points_color || defaultMapConfig.defaultColor,
+                  p25,
+                  p50,
+                  p75
+                )
+              })
+            } else if (featureCollection.is_heatmap) {
+              map.addLayer({
+                id: layerId,
+                type: 'heatmap',
+                source: sourceId,
+                paint: getHeatmapPaint(featureCollection.basedon, featureCollection.points_color)
+              })
+            } else {
+              map.addLayer({
+                id: layerId,
+                type: 'circle',
+                source: sourceId,
+                paint: getCirclePaint(featureCollection.points_color)
+              })
+            }
 
             // Add hover interaction variables
             let hoveredStateId: number | null = null
@@ -130,7 +245,7 @@ export function useMapLayers () {
                 }
 
                 popup = new mapboxgl.Popup({
-                  closeButton: window.innerWidth <= 768 // Mobile check
+                  closeButton: isMobile
                 })
                   .setLngLat(coordinates)
                   .setHTML(loadingContent)
