@@ -9,10 +9,6 @@ import { generatePopupContent } from '../../pages/MapContainer/generatePopupCont
 import { CustomProperties } from '../../types/allTypesAndInterfaces'
 import { useUIContext } from '../../context/UIContext'
 
-const defaultCircleStrokeWidth = 1
-const defaultCircleStrokeColor = '#fff'
-const DEFAULT_RADIUS_METERS = 750
-
 const getGridPaint = (basedonLength: boolean, pointsColor: string, p25: number, p50: number, p75: number) => ({
   'fill-color': pointsColor || defaultMapConfig.defaultColor,
   'fill-opacity': basedonLength ? [
@@ -59,8 +55,8 @@ const getCirclePaint = (pointsColor: string) => ({
   'circle-radius': defaultMapConfig.circleRadius,
   'circle-color': pointsColor || colorOptions[1].hex,
   'circle-opacity': defaultMapConfig.circleOpacity,
-  'circle-stroke-width': defaultCircleStrokeWidth,
-  'circle-stroke-color': defaultCircleStrokeColor
+  'circle-stroke-width': defaultMapConfig.circleStrokeWidth,
+  'circle-stroke-color': defaultMapConfig.circleStrokeColor
 })
 
 export function useMapLayers() {
@@ -135,7 +131,7 @@ export function useMapLayers() {
               const bounds = turf.bbox(featureCollection)
               
               // Create grid
-              const cellSide = DEFAULT_RADIUS_METERS / 1000
+              const cellSide = defaultMapConfig.radiusInMeters / 1000
               const options = { units: 'kilometers' as const }
               const grid = turf.squareGrid(bounds, cellSide, options)
 
