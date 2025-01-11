@@ -67,7 +67,8 @@ export function useMapLayers () {
             // Add source
             map.addSource(sourceId, {
               type: 'geojson',
-              data: featureCollection
+              data: featureCollection,
+              generateId: true
             })
 
             // Add layer
