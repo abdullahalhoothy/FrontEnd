@@ -40,14 +40,11 @@ function CustomizeLayer() {
   const { isAuthenticated } = useAuth();
 
   const {
-    setReqSaveLayer,
     resetFormStage,
     resetFetchDatasetForm,
-    showLoaderTopup,
     reqFetchDataset,
     handleSaveLayer,
-    saveResponse,
-    layerDataMap,
+    updateLayerState,
   } = useLayerContext();
 
   const { removeLayer } = useCatalogContext();
