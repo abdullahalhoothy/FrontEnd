@@ -615,7 +615,7 @@ export interface IAuthResponse {
 
 export interface ApiRequestOptions extends AxiosRequestConfig {
   isAuthRequest?: boolean;
-  isFormData?: boolean;
+  noBodyWrap?: boolean;
   body?: any;
   options?: AxiosRequestConfig;
 }

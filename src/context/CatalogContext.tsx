@@ -254,7 +254,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
         method: "post",
         body: formData,
         isAuthRequest: true,
-        isFormData: true,
+        noBodyWrap: true,
       });
 
       setSaveResponse(res.data.data);

@@ -45,7 +45,7 @@ const refreshAuthToken = async (refreshToken: string): Promise<AuthResponse> => 
         refresh_token: refreshToken,
         grant_type: "refresh_token",
       },
-      isFormData: true,
+      noBodyWrap: true,
     });
     
     if (!res.data?.idToken) {
@@ -65,16 +65,15 @@ const makeApiCall = async ({
   method,
   body,
   options,
-  isFormData = false,
+  noBodyWrap = false,
 }: {
   url: string;
   method: string;
   body?: any;
   options?: AxiosRequestConfig;
-  isFormData?: boolean;
+  noBodyWrap?: boolean;
 }) => {
-  // If it's FormData, don't wrap the body
-  const data = isFormData ? body : (
+  const data = noBodyWrap ? body : (
     method.toUpperCase() !== "GET"
       ? {
           message: "Request from frontend",
@@ -83,19 +82,6 @@ const makeApiCall = async ({
         }
       : undefined
   );
-
-  // Log the final request details
-  console.log('🚀 Making API request:', {
-    url,
-    method,
-    isFormData,
-    headers: options?.headers,
-    data: isFormData 
-      ? 'FormData: ' + Array.from(body.entries()).map(([key, value]) => 
-          key === 'image' ? `${key}: [Blob]` : `${key}: ${value}`
-        ).join(', ')
-      : data
-  });
 
   return await axiosInstance({
     url,
@@ -126,7 +112,7 @@ const apiRequest = async ({
   body = {},
   options = {},
   isAuthRequest = false,
-  isFormData = false,
+  noBodyWrap = false,
 }: ApiRequestOptions): Promise<any> => {
   const authResponse = getAuthResponse();
 
@@ -142,7 +128,7 @@ const apiRequest = async ({
   }
 
   try {
-    const response = await makeApiCall({ url, method, body, options, isFormData });
+    const response = await makeApiCall({ url, method, body, options, noBodyWrap });
     return response;
   } catch (err: any) {
     if (err?.response?.status === 401 || err?.response?.status === 403) {
@@ -156,7 +142,7 @@ const apiRequest = async ({
           
           // Retry the original request with new token
           setAuthorizationHeader(options, newToken.idToken);
-          const retryResponse = await makeApiCall({ url, method, body, options, isFormData });
+          const retryResponse = await makeApiCall({ url, method, body, options, noBodyWrap });
           return retryResponse;
         } catch (tokenErr) {
           console.error("Token refresh error:", tokenErr);
