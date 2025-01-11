@@ -472,9 +472,37 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
     const isHeatmapNew = newType === DisplayType.HEATMAP;
     const isGridNew = newType === DisplayType.GRID;
 
+    console.log("#fix: heatmap, Changing display type:", {
+        newType,
+        isHeatmapNew,
+        layerIndex,
+        currentIsHeatmap: layer.is_heatmap
+    });
+
     setDisplayType(newType);
     setIsHeatmap(isHeatmapNew);
     setIsGrid(isGridNew);
+    
+    // Update the layer's features to include heatmap weight when switching to heatmap mode
+    if (isHeatmapNew) {
+        setGeoPoints(prev => prev.map((point, idx) => {
+            if (idx === layerIndex) {
+                return {
+                    ...point,
+                    is_heatmap: true,
+                    features: point.features.map(feature => ({
+                        ...feature,
+                        properties: {
+                            ...feature.properties,
+                            heatmap_weight: 1  // You might want to calculate this based on some property
+                        }
+                    }))
+                };
+            }
+            return point;
+        }));
+    }
+    
     updateLayerHeatmap(layerIndex, isHeatmapNew);
     updateLayerGrid(layerIndex, isGridNew);
   };
