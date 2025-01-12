@@ -170,6 +170,9 @@ export function useMapLayers() {
                 id: gridLayerId,
                 type: 'fill',
                 source: gridSourceId,
+                layout: {
+                  'visibility': featureCollection.display ? 'visible' : 'none'
+                },
                 paint: getGridPaint(
                   USE_BASEDON && featureCollection.basedon?.length > 0,
                   featureCollection.points_color || defaultMapConfig.defaultColor,
@@ -183,6 +186,9 @@ export function useMapLayers() {
                 id: layerId,
                 type: 'heatmap',
                 source: sourceId,
+                layout: {
+                  'visibility': featureCollection.display ? 'visible' : 'none'
+                },
                 paint: getHeatmapPaint(featureCollection.basedon, featureCollection.points_color)
               })
             } else {
@@ -190,6 +196,9 @@ export function useMapLayers() {
                 id: layerId,
                 type: 'circle',
                 source: sourceId,
+                layout: {
+                  'visibility': featureCollection.display ? 'visible' : 'none'
+                },
                 paint: getCirclePaint(featureCollection.points_color)
               })
             }
