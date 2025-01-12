@@ -8,6 +8,8 @@ import { useMapContext } from '../../context/MapContext'
 import { generatePopupContent } from '../../pages/MapContainer/generatePopupContent'
 import { CustomProperties } from '../../types/allTypesAndInterfaces'
 import { useUIContext } from '../../context/UIContext'
+import apiRequest from '../../services/apiRequest'
+import urls from '../../urls.json'
 
 const USE_BASEDON = false 
 
@@ -257,13 +259,12 @@ export function useMapLayers() {
                 const [lng, lat] = coordinates
 
                 try {
-                  //TODO: Restore StreetView once 403 error is fixed in the backend
 
-                  /*const response = await apiRequest({
+                  await apiRequest({
                     url: urls.check_street_view,
                     method: 'POST',
                     body: { lat, lng }
-                  })*/
+                  })
                   
                   const updatedContent = generatePopupContent(
                     properties,
