@@ -11,7 +11,7 @@ import { usePolygonHandlers } from '../../hooks/map/usePolygonHandlers'
 import { useLegendManager } from '../../hooks/map/useLegendManager'
 import { useMapStyle } from '../../hooks/map/useMapStyle'
 import StatisticsPopups from '../../components/Map/StatisticsPopups'
-import BenchmarkControl from './BenchmarkControl'
+import BenchmarkControl from '../../components/Map/BenchmarkControl'
 import { useMapContext, MapProvider } from '../../context/MapContext'
 
 

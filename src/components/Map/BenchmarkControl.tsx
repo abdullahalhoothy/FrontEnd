@@ -57,20 +57,21 @@ const BenchmarkControl = () => {
       </button>
       {isBenchmarkControlOpen && (
         <div className="min-w-48 w-auto mt-2 flex flex-col rounded-md shadow-sm bg-white p-4 gap-4">
-          {benchmarks.map((benchmark) => {
+          {benchmarks?.map((benchmark, index) => {
+            console.log("benchmark",benchmark )
             return (
               <div
                 className="flex justify-between items-center gap-6"
-                key={benchmark.title}
+                key={benchmark?.title || index}
               >
                 <label className="text-sm font-medium text-gray-700 capitalize">
-                  {benchmark.title.split("_").join(" ")}
+                  {benchmark && benchmark?.title?.split("_")?.join(" ")}
                 </label>
                 <input
                   type="number"
                   className="w-32 p-1 border border-gray-300 rounded-md"
-                  value={benchmark.value}
-                  name={benchmark.title}
+                  value={benchmark?.value}
+                  name={benchmark?.title}
                   onChange={handleBenchmarkChange}
                 />
               </div>
