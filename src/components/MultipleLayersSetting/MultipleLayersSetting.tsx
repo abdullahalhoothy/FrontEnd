@@ -277,7 +277,7 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
   function handleRadiusInputChange(newRadius: number) {
     setRadiusInput(newRadius);
     
-    setGeoPoints(prev => {
+    /*setGeoPoints(prev => {
       const updated = [...prev];
       updated[layerIndex] = {
         ...updated[layerIndex],
@@ -285,7 +285,7 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
         offset_value: newRadius
       };
       return updated;
-    });
+    });*/
 
     setReqGradientColorBasedOnZone((prev: any) => ({
       ...prev,
