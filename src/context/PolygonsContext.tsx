@@ -112,14 +112,12 @@ const PolygonsProvider = ({ children }: ProviderProps) => {
           layer_name,
           data: polygonData.areas.map((area) => {
             const areaData = areaMap.get(area) || { sum: 0, count: 0 };
-            const count = areaData.count;
-            const avg = count ? areaData.sum / count : 0;
             return {
-              count,
+              count: areaData.count,
               percentage: parseFloat(
-                ((count / (geoPoints.find((gp: GeoPoint) => gp.prdcer_layer_name === layer_name)?.features?.length || 1)) * 100).toFixed(1)
+                ((areaData.count / (geoPoints.find((gp: GeoPoint) => gp.prdcer_layer_name === layer_name)?.features?.length || 1)) * 100).toFixed(1)
               ),
-              avg: count ? parseFloat(avg.toFixed(1)) : "-",
+              avg: areaData.count ? parseFloat(areaData.sum / areaData.count) : "-",
               area,
             };
           }),
@@ -133,15 +131,36 @@ const PolygonsProvider = ({ children }: ProviderProps) => {
   }, [polygons, geoPoints]); 
 
   useEffect(() => {
-    const newBenchmarks: Benchmark[] = [...benchmarks];
-    sections.forEach((section) => {
-      const isSectionExists = newBenchmarks.some((benchmark) => benchmark.title === section.title);
-      if (!isSectionExists) {
-        newBenchmarks.push({ title: section.title, value: "" });
+    const newBenchmarks: Benchmark[] = [];
+    
+    // Get unique properties from all layers
+    const properties = new Set<string>();
+    geoPoints.forEach(layer => {
+      layer.features?.forEach(feature => {
+        Object.entries(feature.properties).forEach(([key, val]) => {
+          // Only add numeric properties
+          if (typeof val === 'number' || !isNaN(Number(val))) {
+            properties.add(key);
+          }
+        });
+      });
+    });
+
+
+    // Create benchmarks for each numeric property
+    properties.forEach(property => {
+      if (!benchmarks.some(b => b.title === property)) {
+        newBenchmarks.push({
+          title: property,
+          value: "",
+        });
       }
     });
-    setBenchmarks(newBenchmarks);
-  }, [sections]);
+
+    if (newBenchmarks.length > 0) {
+      setBenchmarks(prev => [...prev, ...newBenchmarks]);
+    }
+  }, [geoPoints]);
 
   return (
     <PolygonsContext.Provider
