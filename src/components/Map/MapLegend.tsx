@@ -1,4 +1,5 @@
 import { MapFeatures } from "../../types/allTypesAndInterfaces";
+import defaultMapConfig from "../../mapConfig.json";
 
 function MapLegend(legendElement: HTMLDivElement, geoPoints: MapFeatures[]) {
   // Clear existing content
@@ -24,7 +25,7 @@ function MapLegend(legendElement: HTMLDivElement, geoPoints: MapFeatures[]) {
         const item = document.createElement('div');
         item.className = 'flex items-center gap-2 mb-1';
         item.innerHTML = `
-          <div class="w-3 h-3 rounded-full" style="background-color: ${group.color}"></div>
+          <div class="w-3 h-3 rounded-full border border-[${defaultMapConfig.circleStrokeColor}]" style="background-color: ${group.color}"></div>
           <span class="text-sm">${group.legend}</span>
         `;
         groupDiv.appendChild(item);
@@ -34,7 +35,7 @@ function MapLegend(legendElement: HTMLDivElement, geoPoints: MapFeatures[]) {
       const item = document.createElement('div');
       item.className = 'flex items-center gap-2 mb-1';
       item.innerHTML = `
-        <div class="w-3 h-3 rounded-full" style="background-color: ${point.points_color}"></div>
+        <div class="w-3 h-3 rounded-full border border-[${defaultMapConfig.circleStrokeColor}]  " style="background-color: ${point.points_color}"></div>
         <span class="text-sm">${point.layer_legend}</span>
       `;
       content.appendChild(item);

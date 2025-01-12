@@ -64,6 +64,18 @@ const getCirclePaint = (pointsColor: string) => ({
   'circle-stroke-color': defaultMapConfig.circleStrokeColor
 })
 
+const getGradientCirclePaint = (defaultColor: string) => ({
+  'circle-radius': defaultMapConfig.circleRadius,
+  'circle-color': [
+    'coalesce',
+    ['get', 'gradient_color'],  // Use gradient color if available
+    defaultColor || defaultMapConfig.defaultColor  // Fallback to default
+  ],
+  'circle-opacity': defaultMapConfig.circleOpacity,
+  'circle-stroke-width': defaultMapConfig.circleStrokeWidth,
+  'circle-stroke-color': defaultMapConfig.circleStrokeColor
+});
+
 export function useMapLayers() {
   const { mapRef, shouldInitializeFeatures } = useMapContext()
   const { isMobile } = useUIContext()
@@ -201,8 +213,10 @@ export function useMapLayers() {
                 layout: {
                   'visibility': featureCollection.display ? 'visible' : 'none'
                 },
-                paint: getCirclePaint(featureCollection.points_color)
-              })
+                paint: featureCollection.is_gradient 
+                  ? getGradientCirclePaint(featureCollection.points_color)
+                  : getCirclePaint(featureCollection.points_color)
+              });              
             }
 
             // Add hover interaction variables
