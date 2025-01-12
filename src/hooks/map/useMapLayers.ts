@@ -9,18 +9,21 @@ import { generatePopupContent } from '../../pages/MapContainer/generatePopupCont
 import { CustomProperties } from '../../types/allTypesAndInterfaces'
 import { useUIContext } from '../../context/UIContext'
 
+const USE_BASEDON = false 
+
 const getGridPaint = (basedonLength: boolean, pointsColor: string, p25: number, p50: number, p75: number) => ({
   'fill-color': pointsColor || defaultMapConfig.defaultColor,
-  'fill-opacity': basedonLength ? [
+  'fill-opacity': [
     'case',
     ['==', ['get', 'density'], 0],
     0,
-    ['step', ['get', 'density'], 0.2, p25, 0.4, p50, 0.6, p75, 0.8]
-  ] : [
-    'case',
-    ['==', ['get', 'density'], 0],
-    0,
-    1
+    ['step', 
+      ['get', 'density'], 
+      0.2,
+      p25, 0.4, 
+      p50, 0.6, 
+      p75, 0.8
+    ]
   ],
   'fill-outline-color': [
     'case',
@@ -102,13 +105,6 @@ export function useMapLayers() {
 
         // Add new layers
         geoPoints.forEach((featureCollection, index) => {
-          console.log("#fix: heatmap/grid, Layer config:", {
-            index,
-            isHeatmap: featureCollection.is_heatmap,
-            isGrid: featureCollection.is_grid,
-            type: featureCollection.type,
-            features: featureCollection.features?.length
-          })
 
           if (!featureCollection.type || !Array.isArray(featureCollection.features)) {
             console.error('🗺️ [Map] Invalid GeoJSON structure:', featureCollection)
@@ -138,12 +134,13 @@ export function useMapLayers() {
               // Calculate density for each cell
               grid.features = grid.features.map(cell => {
                 const pointsWithin = turf.pointsWithinPolygon(featureCollection, cell)
-                const density = featureCollection.basedon?.length > 0
+                const density = USE_BASEDON && featureCollection.basedon?.length > 0
                   ? pointsWithin.features.reduce((sum, point) => {
                       const value = point.properties[featureCollection.basedon]
                       return sum + (typeof value === 'number' ? value : 0)
                     }, 0)
                   : pointsWithin.features.length
+
 
                 return {
                   ...cell,
@@ -166,6 +163,7 @@ export function useMapLayers() {
               const p50 = maxDensity * 0.5
               const p75 = maxDensity * 0.75
 
+
               // Add grid layer
               const gridLayerId = `${layerId}-grid`
               map.addLayer({
@@ -173,7 +171,7 @@ export function useMapLayers() {
                 type: 'fill',
                 source: gridSourceId,
                 paint: getGridPaint(
-                  featureCollection.basedon?.length > 0,
+                  USE_BASEDON && featureCollection.basedon?.length > 0,
                   featureCollection.points_color || defaultMapConfig.defaultColor,
                   p25,
                   p50,
