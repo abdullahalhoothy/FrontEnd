@@ -45,7 +45,7 @@ const refreshAuthToken = async (refreshToken: string): Promise<AuthResponse> => 
         refresh_token: refreshToken,
         grant_type: "refresh_token",
       },
-      noBodyWrap: true,
+      noBodyWrap: false,
     });
     
     if (!res.data?.idToken) {
@@ -124,7 +124,6 @@ const apiRequest = async ({
   if (isAuthRequest && !authResponse) {
     console.error('Not authenticated');
     handleAuthError();
-    throw new Error("Not authenticated");
   }
 
   try {
@@ -139,6 +138,8 @@ const apiRequest = async ({
         try {
           const newToken = await refreshAuthToken(authResponse.refreshToken);
           addAuthTokenToLocalStorage(newToken);
+
+          console.log("Retrying request with refreshed token");
           
           // Retry the original request with new token
           setAuthorizationHeader(options, newToken.idToken);
@@ -146,17 +147,23 @@ const apiRequest = async ({
           return retryResponse;
         } catch (tokenErr) {
           console.error("Token refresh error:", tokenErr);
-          handleAuthError();
           throw new Error("Unable to refresh token. Please log in again.");
         }
       } else {
         console.error("No refresh token available");
-        handleAuthError();
         throw new Error("Authentication required");
       }
     }
-    console.error("API request error:", err);
-    throw err;
+    // Handle navigation after throwing errors
+    if (err.message === "Not authenticated" || 
+        err.message === "Unable to refresh token. Please log in again." ||
+        err.message === "Authentication required") {
+      handleAuthError();
+    }
+    else {
+      console.error("API request error:", err); 
+      throw err;
+    }
   }
 };
 

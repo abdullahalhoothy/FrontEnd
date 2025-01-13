@@ -35,30 +35,40 @@ function CircleControl(props: CircleControlProps) {
   };
 
   const createCircles = (center: LngLat): void => {
-    const radii = [1, 3, 5]; // kilometers
-    const features = radii.map((radius) => {
-      const circle = turf.circle([center.lng, center.lat], radius, {
-        units: "kilometers",
+    try {
+      const radii = [1, 3, 5]; // kilometers
+      const features = radii.map((radius) => {
+        const circle = turf.circle([center.lng, center.lat], radius, {
+          units: "kilometers",
+        });
+        return circle.geometry.coordinates;
       });
-      return circle.geometry.coordinates;
-    });
 
-    const multiPolygon: GeoJSON.Feature = {
-      type: "Feature",
-      geometry: {
-        type: "MultiPolygon",
-        coordinates: features,
-      },
-      properties: {
-        shape: "circle",
-      },
-    };
+      const multiPolygon: GeoJSON.Feature = {
+        type: "Feature",
+        geometry: {
+          type: "MultiPolygon",
+          coordinates: features,
+        },
+        properties: {
+          shape: "circle",
+        },
+      };
 
-    const featureIds = draw.add(multiPolygon as any);
-    (multiPolygon as any).id = featureIds[0];
-
-    _map.fire("draw.create", { features: [multiPolygon] });
-    draw.changeMode("direct_select", { featureIds });
+      const featureIds = draw.add(multiPolygon as any);
+      if (featureIds && featureIds.length > 0) {
+        (multiPolygon as any).id = featureIds[0];
+        _map.fire("draw.create", { features: [multiPolygon] });
+        
+        draw.changeMode("simple_select");
+        
+        draw.changeMode("direct_select", { featureId: featureIds[0] });
+      } else {
+        console.error('Failed to add circle feature to draw control');
+      }
+    } catch (error) {
+      console.error('Error creating circles:', error);
+    }
   };
 
   const handleCenterClick = (e: MapMouseEvent): void => {
