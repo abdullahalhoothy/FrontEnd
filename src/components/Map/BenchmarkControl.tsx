@@ -38,44 +38,50 @@ const BenchmarkControl = () => {
 
   const handleBenchmarkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    
     setBenchmarks((prev) => {
-      return prev.map((benchmark) => {
+      const updated = prev.map((benchmark) => {
         if (benchmark.title === name) {
           return { ...benchmark, value: parseFloat(value) };
         }
         return benchmark;
       });
+      return updated;
     });
   };
   return (
     <div className="absolute top-0 left-0 ml-[10px]" style={benchmarkStyle}>
       <button
         className="!bg-white !w-auto !h-auto !rounded-md !p-2 hover:bg-gray-100 transition-colors shadow-sm !border !border-gray-200"
-        onClick={() => setIsBenchmarkControlOpen(!isBenchmarkControlOpen)}
+        onClick={() => {
+          setIsBenchmarkControlOpen(!isBenchmarkControlOpen);
+        }}
       >
         Set Benchmark
       </button>
       {isBenchmarkControlOpen && (
         <div className="min-w-48 w-auto mt-2 flex flex-col rounded-md shadow-sm bg-white p-4 gap-4">
-          {benchmarks.map((benchmark) => {
-            return (
-              <div
-                className="flex justify-between items-center gap-6"
-                key={benchmark.title}
-              >
-                <label className="text-sm font-medium text-gray-700 capitalize">
-                  {benchmark.title.split("_").join(" ")}
-                </label>
-                <input
-                  type="number"
-                  className="w-32 p-1 border border-gray-300 rounded-md"
-                  value={benchmark.value}
-                  name={benchmark.title}
-                  onChange={handleBenchmarkChange}
-                />
-              </div>
-            );
-          })}
+          {benchmarks
+            .filter(benchmark => benchmark?.title)
+            .map((benchmark) => {
+              return (
+                <div
+                  className="flex justify-between items-center gap-6"
+                  key={benchmark.title}
+                >
+                  <label className="text-sm font-medium text-gray-700 capitalize">
+                    {benchmark.title.split("_").join(" ")}
+                  </label>
+                  <input
+                    type="number"
+                    className="w-32 p-1 border border-gray-300 rounded-md"
+                    value={benchmark.value}
+                    name={benchmark.title}
+                    onChange={handleBenchmarkChange}
+                  />
+                </div>
+              );
+            })}
         </div>
       )}
     </div>

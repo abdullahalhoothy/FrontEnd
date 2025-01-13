@@ -254,7 +254,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
         method: "post",
         body: formData,
         isAuthRequest: true,
-        isFormData: true,
+        noBodyWrap: true,
       });
 
       setSaveResponse(res.data.data);
@@ -379,66 +379,27 @@ export function CatalogProvider(props: { children: ReactNode }) {
     });
   }
 
-  async function handleColorBasedZone() {
-    let idToken: string;
-
-    if (authResponse && "idToken" in authResponse) {
-      idToken = authResponse.idToken;
-    } else {
-      idToken = "";
-    }
-
-    console.log(`#feat multicolor: reqGradientColorBasedOnZone ${JSON.stringify(reqGradientColorBasedOnZone)}`);
-
-    const postData: {
-      color_grid_choice: string[], // Array of colors for the gradient palette
-      change_lyr_id: string, // ID of the layer being recolored
-      change_lyr_name: string, // Name of the layer being recolored
-      based_on_lyr_id: string, // ID of the layer we're comparing against
-      based_on_lyr_name: string, // Name of the layer we're comparing against
-      coverage_value: number, // Distance/radius value for comparison
-      coverage_property: string, // Property to base coloring on (e.g., "population_density", "number_of_ratings")
-      color_based_on: string // Metric to measure distance (e.g., "driving_time", "radius")
-    } = {
-      color_grid_choice: reqGradientColorBasedOnZone.color_grid_choice,
-      change_lyr_id: reqGradientColorBasedOnZone.change_lyr_id,
-      change_lyr_name: reqGradientColorBasedOnZone.change_lyr_name,
-      based_on_lyr_id: reqGradientColorBasedOnZone.based_on_lyr_id,
-      based_on_lyr_name: reqGradientColorBasedOnZone.based_on_lyr_name,
-      coverage_value: reqGradientColorBasedOnZone.coverage_value,
-      coverage_property: reqGradientColorBasedOnZone.coverage_property,
-      color_based_on: reqGradientColorBasedOnZone.color_based_on
-    };
-
-    console.log(`#feat multicolor: postData ${JSON.stringify(postData)}`);
-
-    const disabled = false;
-
-    if (!disabled && reqGradientColorBasedOnZone.change_lyr_id.length > 0) {
-      try {
-        setLocalLoading(true);
-        const res = await apiRequest({
-          url: urls.gradient_color_based_on_zone,
-          method: "post",
-          body: postData,
-          isAuthRequest: true,
-        });
-
-        if (res.data?.data && Array.isArray(res.data.data)) {
-          // Store all gradient groups
-          setGradientColorBasedOnZone(res.data.data);
-          setPostResMessage(res.data.message);
-          setPostResId(res.data.request_id);
-
-          // Combined features approach is now handled in MultipleLayersSetting
-        }
-      } catch (error) {
-        setIsError(error instanceof Error ? error : new Error(String(error)));
-      } finally {
-        setLocalLoading(false);
-      }
-    }
+  async function handleColorBasedZone(requestData?: ReqGradientColorBasedOnZone) {
+    const dataToUse = requestData || reqGradientColorBasedOnZone;
     
+
+    try {
+      const res = await apiRequest({
+        url: urls.gradient_color_based_on_zone,
+        method: "post",
+        body: dataToUse,
+        isAuthRequest: true,
+      });
+      if (res.data?.data && Array.isArray(res.data.data)) {
+        setGradientColorBasedOnZone(res.data.data);
+        return res.data.data;
+      }
+      return [];
+    } catch (error) {
+      console.error("Request failed:", error);
+      setIsError(error instanceof Error ? error : new Error(String(error)));
+      return [];
+    }
   }
 
   const updateDropdownIndex = (index: number, value: number | null) => {

@@ -1,12 +1,13 @@
 {
   "defaultColor": "#12939A",
   "hoverColor": "#FF5733",
-  "circleRadius": 9,
+  "circleRadius": 7,
   "hoverCircleRadius": 10,
   "circleOpacity": 0.8,
   "circleStrokeWidth": 0.4,
   "circleStrokeColor": "#898989",
   "zoom": 13,
   "speed": 10,
-  "center": [39.6074258, 24.4738121]
+  "center": [39.6074258, 24.4738121],
+  "radiusInMeters": 750
 }

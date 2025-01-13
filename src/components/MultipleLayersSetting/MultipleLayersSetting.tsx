@@ -55,6 +55,7 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
     basedOnProperty,
     setBasedOnProperty,
     setIsLoading,
+    isLoading,
     handleColorBasedZone,
     gradientColorBasedOnZone
   } = useCatalogContext()
@@ -277,7 +278,7 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
   function handleRadiusInputChange(newRadius: number) {
     setRadiusInput(newRadius);
     
-    setGeoPoints(prev => {
+    /*setGeoPoints(prev => {
       const updated = [...prev];
       updated[layerIndex] = {
         ...updated[layerIndex],
@@ -285,7 +286,7 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
         offset_value: newRadius
       };
       return updated;
-    });
+    });*/
 
     setReqGradientColorBasedOnZone((prev: any) => ({
       ...prev,
@@ -318,7 +319,7 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
 
   const handleApplyDynamicColor = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    
+
     // Get all required data
     const currentLayer = geoPoints[layerIndex];
     const baseLayer = geoPoints.find(layer => layer.prdcer_lyr_id === basedOnLayerId);
@@ -360,74 +361,58 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
     try {
       setIsLoading(true);
       
-      setReqGradientColorBasedOnZone({
-        // Colors for gradient
+      const requestData = {
         color_grid_choice: selectedColors,
-        
-        // Layer being changed
         change_lyr_id: currentLayer.prdcer_lyr_id,
         change_lyr_name: changeName,
-        
-        // Layer being compared against
         based_on_lyr_id: baseLayer.prdcer_lyr_id,
         based_on_lyr_name: baseName,
-
-        // Metric being compared based on
         coverage_property: basedOnProperty,
-
-        // Distance for comparison (with bounds)
         coverage_value: validRadius,
-        
-        // What metric to base colors on
         color_based_on: selectedBasedon
-      });
+      };
 
-      await handleColorBasedZone()
+      setReqGradientColorBasedOnZone(requestData);
 
-      // Wait for the response to be processed
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Get data directly from the function return value
+      const gradientData = await handleColorBasedZone();
 
-      // Check if we have gradient data
-      if (!gradientColorBasedOnZone || gradientColorBasedOnZone.length === 0) {
+      if (!gradientData || gradientData.length === 0) {
+        console.error("#fix: gradient-color, No gradient data available after request");
         throw new Error('No gradient data received');
       }
 
       // Create a combined layer with all gradient groups
-      const combinedFeatures = gradientColorBasedOnZone.flatMap(group => 
-        group.features.map(feature => ({
+      const combinedFeatures = gradientData.flatMap(group => {
+
+        return group.features.map(feature => ({
           ...feature,
           properties: {
             ...feature.properties,
             gradient_color: group.points_color,
             gradient_legend: group.layer_legend,
           }
-        }))
-      );
+        }));
+      });
 
       // Update the layer with combined gradient data
       setGeoPoints(prev => {
         return prev.map(point => {
           if (point.prdcer_lyr_id === currentLayer.prdcer_lyr_id) {
-            const baseGradientData = gradientColorBasedOnZone[0]; // Use first group for base properties
+            const baseGradientData = gradientData[0]; // Use first group for base properties
             
             return {
               ...point,
-              // Base properties from first group
               prdcer_layer_name: baseGradientData.prdcer_layer_name,
-              layer_legend: gradientColorBasedOnZone.map(g => g.layer_legend).join(' | '),
+              layer_legend: gradientData.map(g => g.layer_legend).join(' | '),
               layer_description: baseGradientData.layer_description,
-              records_count: gradientColorBasedOnZone.reduce((sum, g) => sum + g.records_count, 0),
-              
-              // Combined features with their respective colors
+              records_count: gradientData.reduce((sum, g) => sum + g.records_count, 0),
               features: combinedFeatures,
-              
-              // Gradient metadata
-              gradient_groups: gradientColorBasedOnZone.map(group => ({
+              gradient_groups: gradientData.map(group => ({
                 color: group.points_color,
                 legend: group.layer_legend,
                 count: group.records_count
               })),
-              
               is_gradient: true,
               gradient_based_on: baseLayer.prdcer_lyr_id
             };
@@ -472,12 +457,6 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
     const isHeatmapNew = newType === DisplayType.HEATMAP;
     const isGridNew = newType === DisplayType.GRID;
 
-    console.log("#fix: heatmap, Changing display type:", {
-        newType,
-        isHeatmapNew,
-        layerIndex,
-        currentIsHeatmap: layer.is_heatmap
-    });
 
     setDisplayType(newType);
     setIsHeatmap(isHeatmapNew);
@@ -700,9 +679,36 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
             <div>
               <button
                 onClick={e => handleApplyDynamicColor(e)}
-                className="w-full h-7 text-sm bg-[#115740] text-white  font-semibold rounded-md hover:bg-[#123f30] transition-all cursor-pointer"
+                disabled={isLoading}
+                className="w-full h-7 text-sm bg-[#115740] text-white font-semibold rounded-md hover:bg-[#123f30] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Recolor
+                {isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <svg 
+                      className="animate-spin h-4 w-4 text-white" 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      fill="none" 
+                      viewBox="0 0 24 24"
+                    >
+                      <circle 
+                        className="opacity-25" 
+                        cx="12" 
+                        cy="12" 
+                        r="10" 
+                        stroke="currentColor" 
+                        strokeWidth="4"
+                      />
+                      <path 
+                        className="opacity-75" 
+                        fill="currentColor" 
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    Applying...
+                  </span>
+                ) : (
+                  'Recolor'
+                )}
               </button>
             </div>
           </div>

@@ -8,23 +8,24 @@ import { useMapContext } from '../../context/MapContext'
 import { generatePopupContent } from '../../pages/MapContainer/generatePopupContent'
 import { CustomProperties } from '../../types/allTypesAndInterfaces'
 import { useUIContext } from '../../context/UIContext'
+import apiRequest from '../../services/apiRequest'
+import urls from '../../urls.json'
 
-const defaultCircleStrokeWidth = 1
-const defaultCircleStrokeColor = '#fff'
-const DEFAULT_RADIUS_METERS = 750
+const USE_BASEDON = false 
 
 const getGridPaint = (basedonLength: boolean, pointsColor: string, p25: number, p50: number, p75: number) => ({
   'fill-color': pointsColor || defaultMapConfig.defaultColor,
-  'fill-opacity': basedonLength ? [
+  'fill-opacity': [
     'case',
     ['==', ['get', 'density'], 0],
     0,
-    ['step', ['get', 'density'], 0.2, p25, 0.4, p50, 0.6, p75, 0.8]
-  ] : [
-    'case',
-    ['==', ['get', 'density'], 0],
-    0,
-    1
+    ['step', 
+      ['get', 'density'], 
+      0.2,
+      p25, 0.4, 
+      p50, 0.6, 
+      p75, 0.8
+    ]
   ],
   'fill-outline-color': [
     'case',
@@ -59,9 +60,21 @@ const getCirclePaint = (pointsColor: string) => ({
   'circle-radius': defaultMapConfig.circleRadius,
   'circle-color': pointsColor || colorOptions[1].hex,
   'circle-opacity': defaultMapConfig.circleOpacity,
-  'circle-stroke-width': defaultCircleStrokeWidth,
-  'circle-stroke-color': defaultCircleStrokeColor
+  'circle-stroke-width': defaultMapConfig.circleStrokeWidth,
+  'circle-stroke-color': defaultMapConfig.circleStrokeColor
 })
+
+const getGradientCirclePaint = (defaultColor: string) => ({
+  'circle-radius': defaultMapConfig.circleRadius,
+  'circle-color': [
+    'coalesce',
+    ['get', 'gradient_color'],  // Use gradient color if available
+    defaultColor || defaultMapConfig.defaultColor  // Fallback to default
+  ],
+  'circle-opacity': defaultMapConfig.circleOpacity,
+  'circle-stroke-width': defaultMapConfig.circleStrokeWidth,
+  'circle-stroke-color': defaultMapConfig.circleStrokeColor
+});
 
 export function useMapLayers() {
   const { mapRef, shouldInitializeFeatures } = useMapContext()
@@ -106,13 +119,6 @@ export function useMapLayers() {
 
         // Add new layers
         geoPoints.forEach((featureCollection, index) => {
-          console.log("#fix: heatmap/grid, Layer config:", {
-            index,
-            isHeatmap: featureCollection.is_heatmap,
-            isGrid: featureCollection.is_grid,
-            type: featureCollection.type,
-            features: featureCollection.features?.length
-          })
 
           if (!featureCollection.type || !Array.isArray(featureCollection.features)) {
             console.error('🗺️ [Map] Invalid GeoJSON structure:', featureCollection)
@@ -135,19 +141,20 @@ export function useMapLayers() {
               const bounds = turf.bbox(featureCollection)
               
               // Create grid
-              const cellSide = DEFAULT_RADIUS_METERS / 1000
+              const cellSide = defaultMapConfig.radiusInMeters / 1000
               const options = { units: 'kilometers' as const }
               const grid = turf.squareGrid(bounds, cellSide, options)
 
               // Calculate density for each cell
               grid.features = grid.features.map(cell => {
                 const pointsWithin = turf.pointsWithinPolygon(featureCollection, cell)
-                const density = featureCollection.basedon?.length > 0
+                const density = USE_BASEDON && featureCollection.basedon?.length > 0
                   ? pointsWithin.features.reduce((sum, point) => {
                       const value = point.properties[featureCollection.basedon]
                       return sum + (typeof value === 'number' ? value : 0)
                     }, 0)
                   : pointsWithin.features.length
+
 
                 return {
                   ...cell,
@@ -170,14 +177,18 @@ export function useMapLayers() {
               const p50 = maxDensity * 0.5
               const p75 = maxDensity * 0.75
 
+
               // Add grid layer
               const gridLayerId = `${layerId}-grid`
               map.addLayer({
                 id: gridLayerId,
                 type: 'fill',
                 source: gridSourceId,
+                layout: {
+                  'visibility': featureCollection.display ? 'visible' : 'none'
+                },
                 paint: getGridPaint(
-                  featureCollection.basedon?.length > 0,
+                  USE_BASEDON && featureCollection.basedon?.length > 0,
                   featureCollection.points_color || defaultMapConfig.defaultColor,
                   p25,
                   p50,
@@ -189,6 +200,9 @@ export function useMapLayers() {
                 id: layerId,
                 type: 'heatmap',
                 source: sourceId,
+                layout: {
+                  'visibility': featureCollection.display ? 'visible' : 'none'
+                },
                 paint: getHeatmapPaint(featureCollection.basedon, featureCollection.points_color)
               })
             } else {
@@ -196,8 +210,13 @@ export function useMapLayers() {
                 id: layerId,
                 type: 'circle',
                 source: sourceId,
-                paint: getCirclePaint(featureCollection.points_color)
-              })
+                layout: {
+                  'visibility': featureCollection.display ? 'visible' : 'none'
+                },
+                paint: featureCollection.is_gradient 
+                  ? getGradientCirclePaint(featureCollection.points_color)
+                  : getCirclePaint(featureCollection.points_color)
+              });              
             }
 
             // Add hover interaction variables
@@ -254,13 +273,12 @@ export function useMapLayers() {
                 const [lng, lat] = coordinates
 
                 try {
-                  //TODO: Restore StreetView once 403 error is fixed in the backend
 
-                  /*const response = await apiRequest({
+                  await apiRequest({
                     url: urls.check_street_view,
                     method: 'POST',
                     body: { lat, lng }
-                  })*/
+                  })
                   
                   const updatedContent = generatePopupContent(
                     properties,
