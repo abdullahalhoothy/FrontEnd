@@ -256,7 +256,6 @@ export function LayerProvider(props: { children: ReactNode }) {
               action: action,
               search_type: searchType,
               text_search: textSearchInput?.trim() || "",
-              ...(action === "full data" && { password: password }),
               page_token: pageToken || "",
               user_id: user_id,
             },

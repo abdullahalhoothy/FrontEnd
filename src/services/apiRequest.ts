@@ -5,23 +5,18 @@ import { ApiRequestOptions, AuthResponse, IAuthResponse } from "../types/allType
 const baseUrl = urls.REACT_APP_API_URL;
 
 const axiosInstance = axios.create({
-  baseURL: baseUrl, // Replace with your actual base URL
+  baseURL: baseUrl,
 });
 
-// move this to auth module
-export const addAuthTokenToLocalStorage = (token: object) => {
-  const authResponse = getAuthResponse();
-
-  if (authResponse) {
-    const newAuthResponse = {
-      ...authResponse,
-      idToken: token.idToken,
-      refreshToken: token.refreshToken,
-    };
-    localStorage.setItem("authResponse", JSON.stringify(newAuthResponse));
-  } else {
-    console.error("Auth response not found in local storage");
-  }
+export const addAuthTokenToLocalStorage = (token: AuthResponse) => {
+  const authResponse = getAuthResponse() || {};
+  
+  const newAuthResponse = {
+    ...authResponse,
+    idToken: token.idToken,
+    refreshToken: token.refreshToken,
+  };
+  localStorage.setItem("authResponse", JSON.stringify(newAuthResponse));
 };
 
 const getAuthResponse = (): IAuthResponse | null => {
@@ -45,15 +40,17 @@ const refreshAuthToken = async (refreshToken: string): Promise<AuthResponse> => 
         refresh_token: refreshToken,
         grant_type: "refresh_token",
       },
-      noBodyWrap: false,
+      isFormData: false,
     });
     
-    if (!res.data?.idToken) {
-      handleAuthError()
+    console.log("Token refresh response:", res);
+    const refreshTokenData = res.data?.data;
+    if (!refreshTokenData?.idToken) {
+      handleAuthError();
       throw new Error("Invalid token refresh response");
     }
     
-    return res.data;
+    return refreshTokenData;
   } catch (error) {
     console.error("Token refresh failed:", error);
     throw error;
@@ -65,15 +62,15 @@ const makeApiCall = async ({
   method,
   body,
   options,
-  noBodyWrap = false,
+  isFormData = false,
 }: {
   url: string;
   method: string;
   body?: any;
   options?: AxiosRequestConfig;
-  noBodyWrap?: boolean;
+  isFormData?: boolean;
 }) => {
-  const data = noBodyWrap ? body : (
+  const data = isFormData ? body : (
     method.toUpperCase() !== "GET"
       ? {
           message: "Request from frontend",
@@ -112,11 +109,10 @@ const apiRequest = async ({
   body = {},
   options = {},
   isAuthRequest = false,
-  noBodyWrap = false,
+  isFormData = false,
 }: ApiRequestOptions): Promise<any> => {
   const authResponse = getAuthResponse();
 
-  // Set auth header for authenticated requests
   if (authResponse?.idToken) {
     setAuthorizationHeader(options, authResponse.idToken);
   }
@@ -124,46 +120,44 @@ const apiRequest = async ({
   if (isAuthRequest && !authResponse) {
     console.error('Not authenticated');
     handleAuthError();
+    throw new Error("Not authenticated");
   }
 
   try {
-    const response = await makeApiCall({ url, method, body, options, noBodyWrap });
+    const response = await makeApiCall({ url, method, body, options, isFormData });
     return response;
   } catch (err: any) {
-    if (err?.response?.status === 401 || err?.response?.status === 403) {
-      // Clear existing auth data on auth errors
+    if (err?.response?.status === 403) {
+      localStorage.removeItem("authResponse");
+      handleAuthError();
+      throw new Error("Access forbidden");
+    }
+
+    if (err?.response?.status === 401) {
       localStorage.removeItem("authResponse");
       
       if (authResponse?.refreshToken) {
         try {
           const newToken = await refreshAuthToken(authResponse.refreshToken);
           addAuthTokenToLocalStorage(newToken);
-
-          console.log("Retrying request with refreshed token");
           
-          // Retry the original request with new token
           setAuthorizationHeader(options, newToken.idToken);
-          const retryResponse = await makeApiCall({ url, method, body, options, noBodyWrap });
+          const retryResponse = await makeApiCall({ url, method, body, options, isFormData });
           return retryResponse;
         } catch (tokenErr) {
           console.error("Token refresh error:", tokenErr);
+          handleAuthError();
           throw new Error("Unable to refresh token. Please log in again.");
         }
       } else {
         console.error("No refresh token available");
+        handleAuthError();
         throw new Error("Authentication required");
       }
     }
-    // Handle navigation after throwing errors
-    if (err.message === "Not authenticated" || 
-        err.message === "Unable to refresh token. Please log in again." ||
-        err.message === "Authentication required") {
-      handleAuthError();
-    }
-    else {
-      console.error("API request error:", err); 
-      throw err;
-    }
+    
+    console.error("API request error:", err);
+    throw err;
   }
 };
 
