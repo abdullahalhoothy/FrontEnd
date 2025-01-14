@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import mapboxgl, { GeoJSONSource } from 'mapbox-gl'
 import { useCatalogContext } from '../../context/CatalogContext'
 import { defaultMapConfig } from './useMapInitialization'
@@ -77,10 +77,41 @@ const getGradientCirclePaint = (defaultColor: string) => ({
 });
 
 export function useMapLayers() {
+  const [cityBounds, setCityBounds] = useState<Record<string, any>>({})
   const { mapRef, shouldInitializeFeatures } = useMapContext()
   const { isMobile } = useUIContext()
   const map = mapRef.current
   const { geoPoints } = useCatalogContext()
+
+  useEffect(() => {
+    const fetchCityBounds = async () => {
+      try {
+        const response = await apiRequest({
+          url: urls.country_city,
+          method: 'GET'
+        })
+        
+        const boundsMap: Record<string, any> = {}
+        Object.values(response.data.data).flat().forEach((city: any) => {
+          boundsMap[city.name.toLowerCase()] = {
+            // Format: [west, south, east, north]
+            bounds: [
+              city.borders.southwest.lng,  // west (minX)
+              city.borders.southwest.lat,  // south (minY)
+              city.borders.northeast.lng,  // east (maxX)
+              city.borders.northeast.lat   // north (maxY)
+            ],
+            center: [city.lng, city.lat]
+          }
+        })
+        setCityBounds(boundsMap)
+      } catch (error) {
+        console.error('Error fetching city bounds:', error)
+      }
+    }
+
+    fetchCityBounds()
+  }, [])
 
   useEffect(() => {
     if (!shouldInitializeFeatures || !map) return
@@ -137,9 +168,24 @@ export function useMapLayers() {
             })
 
             if (featureCollection.is_grid) {
-              // Calculate bounds from features
-              const bounds = turf.bbox(featureCollection)
-              
+              let bounds
+              if (featureCollection.city_name && cityBounds[featureCollection.city_name.toLowerCase()]) {
+                const cityBound = cityBounds[featureCollection.city_name.toLowerCase()].bounds
+                bounds = [
+                  cityBound[0] - 0.1,
+                  cityBound[1] - 0.1,
+                  cityBound[2] + 0.1,
+                  cityBound[3] + 0.1 
+                ]
+              } else {
+                // Fallback to calculating bounds from features
+                const bbox = turf.bbox(featureCollection)
+                const bboxPolygon = turf.bboxPolygon(bbox)
+                // Increase buffer for fallback bounds
+                const bufferedBbox = turf.buffer(bboxPolygon, 1, { units: 'kilometers' })
+                bounds = turf.bbox(bufferedBbox)
+              }
+
               // Create grid
               const cellSide = defaultMapConfig.radiusInMeters / 1000
               const options = { units: 'kilometers' as const }
@@ -412,5 +458,5 @@ export function useMapLayers() {
     return () => {
       cleanupLayers();
     };
-  }, [mapRef, geoPoints, shouldInitializeFeatures])
+  }, [mapRef, geoPoints, shouldInitializeFeatures, cityBounds])
 }
