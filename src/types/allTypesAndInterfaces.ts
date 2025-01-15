@@ -122,7 +122,7 @@ export interface CatalogContextType {
   setRadiusInput: React.Dispatch<React.SetStateAction<number | null>>;
   gradientColorBasedOnZone: GradientColorBasedOnZone[];
   setGradientColorBasedOnZone: React.Dispatch<React.SetStateAction<GradientColorBasedOnZone[]>>;
-  handleColorBasedZone: () => Promise<void>;
+  handleColorBasedZone: (requestData?: ReqGradientColorBasedOnZone) => Promise<void>;
   visualizationMode: VisualizationMode;
   setVisualizationMode: React.Dispatch<React.SetStateAction<VisualizationMode>>;
   updateLayerColor: (layerId: number, newColor: string) => void;
