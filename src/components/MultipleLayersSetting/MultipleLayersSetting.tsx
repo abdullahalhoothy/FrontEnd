@@ -375,7 +375,7 @@ function MultipleLayersSetting (props: MultipleLayersSettingProps) {
       setReqGradientColorBasedOnZone(requestData);
 
       // Get data directly from the function return value
-      const gradientData = await handleColorBasedZone();
+      const gradientData = await handleColorBasedZone(requestData);
 
       if (!gradientData || gradientData.length === 0) {
         console.error("#fix: gradient-color, No gradient data available after request");
