@@ -166,7 +166,7 @@ export function LayerProvider(props: { children: ReactNode }) {
         type: 'FeatureCollection',
         features: [
           ...(existingPoint?.features || []),  // Keep existing features if any
-          ...response.features.map(f => ({
+          ...response.features.map(f => ({ 
             type: 'Feature',
             geometry: f.geometry,
             properties: f.properties,
@@ -183,9 +183,11 @@ export function LayerProvider(props: { children: ReactNode }) {
         bknd_dataset_id: response.bknd_dataset_id
       };
 
-      const filteredPoints = prevPoints.filter((p: MapFeatures) => String(p.layerId) !== String(layerId));
+      const filteredPoints = prevPoints.filter(p => 
+        String(p.layerId) !== String(layerId)
+      );
       const newPoints = [...filteredPoints, newPoint];
-      
+
       if (response.next_page_token && callCountRef.current < MAX_CALLS) {
         callCountRef.current++;
         handleFetchDataset("full data", response.next_page_token);
@@ -199,14 +201,11 @@ export function LayerProvider(props: { children: ReactNode }) {
   }
 
   async function handleFetchDataset(action: string, pageToken?: string) {    
-    if (!Array.isArray(reqFetchDataset?.layers)) {
-      console.error('No layers configured for fetch');
-      return;
+    // Clear existing data on initial request (when no pageToken)
+    if (!pageToken) {
+      setGeoPoints([]);
+      setLayerDataMap({});
     }
-
-    // Clear existing points before adding new ones
-    setGeoPoints([]);
-    setLayerDataMap({});
 
     let user_id: string;
     let idToken: string;
