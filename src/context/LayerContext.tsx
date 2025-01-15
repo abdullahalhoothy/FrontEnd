@@ -94,7 +94,7 @@ export function LayerProvider(props: { children: ReactNode }) {
   const [searchType, setSearchType] = useState<string>("category_search");
   const [password, setPassword] = useState<string>("");
 
-  const callCountRef = useRef<number>(0);
+  const pageCountsRef = useRef<{[layerId: string]: number}>({});
   const MAX_CALLS = 10;
 
   const [layerDataMap, setLayerDataMap] = useState<LayerDataMap>({});
@@ -158,10 +158,17 @@ export function LayerProvider(props: { children: ReactNode }) {
 
   function updateGeoJSONDataset(response: FetchDatasetResponse, layerId: number, defaultName: string) {
     setGeoPoints((prevPoints: MapFeatures[] | MapFeatures | any) => {
-      // Find existing point collection for this layer
+      const layerKey = String(layerId);
+      pageCountsRef.current[layerKey] = (pageCountsRef.current[layerKey] || 0) + 1;
+
+      // Skip merging if response has no features
+      if (!response.features?.length) {
+        console.warn(`No features in response for layer ${layerId}, skipping...`);
+        return prevPoints;
+      }
+
       const existingPoint = prevPoints.find((p: MapFeatures) => String(p.layerId) === String(layerId));
       
-      // Create new point with accumulated features
       const newPoint = {
         type: 'FeatureCollection',
         features: [
@@ -188,12 +195,18 @@ export function LayerProvider(props: { children: ReactNode }) {
       );
       const newPoints = [...filteredPoints, newPoint];
 
-      if (response.next_page_token && callCountRef.current < MAX_CALLS) {
-        callCountRef.current++;
-        handleFetchDataset("full data", response.next_page_token);
+      // Continue pagination even if current page had issues
+      if (response.next_page_token && pageCountsRef.current[layerKey] < MAX_CALLS) {
+        handleFetchDataset("full data", response.next_page_token).catch(err => {
+          console.error(`Error fetching page for layer ${layerId}:`, err);
+          // Continue to next page despite error
+          if (pageCountsRef.current[layerKey] < MAX_CALLS) {
+            handleFetchDataset("full data", response.next_page_token);
+          }
+        });
       } else {
         setShowLoaderTopup(false);
-        callCountRef.current = 0;
+        delete pageCountsRef.current[layerKey];
       }
       
       return newPoints;
@@ -421,7 +434,6 @@ export function LayerProvider(props: { children: ReactNode }) {
   useEffect(() => {
     if (isError) {
       setShowLoaderTopup(false);
-      callCountRef.current = 0;
     }
   }, [isError]);
 
