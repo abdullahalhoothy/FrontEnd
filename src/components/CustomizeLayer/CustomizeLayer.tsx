@@ -9,6 +9,7 @@ import { LayerCustomization } from "../../types/allTypesAndInterfaces";
 import LayerCustomizationItem from "../LayerCustomizationItem/LayerCustomizationItem";
 import { useCatalogContext } from "../../context/CatalogContext";
 import { HiCheck, HiExclamation } from "react-icons/hi";
+import { getDefaultLayerColor } from "../../utils/helperFunctions";
 
 function autoFillLegendFormat(data) {
   if (!data.selectedCountry || !data.selectedCity) return "";
@@ -74,7 +75,7 @@ function CustomizeLayer() {
           name: legendText,
           legend: legendText,
           description: '',
-          color: '#28A745',
+          color: getDefaultLayerColor(layer.id),
         };
       });
       

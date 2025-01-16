@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import mapboxgl, { GeoJSONSource } from 'mapbox-gl'
 import { useCatalogContext } from '../../context/CatalogContext'
 import { defaultMapConfig } from './useMapInitialization'
-import { colorOptions } from '../../utils/helperFunctions'
+import { getDefaultLayerColor } from '../../utils/helperFunctions'
 import * as turf from '@turf/turf'
 import { useMapContext } from '../../context/MapContext'
 import { generatePopupContent } from '../../pages/MapContainer/generatePopupContent'
@@ -56,9 +56,9 @@ const getHeatmapPaint = (basedon: string, pointsColor?: string) => ({
   ]
 })
 
-const getCirclePaint = (pointsColor: string) => ({
+const getCirclePaint = (pointsColor: string, layerId: number) => ({
   'circle-radius': defaultMapConfig.circleRadius,
-  'circle-color': pointsColor || colorOptions[1].hex,
+  'circle-color': pointsColor || getDefaultLayerColor(layerId),
   'circle-opacity': defaultMapConfig.circleOpacity,
   'circle-stroke-width': defaultMapConfig.circleStrokeWidth,
   'circle-stroke-color': defaultMapConfig.circleStrokeColor
@@ -261,7 +261,7 @@ export function useMapLayers() {
                 },
                 paint: featureCollection.is_gradient 
                   ? getGradientCirclePaint(featureCollection.points_color)
-                  : getCirclePaint(featureCollection.points_color)
+                  : getCirclePaint(featureCollection.points_color, layerId)
               });              
             }
 

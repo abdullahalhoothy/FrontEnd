@@ -3,6 +3,7 @@ import { HttpReq } from "../../services/apiService";
 import {
   formatSubcategoryName,
   processCityData,
+  getDefaultLayerColor,
 } from "../../utils/helperFunctions";
 import urls from "../../urls.json";
 import { CategoryData, City, Layer } from "../../types/allTypesAndInterfaces";
@@ -14,6 +15,7 @@ import { useNavigate } from "react-router";
 import apiRequest from "../../services/apiRequest";
 import LayerDisplaySubCategories from "../LayerDisplaySubCategories/LayerDisplaySubCategories";
 import CategoriesBrowserSubCategories from "../CategoriesBrowserSubCategories/CategoriesBrowserSubCategories";
+import { colorOptions } from "../../utils/helperFunctions";
 
 const FetchDatasetForm = () => {
   const nav = useNavigate();
@@ -220,7 +222,7 @@ const FetchDatasetForm = () => {
           includedTypes: setAsExcluded ? [] : [type],
           excludedTypes: setAsExcluded ? [type] : [],
           display: true,
-          points_color: '#28A745',
+          points_color: getDefaultLayerColor(1),
         };
         return [newLayer];
       }
@@ -232,14 +234,15 @@ const FetchDatasetForm = () => {
 
       // If all existing layers have this type, create new layer
       if (targetLayerIndex === -1) {
+        const newLayerId = prevLayers.length + 1;
         const newLayer: Layer = {
-          id: prevLayers.length + 1,
-          name: `Layer ${prevLayers.length + 1}`,
-          layer_name: `Layer ${prevLayers.length + 1}`,
+          id: newLayerId,
+          name: `Layer ${newLayerId}`,
+          layer_name: `Layer ${newLayerId}`,
           includedTypes: setAsExcluded ? [] : [type],
           excludedTypes: setAsExcluded ? [type] : [],
           display: true,
-          points_color: '#28A745', // Default color
+          points_color: getDefaultLayerColor(newLayerId),
         };
         return [...prevLayers, newLayer];
       }
