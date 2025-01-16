@@ -26,7 +26,7 @@ import { useCatalogContext } from "./CatalogContext";
 import userIdData from "../currentUserId.json";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { colorOptions, processCityData, colorMap } from "../utils/helperFunctions";
+import { processCityData, getDefaultLayerColor } from "../utils/helperFunctions";
 import apiRequest from "../services/apiRequest";
 
 const LayerContext = createContext<LayerContextType | undefined>(undefined);
@@ -181,7 +181,7 @@ export function LayerProvider(props: { children: ReactNode }) {
           }))
         ],
         display: true,
-        points_color: "#28A745",
+        points_color: existingPoint?.points_color || getDefaultLayerColor(layerId),
         layerId: String(layerId),
         city_name: reqFetchDataset.selectedCity,
         layer_legend: defaultName,

@@ -25,6 +25,10 @@ export const colorOptions = [
 
 export const colorMap = new Map(colorOptions.map(color => [color.hex, color.name]));
 
+export const getDefaultLayerColor = (layerId: number): string => {
+  return colorOptions[layerId % colorOptions.length]?.hex || '#28A745';
+}; 
+
 export function isValidColor(color: string): boolean {
   // Check if the color is a valid hex color
   const hexColorRegex = /^#([0-9A-Fa-f]{3}){1,2}$/;

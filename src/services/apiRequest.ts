@@ -13,8 +13,7 @@ export const addAuthTokenToLocalStorage = (token: AuthResponse) => {
   
   const newAuthResponse = {
     ...authResponse,
-    idToken: token.idToken,
-    refreshToken: token.refreshToken,
+    ...token
   };
   localStorage.setItem("authResponse", JSON.stringify(newAuthResponse));
 };
