@@ -79,7 +79,6 @@ const PolygonsProvider = ({ children }: ProviderProps) => {
             }
             return false;
           }) || [];
-
           matchingFeatures.forEach((feature) => {
             Object.entries(feature.properties).forEach(([key, val]) => {
               if (!excludedProperties.has(key)) {
@@ -114,6 +113,7 @@ const PolygonsProvider = ({ children }: ProviderProps) => {
             const areaData = areaMap.get(area) || { sum: 0, count: 0 };
             return {
               count: areaData.count,
+              sum: areaData.sum,
               percentage: parseFloat(
                 ((areaData.count / (geoPoints.find((gp: GeoPoint) => gp.prdcer_layer_name === layer_name)?.features?.length || 1)) * 100).toFixed(1)
               ),
