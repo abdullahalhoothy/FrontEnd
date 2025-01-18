@@ -192,6 +192,9 @@ function DesktopStatisticsPopup({ polygon }: { polygon: PolygonFeature }) {
                             Count
                           </span>
                           <span className="bg-blue-600 text-white p-1.5 w-1/4 text-center">
+                            Sum
+                          </span>
+                          <span className="bg-blue-600 text-white p-1.5 w-1/4 text-center">
                             %
                           </span>
                           <span className="bg-blue-600 text-white p-1.5 w-1/4 text-center">
@@ -251,6 +254,9 @@ function DesktopStatisticsPopup({ polygon }: { polygon: PolygonFeature }) {
                             >
                               <div className="text-right py-1 px-1.5 w-1/4">
                                 {data.count}
+                              </div>
+                              <div className="text-right py-1 px-1.5 w-1/4">
+                                {data.sum.toFixed(2)}
                               </div>
                               <div className="text-right py-1 px-1.5 w-1/4">
                                 {data.percentage}%
@@ -374,6 +380,10 @@ const MobileStatisticsPopup = ({ polygon }) => {
                         <div className="flex justify-between items-center">
                           <span className="text-gray-700 font-medium">Count:</span>
                           <span className="text-gray-700">{dataForArea.count}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-700 font-medium">Sum:</span>
+                          <span className="text-gray-700">{dataForArea.sum}</span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-gray-700 font-medium">Percentage:</span>
