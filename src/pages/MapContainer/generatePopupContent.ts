@@ -39,7 +39,7 @@ export function generatePopupContent(
       if (Array.isArray(parsedValue)) {
         content += `<div class="popup-content-div">${key}: ${parsedValue.join(", ")}</div>`;
       } else {
-        content += (typeof parsedValue === "string" && parsedValue.startsWith("http"))?`<div class="popup-content-div">${key}: <a target='_blank' class="text-xs text-blue-500 underline" href=${parsedValue}>Click Here</a></div>`:`<div class="popup-content-div">${key}: ${parsedValue}</div>`;
+        content += `<div class="popup-content-div">${key}: ${parsedValue}</div>`;
       }
     }
   }
