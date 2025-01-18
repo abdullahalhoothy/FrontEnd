@@ -260,7 +260,7 @@ function DesktopStatisticsPopup({ polygon }) {
                                 {data.percentage}%
                               </div>
                               <div className="text-right py-1 px-2 w-1/4">
-                                {data.avg}
+                                {data.avg.toFixed(2)}
                               </div>
                               <div className="text-right min-w-[84px] w-auto h-full">
                                 {benchmark?.value === "" && (
