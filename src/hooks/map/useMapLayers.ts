@@ -18,7 +18,7 @@ const getGridPaint = (basedonLength: boolean, pointsColor: string, p25: number, 
   'fill-opacity': [
     'case',
     ['==', ['get', 'density'], 0],
-    0,
+    0.1, // experimnetal: show empty cells with 10% opacity
     ['step', 
       ['get', 'density'], 
       0.2,
@@ -30,8 +30,8 @@ const getGridPaint = (basedonLength: boolean, pointsColor: string, p25: number, 
   'fill-outline-color': [
     'case',
     ['==', ['get', 'density'], 0],
-    'rgba(0,0,0,0)',
-    '#000'
+    'rgba(0,0,0,128)',//'rgba(0,0,0,0)',
+    'rgba(0,0,0,128)'// experimnetal: show outline for empty cells
   ]
 })
 
