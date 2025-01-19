@@ -311,6 +311,7 @@ export interface ReqFetchDataset {
   }[];
   includedTypes: string[];
   excludedTypes: string[];
+  zoomLevel?: number;
 }
 
 export interface ModalOptions {

@@ -9,5 +9,6 @@
   "zoom": 13,
   "speed": 10,
   "center": [39.6074258, 24.4738121],
-  "radiusInMeters": 750
+  "radiusInMeters": 2750,
+  "zoomLevel": 4
 }
