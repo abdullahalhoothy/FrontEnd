@@ -10,6 +10,8 @@ export function MapProvider({ children }: { children: ReactNode }) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const drawRef = useRef<MapboxDraw | null>(null);
   const [isStyleLoaded, setIsStyleLoaded] = useState(false);
+  const [currentZoom, setCurrentZoom] = useState<number | null>(null);
+  const [backendZoom, setBackendZoom] = useState<number | null>(null);
 
   const shouldInitializeFeatures = useMemo(() => {
     return isStyleLoaded && mapRef.current !== null;
@@ -23,7 +25,11 @@ export function MapProvider({ children }: { children: ReactNode }) {
         drawRef,
         isStyleLoaded,
         setIsStyleLoaded,
-        shouldInitializeFeatures
+        shouldInitializeFeatures,
+        currentZoom,
+        setCurrentZoom,
+        backendZoom,
+        setBackendZoom
       }}
     >
       {children}

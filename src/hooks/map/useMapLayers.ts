@@ -11,27 +11,27 @@ import { useUIContext } from '../../context/UIContext'
 import apiRequest from '../../services/apiRequest'
 import urls from '../../urls.json'
 
-const USE_BASEDON = false 
+const USE_BASEDON = true 
 
 const getGridPaint = (basedonLength: boolean, pointsColor: string, p25: number, p50: number, p75: number) => ({
   'fill-color': pointsColor || defaultMapConfig.defaultColor,
   'fill-opacity': [
     'case',
     ['==', ['get', 'density'], 0],
-    0.1, // experimnetal: show empty cells with 10% opacity
+    0,
     ['step', 
       ['get', 'density'], 
-      0.2,
-      p25, 0.4, 
-      p50, 0.6, 
-      p75, 0.8
+      0.45,
+      p25, 0.6, 
+      p50, 0.75, 
+      p75, 0.9
     ]
   ],
   'fill-outline-color': [
     'case',
     ['==', ['get', 'density'], 0],
-    'rgba(0,0,0,128)',//'rgba(0,0,0,0)',
-    'rgba(0,0,0,128)'// experimnetal: show outline for empty cells
+    'rgba(0,0,0,0)',
+    'rgba(0,0,0,128)'
   ]
 })
 
@@ -192,15 +192,14 @@ export function useMapLayers() {
               const grid = turf.squareGrid(bounds, cellSide, options)
 
               // Calculate density for each cell
-              grid.features = grid.features.map(cell => {
-                const pointsWithin = turf.pointsWithinPolygon(featureCollection, cell)
+              grid.features = grid.features.map((cell, index) => {
+                const pointsWithin = turf.pointsWithinPolygon(featureCollection, cell);
                 const density = USE_BASEDON && featureCollection.basedon?.length > 0
                   ? pointsWithin.features.reduce((sum, point) => {
-                      const value = point.properties[featureCollection.basedon]
-                      return sum + (typeof value === 'number' ? value : 0)
+                      const value = point.properties[featureCollection.basedon];
+                      return sum + (typeof value === 'number' ? value : 0);
                     }, 0)
-                  : pointsWithin.features.length
-
+                  : pointsWithin.features.length;
 
                 return {
                   ...cell,
