@@ -12,13 +12,13 @@ import { useLegendManager } from '../../hooks/map/useLegendManager'
 import { useMapStyle } from '../../hooks/map/useMapStyle'
 import StatisticsPopups from '../../components/Map/StatisticsPopups'
 import BenchmarkControl from '../../components/Map/BenchmarkControl'
-import { useMapContext, MapProvider } from '../../context/MapContext'
+import { useMapContext } from '../../context/MapContext'
 
 
 // Main container component that handles map initialization and state
 function Container () {
   const { shouldInitializeFeatures, mapContainerRef} = useMapContext();
-
+  
   useMapInitialization();
   useMapBounds();
   useMapControls();
@@ -40,12 +40,10 @@ function Container () {
 }
 
 // Wrapper component that provides polygon context
-export default function MapContainer () {
+export default function MapContainer() {
   return (
-    <MapProvider>
-      <PolygonsProvider>
-        <Container />
-      </PolygonsProvider>
-    </MapProvider>
-  )
+    <PolygonsProvider>
+      <Container />
+    </PolygonsProvider>
+  );
 }

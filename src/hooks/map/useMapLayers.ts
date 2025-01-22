@@ -249,7 +249,7 @@ export function useMapLayers() {
         };
 
         // Add new layers
-        geoPoints.forEach((featureCollection, index) => {
+        [...geoPoints].reverse().forEach((featureCollection, index) => {
 
           if (!featureCollection.type || !Array.isArray(featureCollection.features)) {
             console.error('🗺️ [Map] Invalid GeoJSON structure:', featureCollection)
@@ -602,26 +602,6 @@ export function useMapLayers() {
         }
       })
 
-      // Fit bounds to show all features
-      if (geoPoints.length > 0) {
-        const bounds = new mapboxgl.LngLatBounds()
-
-        geoPoints.forEach(layer => {
-          layer.features?.forEach(feature => {
-            if (feature.geometry?.coordinates) {
-              bounds.extend(feature.geometry.coordinates as [number, number])
-            }
-          })
-        })
-
-        if (!bounds.isEmpty()) {
-          map.fitBounds(bounds, {
-            padding: { top: 50, bottom: 50, left: 50, right: 50 },
-            maxZoom: 15,
-            duration: 1000
-          })
-        }
-      }
     } catch (error) {
       console.error('Error managing layers:', error)
     }
