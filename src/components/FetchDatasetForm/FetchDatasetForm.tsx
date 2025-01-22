@@ -16,6 +16,8 @@ import apiRequest from "../../services/apiRequest";
 import LayerDisplaySubCategories from "../LayerDisplaySubCategories/LayerDisplaySubCategories";
 import CategoriesBrowserSubCategories from "../CategoriesBrowserSubCategories/CategoriesBrowserSubCategories";
 import { colorOptions } from "../../utils/helperFunctions";
+import { useCatalogContext } from "../../context/CatalogContext";
+import { defaultMapConfig } from "../../hooks/map/useMapInitialization";
 
 const FetchDatasetForm = () => {
   const nav = useNavigate();
@@ -50,7 +52,7 @@ const FetchDatasetForm = () => {
   } = useLayerContext();
 
   // AUTH CONTEXT
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, authResponse } = useAuth();
 
   // FETCHED DATA
   const [layers, setLayers] = useState<Layer[]>([]);
@@ -65,6 +67,12 @@ const FetchDatasetForm = () => {
 
   // Add ref for the categories section
   const categoriesRef = useRef<HTMLDivElement>(null);
+
+  // Add this near other state declarations
+  const [includePopulation, setIncludePopulation] = useState(false);
+
+  // Add this near other context hooks
+  const { setGeoPoints } = useCatalogContext();
 
   useEffect(() => {
     resetFetchDatasetForm();
@@ -368,6 +376,85 @@ const FetchDatasetForm = () => {
     }
   };
 
+  const handleIncludePopulation = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIncludePopulation(e.target.checked);
+    
+    if (e.target.checked) {
+      setShowLoaderTopup(true);
+      try {
+        // Create a new layer for population data
+        const newLayer: Layer = {
+          id: layers.length + 1,
+          name: 'Population Layer',
+          includedTypes: ["TotalPopulation"],
+          excludedTypes: [],
+          display: true,
+          points_color: colorOptions[0].hex
+        };
+        setLayers(prev => [...prev, newLayer]);
+
+         if(!authResponse || !authResponse.localId || !authResponse.idToken) return;
+        // Fetch population data
+        const res = await apiRequest({
+          url: urls.fetch_dataset,
+          method: "post",
+          body: {
+            text_search: "",
+            page_token: "",
+            user_id : authResponse.localId,
+            idToken : authResponse.idToken,
+            zoom_level: defaultMapConfig.zoomLevel,
+            country_name: selectedCountry,
+            city_name: selectedCity,
+            boolean_query: "TotalPopulation",
+            layerId: newLayer.id,
+            layer_name: 'Population Layer',
+            action: 'sample',
+            search_type: 'category_search',
+          },
+          isAuthRequest: true,
+        });
+
+        if (res?.data?.data) {
+          // Add to geoPoints with grid mode enabled
+          setGeoPoints(prevPoints => {
+            const populationLayer = {
+              type: 'FeatureCollection',
+              features: res.data.data.features,
+              display: true,
+              points_color: newLayer.points_color,
+              layerId: String(newLayer.id),
+              city_name: selectedCity,
+              layer_legend: 'Population Layer',
+              is_grid: true, // Enable grid visualization
+              is_population: true, // Mark as population layer
+              basedon: 'population', // For density calculations
+              visualization_mode: 'grid'
+            };
+            return [...prevPoints, populationLayer];
+          });
+        }
+      } catch (error) {
+        setError(error instanceof Error ? error.message : 'Failed to fetch population data');
+        // Cleanup on error
+        setLayers(prev => prev.filter(layer => 
+          !layer.includedTypes.includes("TotalPopulation")
+        ));
+      } finally {
+        setShowLoaderTopup(false);
+      }
+    } else {
+      // Remove population layer when unchecked
+      setLayers(prev => prev.filter(layer => 
+        !layer.includedTypes.includes("TotalPopulation")
+      ));
+      // Also remove from geoPoints
+      setGeoPoints(prev => prev.filter(point => 
+        !point.is_population
+      ));
+    }
+  };
+
   const handleReset = () => {
     resetFetchDatasetForm();
     setLayers([]);
@@ -404,8 +491,8 @@ const FetchDatasetForm = () => {
                 key={layer.id}
                 layer={layer}
                 layerIndex={index}
-                onRemoveType={removeTypeFromLayer}
-                onToggleTypeInLayer={toggleTypeInLayer}
+                onRemoveType={(type: string) => removeTypeFromLayer(type, layer.id, false)}
+                onToggleTypeInLayer={(type: string) => toggleTypeInLayer(type, layer.id, false)}
                 onNameChange={handleLayerNameChange}
               />
             ))}
@@ -526,6 +613,25 @@ const FetchDatasetForm = () => {
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className="pt-4">
+            <div aria-disabled={!selectedCity || !selectedCountry} className="flex items-center aria-disabled:opacity-50 aria-disabled:cursor-not-allowed" title={!selectedCity || !selectedCountry ? "Please select a city and country" : "Add population data"}  >
+              <input
+                id="population-toggle"
+                type="checkbox"
+                checked={includePopulation}
+                disabled={!selectedCity || !selectedCountry}
+                onChange={(e) => handleIncludePopulation(e)}
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              <label
+                htmlFor="population-toggle"
+                className="ml-2 text-sm font-medium text-gray-900"
+              >
+                Include population data
+              </label>
+            </div>
           </div>
 
           {searchType !== "keyword_search" && (

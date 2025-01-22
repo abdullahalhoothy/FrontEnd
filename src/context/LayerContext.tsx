@@ -28,12 +28,13 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { processCityData, getDefaultLayerColor } from "../utils/helperFunctions";
 import apiRequest from "../services/apiRequest";
+import { defaultMapConfig } from "../hooks/map/useMapInitialization";
 
 const LayerContext = createContext<LayerContextType | undefined>(undefined);
 
 export function LayerProvider(props: { children: ReactNode }) {
   const navigate = useNavigate();
-  const { authResponse } = useAuth(); // Add this line
+  const { authResponse } = useAuth();
   const { children } = props;
   const { geoPoints, setGeoPoints } = useCatalogContext();
   // State from useLocationAndCategories
@@ -49,6 +50,7 @@ export function LayerProvider(props: { children: ReactNode }) {
     layers: [],
     includedTypes: [],
     excludedTypes: [],
+    zoomLevel: defaultMapConfig.zoomLevel
   });
   const [reqSaveLayer, setReqSaveLayer] = useState({
     legend: "",
@@ -270,6 +272,7 @@ export function LayerProvider(props: { children: ReactNode }) {
               text_search: textSearchInput?.trim() || "",
               page_token: pageToken || "",
               user_id: user_id,
+              zoom_level: reqFetchDataset.zoomLevel ?? defaultMapConfig.zoomLevel
             },
             isAuthRequest: true,
           });
