@@ -191,6 +191,7 @@ const Auth = () => {
               onChange={e => setName(e.target.value)}
               required
               className='flex-1 px-3 py-2 text-lg bg-transparent outline-none'
+              disabled={isLoading||!isLogin}
             />
           </div>
         )}
@@ -203,6 +204,7 @@ const Auth = () => {
             onChange={e => setEmail(e.target.value)}
             required
             className={styles.authInput}
+            disabled={isLoading||!isLogin}
           />
         </div>
         <div className={styles.inputGroup}>
@@ -214,12 +216,13 @@ const Auth = () => {
             onChange={e => setPassword(e.target.value)}
             required
             className={styles.authInput}
+            disabled={isLoading||!isLogin}
           />
         </div>
         <button
           type='submit'
           className='px-4 py-3 text-lg text-white bg-[#155315] rounded-md hover:bg-[#1a651a] disabled:bg-gray-400 disabled:cursor-not-allowed'
-          disabled={isLoading}
+          disabled={isLoading||!isLogin}
         >
           {isLogin ? 'Login' : 'Register'}
         </button>
@@ -258,6 +261,16 @@ const Auth = () => {
             >
               {isLogin ? 'Need to register?' : 'Already have an account?'}
             </button>
+            <button
+              onClick={() => {
+                setIsLogin(!isLogin)
+                setIsPasswordReset(false)
+              }}
+              className='text-[#006400] text-sm hover:underline'
+            >
+              {isLogin ? null : <a href='https://www.s-locator.com/' target='_blank'>Registration Form</a>}
+            </button>
+            
             {isLogin && (
               <button
                 onClick={() => setIsPasswordReset(!isPasswordReset)}
