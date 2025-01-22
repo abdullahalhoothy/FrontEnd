@@ -725,3 +725,11 @@ export type MapContextType = {
   backendZoom: number | null;
   setBackendZoom: (zoom: number | null) => void;
 };
+
+export interface PropertyStats {
+  sum: number;
+  values: number[];
+  count: number;
+  average?: number;
+  median?: number;
+}

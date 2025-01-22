@@ -16,7 +16,7 @@ export function useMapZoom() {
       const mapboxZoom = map.getZoom();
       const mappedZoom = mapToBackendZoom(mapboxZoom);
 
-      console.log('mapboxZoom -> mappedZoom', mapboxZoom, mappedZoom);
+      //console.log('mapboxZoom -> mappedZoom', mapboxZoom, mappedZoom);
       
       setCurrentZoom(mapboxZoom);
       setBackendZoom(mappedZoom);
