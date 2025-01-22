@@ -24,10 +24,10 @@ const getGridPaint = (basedonLength: boolean, pointsColor: string, p25: number, 
     0,
     ['step', 
       ['get', 'density'], 
-      0.45,
-      p25, 0.6, 
-      p50, 0.75, 
-      p75, 0.9
+      0.1,
+      p25, 0.25, 
+      p50, 0.5, 
+      p75, 0.75
     ]
   ],
   'fill-outline-color': [
