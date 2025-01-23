@@ -37,17 +37,10 @@ export function useGridInteraction(
 
     // Clean up any existing popup
     cleanupGridPopup();
-
-    // Get cell data
-    const density = feature.properties?.density || 0;
-    const basedonValue = feature.properties?.[basedonField] || 0;
     
     // Get center coordinates from properties
     const center = feature.properties?.center;
-    
-    console.log('Center from properties:', center);
-    console.log('Center type:', typeof center);
-    
+        
     // Check if center is a string (might be serialized JSON)
     let centerObj;
     if (typeof center === 'string') {
@@ -208,10 +201,8 @@ export function useGridInteraction(
 
   // Add cleanupHoverState function before return
   const cleanupGridSelection = useCallback((gridSourceId: string) => {
-    console.log('Cleaning up hover state...', { gridSourceId, selectedGridId });
     if (selectedGridId !== null && map) {
       try {
-        console.log('Removing feature state for:', { source: gridSourceId, id: selectedGridId });
         map.removeFeatureState({
           source: gridSourceId,
           id: selectedGridId
