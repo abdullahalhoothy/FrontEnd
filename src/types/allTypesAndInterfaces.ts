@@ -296,6 +296,9 @@ export interface LayerContextType {
 
   layerStates: { [layerId: number]: LayerState };
   updateLayerState: (layerId: number, updates: Partial<LayerState>) => void;
+  includePopulation: boolean;
+  setIncludePopulation: React.Dispatch<React.SetStateAction<boolean>>;
+  handlePopulationLayer: (shouldInclude: boolean) => Promise<void>;
 }
 
 export interface ReqFetchDataset {
