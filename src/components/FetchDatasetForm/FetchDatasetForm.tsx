@@ -385,17 +385,7 @@ const FetchDatasetForm = () => {
     if (e.target.checked) {
       setShowLoaderTopup(true);
       try {
-        // Create a new layer for population data
-        const newLayer: Layer = {
-          id: layers.length + 1,
-          name: 'Population Layer',
-          includedTypes: ["TotalPopulation"],
-          excludedTypes: [],
-          display: true,
-          points_color: colorOptions[0].hex
-        };
-        setLayers(prev => [...prev, newLayer]);
-
+      
         if(!authResponse || !authResponse.localId || !authResponse.idToken) return;
         
         // Fetch population data
@@ -411,7 +401,6 @@ const FetchDatasetForm = () => {
             country_name: selectedCountry,
             city_name: selectedCity,
             boolean_query: "TotalPopulation",
-            layerId: newLayer.id,
             layer_name: 'Population Layer',
             action: 'sample',
             search_type: 'category_search',
@@ -426,8 +415,7 @@ const FetchDatasetForm = () => {
               type: 'FeatureCollection',
               features: res.data.data.features,
               display: true,
-              points_color: newLayer.points_color,
-              layerId: String(newLayer.id),
+              points_color: colorOptions[0].hex,
               city_name: selectedCity,
               layer_legend: 'Population Layer',
               is_grid: true, // Enable grid visualization
@@ -440,18 +428,10 @@ const FetchDatasetForm = () => {
         }
       } catch (error) {
         setError(error instanceof Error ? error.message : 'Failed to fetch population data');
-        // Cleanup on error
-        setLayers(prev => prev.filter(layer => 
-          !layer.includedTypes.includes("TotalPopulation")
-        ));
       } finally {
         setShowLoaderTopup(false);
       }
     } else {
-      // Remove population layer when unchecked
-      setLayers(prev => prev.filter(layer => 
-        !layer.includedTypes.includes("TotalPopulation")
-      ));
       // Also remove from geoPoints
       setGeoPoints(prev => prev.filter(point => 
         !point.is_population
