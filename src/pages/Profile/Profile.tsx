@@ -63,6 +63,7 @@ function ProfileContent() {
           onClick={() => toggleExpand("billing")}
         >
           <SubMenuItem label="Payment methods" to="/profile/payment-methods" />
+          <SubMenuItem label="Wallet" to="/profile/wallet" />
         </ExpandableMenuItem>
       </div>
     </>
