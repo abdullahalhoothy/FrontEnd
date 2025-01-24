@@ -723,6 +723,7 @@ export type MapContextType = {
   isStyleLoaded: boolean;
   setIsStyleLoaded: (loaded: boolean) => void;
   shouldInitializeFeatures: boolean;
+  gridSize: number;
   currentZoom: number | null;
   backendZoom: number | null;
 };
