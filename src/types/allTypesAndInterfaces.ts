@@ -311,6 +311,7 @@ export interface ReqFetchDataset {
   }[];
   includedTypes: string[];
   excludedTypes: string[];
+  zoomLevel?: number;
 }
 
 export interface ModalOptions {
@@ -724,4 +725,14 @@ export type MapContextType = {
   isStyleLoaded: boolean;
   setIsStyleLoaded: (loaded: boolean) => void;
   shouldInitializeFeatures: boolean;
+  currentZoom: number | null;
+  backendZoom: number | null;
 };
+
+export interface PropertyStats {
+  sum: number;
+  values: number[];
+  count: number;
+  average?: number;
+  median?: number;
+}
