@@ -56,35 +56,177 @@ const refreshAuthToken = async (refreshToken: string): Promise<AuthResponse> => 
   }
 };
 
+// Add cache implementation
+interface CacheEntry {
+  data: any;
+  timestamp: number;
+}
+
+const CACHE_KEY_PREFIX = 'api_cache_';
+const DURATION_IN_MINUTES = 15;
+const CACHE_EXPIRY = DURATION_IN_MINUTES * 60 * 1000;
+
+// Generic cache helper functions
+const generateCacheKey = (url: string, method: string, data: any): string => {
+  // For POST requests, we only care about the request_body part of the data
+  const keyData = method === "POST" ? data?.request_body : data;
+  
+  const cacheKey = CACHE_KEY_PREFIX + JSON.stringify({
+    url,
+    method,
+    data: keyData
+  });
+  
+  console.log('Generated cache key:', cacheKey);
+  return cacheKey;
+};
+
+const getCachedResponse = (key: string): any | null => {
+  try {
+    const cached = localStorage.getItem(key);
+    if (!cached) {
+      console.log('Cache miss for key:', key);
+      return null;
+    }
+
+    const { data, timestamp } = JSON.parse(cached) as CacheEntry;
+    
+    if (Date.now() - timestamp > CACHE_EXPIRY) {
+      console.log('Cache expired for key:', key);
+      localStorage.removeItem(key);
+      return null;
+    }
+
+    console.log('Cache hit for key:', key);
+    return data;
+  } catch (error) {
+    console.error('Error reading from cache:', error);
+    return null;
+  }
+};
+
+const setCacheEntry = (key: string, data: any) => {
+  try {
+    const entry: CacheEntry = {
+      data,
+      timestamp: Date.now()
+    };
+    localStorage.setItem(key, JSON.stringify(entry));
+    console.log('Cached response for:', key);
+  } catch (error) {
+    console.error('Error writing to cache:', error);
+    // If localStorage is full, clear it and try again
+    if (error.name === 'QuotaExceededError') {
+      clearCache();
+      try {
+        const entry: CacheEntry = {
+          data,
+          timestamp: Date.now()
+        };
+        localStorage.setItem(key, JSON.stringify(entry));
+      } catch (retryError) {
+        console.error('Failed to cache even after clearing:', retryError);
+      }
+    }
+  }
+};
+
+// Cache management functions
+export const clearCache = () => {
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key?.startsWith(CACHE_KEY_PREFIX)) {
+      localStorage.removeItem(key);
+    }
+  }
+  console.log('Cache cleared');
+};
+
+const cleanupCache = () => {
+  const now = Date.now();
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key?.startsWith(CACHE_KEY_PREFIX)) {
+      try {
+        const cached = localStorage.getItem(key);
+        if (cached) {
+          const { timestamp } = JSON.parse(cached) as CacheEntry;
+          if (now - timestamp > CACHE_EXPIRY) {
+            localStorage.removeItem(key);
+            console.log('Removed expired cache entry:', key);
+          }
+        }
+      } catch (error) {
+        console.error('Error cleaning up cache entry:', error);
+        localStorage.removeItem(key);
+      }
+    }
+  }
+};
+
+// Run cleanup periodically
+setInterval(cleanupCache, CACHE_EXPIRY / 2);
+
+// Update makeApiCall to use the new localStorage cache functions
 const makeApiCall = async ({
   url,
   method,
   body,
   options,
   isFormData = false,
+  useCache = false,
 }: {
   url: string;
   method: string;
   body?: any;
   options?: AxiosRequestConfig;
   isFormData?: boolean;
+  useCache?: boolean;
 }) => {
-  const data = isFormData ? body : (
-    method.toUpperCase() !== "GET"
-      ? {
-          message: "Request from frontend",
-          request_info: {},
-          request_body: body,
-        }
-      : undefined
-  );
+  console.log('makeApiCall', { url, method, useCache, isFormData });
 
-  return await axiosInstance({
+  // Skip cache for form data or when caching is not requested
+  if (isFormData || !useCache) {
+    console.log('Skipping cache due to:', isFormData ? 'form data' : 'useCache false');
+    return await axiosInstance({
+      url,
+      method,
+      data: isFormData ? body : {
+        message: "Request from frontend",
+        request_info: {},
+        request_body: body,
+      },
+      ...options,
+    });
+  }
+
+  // For cacheable requests, try cache first
+  const data = {
+    message: "Request from frontend",
+    request_info: {},
+    request_body: body,
+  };
+
+  const cacheKey = generateCacheKey(url, method, data);
+  const cachedResponse = getCachedResponse(cacheKey);
+  
+  if (cachedResponse) {
+    console.log('Returning cached response for:', url);
+    return cachedResponse;
+  }
+
+  console.log('Making new request for:', url);
+  // Make the request and cache the response
+  const response = await axiosInstance({
     url,
     method,
     data,
     ...options,
   });
+
+  setCacheEntry(cacheKey, response);
+
+  return response;
 };
 
 // Since we can't use hooks directly in a non-component function, 
@@ -109,9 +251,10 @@ const apiRequest = async ({
   options = {},
   isAuthRequest = false,
   isFormData = false,
+  useCache = false,
 }: ApiRequestOptions): Promise<any> => {
+  console.log("Making apiRequest with", {useCache})
   const authResponse = getAuthResponse();
-
   if (authResponse?.idToken) {
     setAuthorizationHeader(options, authResponse.idToken);
   }
@@ -123,7 +266,7 @@ const apiRequest = async ({
   }
 
   try {
-    const response = await makeApiCall({ url, method, body, options, isFormData });
+    const response = await makeApiCall({ url, method, body, options, isFormData, useCache });
     return response;
   } catch (err: any) {
     if (err?.response?.status === 403) {
@@ -141,7 +284,7 @@ const apiRequest = async ({
           addAuthTokenToLocalStorage(newToken);
           
           setAuthorizationHeader(options, newToken.idToken);
-          const retryResponse = await makeApiCall({ url, method, body, options, isFormData });
+          const retryResponse = await makeApiCall({ url, method, body, options, isFormData, useCache });
           return retryResponse;
         } catch (tokenErr) {
           console.error("Token refresh error:", tokenErr);

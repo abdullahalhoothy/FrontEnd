@@ -624,6 +624,7 @@ export interface ApiRequestOptions extends AxiosRequestConfig {
   isFormData?: boolean;
   body?: any;
   options?: AxiosRequestConfig;
+  useCache?: boolean;
 }
 
 export interface CategoriesBrowserSubCategoriesProps {

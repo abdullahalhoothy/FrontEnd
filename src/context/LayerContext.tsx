@@ -556,6 +556,7 @@ export function LayerProvider(props: { children: ReactNode }) {
             search_type: 'category_search',
           },
           isAuthRequest: true,
+          useCache: true,
         });
 
         if (res?.data?.data) {
