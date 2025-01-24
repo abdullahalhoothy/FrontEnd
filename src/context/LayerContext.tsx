@@ -490,7 +490,19 @@ export function LayerProvider(props: { children: ReactNode }) {
       });
     }
   }, [reqFetchDataset?.layers]);
-// Depend on the memoized zoom level
+
+  // Add zoom level effect to trigger refetch for all grid population layers
+  useEffect(() => {
+    // Only refetch if we have existing population grid layers
+    const gridLayers = geoPoints.filter(point => point.is_grid && point.is_population);
+    if (gridLayers.length > 0) {
+      console.log("#feat: auto zoom","gridLayers", gridLayers);
+      
+      handlePopulationLayer(false)
+      handlePopulationLayer(true)
+
+    }
+  }, [currentZoomLevel]); // Depend on the memoized zoom level
 
   const [includePopulation, setIncludePopulation] = useState(false);
 
