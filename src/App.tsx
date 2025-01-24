@@ -5,6 +5,7 @@ import { AuthProvider } from "./context/AuthContext";
 import Layout from "./components/Layout/Layout";
 import { UIProvider } from "./context/UIContext";
 import NavigationSetup from "./components/NavigationSetup/NavigationSetup";
+import { MapProvider } from "./context/MapContext";
 
 function App() {
   return (
@@ -12,13 +13,15 @@ function App() {
       <BrowserRouter>
         <NavigationSetup>
           <AuthProvider>
-            <CatalogProvider>
-              <LayerProvider>
-                <UIProvider>
-                  <Layout />
-                </UIProvider>
-              </LayerProvider>
-            </CatalogProvider>
+            <MapProvider>
+              <CatalogProvider>
+                <LayerProvider>
+                  <UIProvider>
+                    <Layout />
+                  </UIProvider>
+                </LayerProvider>
+              </CatalogProvider>
+            </MapProvider>
           </AuthProvider>
         </NavigationSetup>
       </BrowserRouter>

@@ -7,6 +7,7 @@ import React, {
   ReactNode,
   useRef,
   useEffect,
+  useMemo,
 } from "react";
 import { HttpReq } from "../services/apiService";
 import {
@@ -29,6 +30,7 @@ import { useNavigate } from "react-router-dom";
 import { processCityData, getDefaultLayerColor } from "../utils/helperFunctions";
 import apiRequest from "../services/apiRequest";
 import { defaultMapConfig } from "../hooks/map/useMapInitialization";
+import { useMapContext } from './MapContext';
 
 const LayerContext = createContext<LayerContextType | undefined>(undefined);
 
@@ -105,6 +107,14 @@ export function LayerProvider(props: { children: ReactNode }) {
   const [selectedCity, setSelectedCity] = useState<string>("");
 
   const [layerStates, setLayerStates] = useState<{ [layerId: number]: LayerState }>({});
+
+  const { backendZoom } = useMapContext();
+
+  // Memoize the zoom level
+  const currentZoomLevel = useMemo(() => 
+    backendZoom ?? defaultMapConfig.zoomLevel,
+    [backendZoom]
+  );
 
   function incrementFormStage() {
     if (createLayerformStage === "initial") {
@@ -272,7 +282,7 @@ export function LayerProvider(props: { children: ReactNode }) {
               text_search: textSearchInput?.trim() || "",
               page_token: pageToken || "",
               user_id: user_id,
-              zoom_level: reqFetchDataset.zoomLevel ?? defaultMapConfig.zoomLevel
+              zoom_level: currentZoomLevel,
             },
             isAuthRequest: true,
           });
@@ -424,6 +434,7 @@ export function LayerProvider(props: { children: ReactNode }) {
       layers: [],
       includedTypes: [],
       excludedTypes: [],
+      zoomLevel: defaultMapConfig.zoomLevel
     });
     setLayerDataMap({});
     setSelectedCountry(""); // Reset country

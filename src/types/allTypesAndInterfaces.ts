@@ -721,7 +721,13 @@ export type MapContextType = {
   setIsStyleLoaded: (loaded: boolean) => void;
   shouldInitializeFeatures: boolean;
   currentZoom: number | null;
-  setCurrentZoom: (zoom: number | null) => void;
   backendZoom: number | null;
-  setBackendZoom: (zoom: number | null) => void;
 };
+
+export interface PropertyStats {
+  sum: number;
+  values: number[];
+  count: number;
+  average?: number;
+  median?: number;
+}

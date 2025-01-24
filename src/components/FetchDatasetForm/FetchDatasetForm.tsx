@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { HttpReq } from "../../services/apiService";
 import {
   formatSubcategoryName,
@@ -18,6 +18,7 @@ import CategoriesBrowserSubCategories from "../CategoriesBrowserSubCategories/Ca
 import { colorOptions } from "../../utils/helperFunctions";
 import { useCatalogContext } from "../../context/CatalogContext";
 import { defaultMapConfig } from "../../hooks/map/useMapInitialization";
+import { useMapContext } from '../../context/MapContext';
 
 const FetchDatasetForm = () => {
   const nav = useNavigate();
@@ -73,6 +74,8 @@ const FetchDatasetForm = () => {
 
   // Add this near other context hooks
   const { setGeoPoints } = useCatalogContext();
+
+  const { backendZoom } = useMapContext();
 
   useEffect(() => {
     resetFetchDatasetForm();
@@ -393,7 +396,8 @@ const FetchDatasetForm = () => {
         };
         setLayers(prev => [...prev, newLayer]);
 
-         if(!authResponse || !authResponse.localId || !authResponse.idToken) return;
+        if(!authResponse || !authResponse.localId || !authResponse.idToken) return;
+        
         // Fetch population data
         const res = await apiRequest({
           url: urls.fetch_dataset,
@@ -401,9 +405,9 @@ const FetchDatasetForm = () => {
           body: {
             text_search: "",
             page_token: "",
-            user_id : authResponse.localId,
-            idToken : authResponse.idToken,
-            zoom_level: defaultMapConfig.zoomLevel,
+            user_id: authResponse.localId,
+            idToken: authResponse.idToken,
+            zoom_level: backendZoom ?? defaultMapConfig.zoomLevel,
             country_name: selectedCountry,
             city_name: selectedCity,
             boolean_query: "TotalPopulation",
@@ -466,6 +470,18 @@ const FetchDatasetForm = () => {
       setError(isError.message);
     }
   }, [isError]);
+
+  useEffect(() => {
+    if (backendZoom !== null) {
+      setReqFetchDataset(prev => {
+        const newState = {
+          ...prev,
+          zoomLevel: backendZoom
+        };
+        return newState;
+      });
+    }
+  }, [backendZoom, setReqFetchDataset]);
 
   return (
     <>
