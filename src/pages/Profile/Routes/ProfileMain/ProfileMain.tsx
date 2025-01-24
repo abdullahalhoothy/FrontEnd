@@ -8,6 +8,7 @@ import {
   FaDatabase,
   FaLayerGroup,
   FaBook,
+  FaIdCard
 } from "react-icons/fa";
 import { useNavigate } from "react-router";
 import urls from "../../../../urls.json";
@@ -181,7 +182,7 @@ const ProfileMain: React.FC = () => {
     setTimeout(() => navigate("/auth"), 500);
     return null;
   }
-
+  console.log('profile',JSON.stringify(profile))
   return (
     <div className="w-full h-full overflow-y-auto lg:px-10 px-4 text-sm">
       <div className="m-5 mx-auto p-5 bg-[#f0f8f0] rounded-lg lg:shadow-md shadow-sm">
@@ -198,6 +199,11 @@ const ProfileMain: React.FC = () => {
         </div>
         <div className="bg-white p-5 rounded-lg mb-5">
           <div className="flex items-start mb-2">
+            <FaIdCard className="mr-2 text-[#006400]"/>
+            <span className="font-bold mr-1 min-w-[100px]">Account Type:</span>
+            {profile.account_type}
+          </div>
+          <div className="flex items-start mb-2">
             <FaUser className="mr-2 text-[#006400]" />
             <span className="font-bold mr-1 min-w-[100px]">Username:</span>
             {profile.username}
@@ -207,6 +213,49 @@ const ProfileMain: React.FC = () => {
             <span className="font-bold mr-1 min-w-[100px]">Email:</span>
             {profile.email}
           </div>
+          <div className="flex items-start mb-2">
+            <label className="flex items-center mb-4 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={profile.settings.show_price_on_purchase}
+                onChange={async(e) => {
+                  if (profile.account_type==='admin') {
+                    if (!authResponse || !("idToken" in authResponse)) {
+                      setError(new Error("Authentication information is missing."));
+                      setIsLoading(false);
+                      navigate("/auth");
+                      return;
+                    }
+                    const res = await apiRequest({
+                      url: urls.update_user_profile,
+                      method: "POST",
+                      isAuthRequest: true,
+                      body: { 
+                        user_id: authResponse.localId,
+                        show_price_on_purchase:e.target.checked,
+                        username:profile.username,
+                        email:profile.email,
+                        password:''
+                      },
+                    });
+                    console.log(res)
+                  }
+                }}
+                disabled={profile.account_type!=='admin'}
+                className={`mr-2 h-4 w-4 border-gray-300 rounded focus:ring-green-600 ${
+                  !profile.account_type ? "opacity-50 cursor-not-allowed" : "text-green-700"
+                }`}
+              />
+              <span
+                className={`text-gray-700 font-medium ${
+                  (profile.account_type!=='admin') ? "text-gray-400" : ""
+                }`}
+              >
+                Show Price
+              </span>
+            </label>
+          </div>
+
           {profile.prdcer && (
             <div>
               <h3 className="text-lg text-[#006400] mt-5 mb-2">

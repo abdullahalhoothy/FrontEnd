@@ -16,7 +16,7 @@ import apiRequest from "../../services/apiRequest";
 import LayerDisplaySubCategories from "../LayerDisplaySubCategories/LayerDisplaySubCategories";
 import CategoriesBrowserSubCategories from "../CategoriesBrowserSubCategories/CategoriesBrowserSubCategories";
 import { colorOptions } from "../../utils/helperFunctions";
-
+import { CostEstimate } from "../../types/allTypesAndInterfaces";
 const FetchDatasetForm = () => {
   const nav = useNavigate();
 
@@ -50,13 +50,14 @@ const FetchDatasetForm = () => {
   } = useLayerContext();
 
   // AUTH CONTEXT
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated,authResponse } = useAuth();
 
   // FETCHED DATA
   const [layers, setLayers] = useState<Layer[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [citiesData, setCitiesData] = useState<{ [country: string]: City[] }>({});
-
+  const [costEstimate, setCostEstimate] = useState<number>(0.0);
+  const [isLoading, setIsLoading] = useState(false);
   // COLBASE CATEGORY
   const [openedCategories, setOpenedCategories] = useState<string[]>([]);
 
@@ -72,6 +73,9 @@ const FetchDatasetForm = () => {
   }, []);
 
   useEffect(() => {
+    if(reqFetchDataset.includedTypes&&reqFetchDataset.selectedCity&&reqFetchDataset.selectedCountry){
+      estimateCost()
+    }
     console.log(reqFetchDataset);
   }, [reqFetchDataset]);
 
@@ -172,10 +176,42 @@ const FetchDatasetForm = () => {
       block: 'start'
     });
   };
-
+  const estimateCost=()=>{
+    if (!authResponse || !("idToken" in authResponse)) {
+      return;
+    }
+    console.log('Estimating Cost')
+    const requestBody = {
+      user_id: authResponse.localId,
+      boolean_query: reqFetchDataset.includedTypes?.join(" OR "),
+      city_name: reqFetchDataset.selectedCity,
+      country_name: reqFetchDataset.selectedCountry,
+    };
+    HttpReq<CostEstimate>(
+      urls.cost_calculator,
+      (data) => {
+        if (
+          data &&
+          typeof data.cost === "number" &&
+          typeof data.api_calls === "number"
+        ) {
+          setCostEstimate(data.cost);
+          // console.log('Cost Data:',data)
+        } else {
+          setIsError(new Error("Invalid response from server"));
+        }
+      },
+      () => { },
+      () => { },
+      () => setIsLoading(false),
+      setIsError,
+      "post",
+      requestBody
+    );
+  }
   // Add new handler to remove type from specific layer
-  const removeTypeFromLayer = (type: string, layerId: number, isExcluded: boolean) => {
-    setLayers(layers.map(layer => {
+  const removeTypeFromLayer = async(type: string, layerId: number, isExcluded: boolean) => {
+    await setLayers(layers.map(layer => {
       if (layer.id === layerId) {
         return {
           ...layer,
@@ -185,11 +221,10 @@ const FetchDatasetForm = () => {
       }
       return layer;
     }).filter(layer => layer.includedTypes.length > 0 || layer.excludedTypes.length > 0));
-
     // Update reqFetchDataset based on remaining types
     const remainingIncluded = layers.flatMap(layer => layer.includedTypes);
     const remainingExcluded = layers.flatMap(layer => layer.excludedTypes);
-
+    
     setReqFetchDataset(prevData => ({
       ...prevData,
       includedTypes: remainingIncluded,
@@ -283,8 +318,8 @@ const FetchDatasetForm = () => {
   };
 
   // Add this new function
-  const toggleTypeInLayer = (type: string, layerId: number, setAsExcluded: boolean) => {
-    setLayers(prevLayers => prevLayers.map(layer => {
+  const toggleTypeInLayer = async(type: string, layerId: number, setAsExcluded: boolean) => {
+    await setLayers(prevLayers => prevLayers.map(layer => {
       if (layer.id === layerId) {
         // If trying to exclude
         if (setAsExcluded) {
@@ -315,7 +350,6 @@ const FetchDatasetForm = () => {
       }
       return layer;
     }));
-
     // Update reqFetchDataset based on all layers
     const allIncludedTypes = new Set<string>();
     const allExcludedTypes = new Set<string>();
@@ -583,7 +617,7 @@ const FetchDatasetForm = () => {
               handleButtonClick("full data", e);
             }}
           >
-            Full Data
+              Full Data (${costEstimate})
           </button>
         </div>
       </div>
