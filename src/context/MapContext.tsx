@@ -25,7 +25,7 @@ export function MapProvider({ children }: { children: ReactNode }) {
     const mapboxZoom = mapRef.current.getZoom();
     const mappedZoom = mapToBackendZoom(mapboxZoom);
     const hadZoomedIn = mapboxZoom > mapState.currentZoom;
-    const mapGridSize = mapState.gridSize * (hadZoomedIn ? 0.75 : 1.25);
+    const mapGridSize = mapState.gridSize * (hadZoomedIn ? 0.75 : 1.5);
         
     // Force state update
     setMapState(prevState => {

@@ -117,6 +117,13 @@ export function LayerProvider(props: { children: ReactNode }) {
   );
 
   useEffect(() => {
+    console.log("#feat: auto zoom","selectedCity", selectedCity);
+  }, [selectedCity]);
+  useEffect(() => {
+    console.log("#feat: auto zoom","selectedCountry", selectedCountry);
+  }, [selectedCountry]);
+
+  useEffect(() => {
     console.log("#feat: auto zoom","currentZoomLevel", currentZoomLevel);
   }, [currentZoomLevel]);
 
@@ -497,20 +504,40 @@ export function LayerProvider(props: { children: ReactNode }) {
     const gridLayers = geoPoints.filter(point => point.is_grid && point.is_population);
     if (gridLayers.length > 0) {
       console.log("#feat: auto zoom","gridLayers", gridLayers);
-      
-      handlePopulationLayer(false)
-      handlePopulationLayer(true)
+      refetchPopulationLayer()
 
     }
-  }, [currentZoomLevel]); // Depend on the memoized zoom level
+  }, [currentZoomLevel]);
 
   const [includePopulation, setIncludePopulation] = useState(false);
 
+  async function switchPopulationLayer(fromSetter: boolean = true) {
+    console.log("#feat: switchPopulationLayer", "fromSetter", fromSetter, "includePopulation", includePopulation);
+    const shouldInclude = !includePopulation
+    if (fromSetter) {
+      handlePopulationLayer(shouldInclude)
+    } else {
+      setIncludePopulation(shouldInclude)
+      handlePopulationLayer(shouldInclude)
+    }
+  }
+
+  async function refetchPopulationLayer() {
+    handlePopulationLayer(false)
+    handlePopulationLayer(true)
+  }
+
   async function handlePopulationLayer(shouldInclude: boolean) {
+    console.log("#feat: handlePopulationLayer", shouldInclude, selectedCity, selectedCountry);
     if (shouldInclude) {
       setShowLoaderTopup(true);
       try {
         if (!authResponse || !authResponse.localId || !authResponse.idToken) return;
+
+        if (!selectedCity || !selectedCountry) {
+          console.error("Please select a city and country first", selectedCity, selectedCountry);
+          return;
+        }
 
         const res = await apiRequest({
           url: urls.fetch_dataset,
@@ -641,6 +668,8 @@ export function LayerProvider(props: { children: ReactNode }) {
         includePopulation,
         setIncludePopulation,
         handlePopulationLayer,
+        switchPopulationLayer,
+        refetchPopulationLayer,
       }}
     >
       {children}
