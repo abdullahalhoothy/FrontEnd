@@ -63,7 +63,7 @@ interface CacheEntry {
 }
 
 const CACHE_KEY_PREFIX = 'api_cache_';
-const DURATION_IN_MINUTES = 15;
+const DURATION_IN_MINUTES = 60;
 const CACHE_EXPIRY = DURATION_IN_MINUTES * 60 * 1000;
 
 // Generic cache helper functions
