@@ -14,13 +14,15 @@ import { getDefaultLayerColor } from '../../utils/helperFunctions';
 function autoFillLegendFormat(data) {
   if (!data.selectedCountry || !data.selectedCity) return '';
 
+  const actionAbbreviation = data.action.split(' ')[0];
+
+  const cityAbbreviartion = data.selectedCity.slice(0, 3).toUpperCase();
+
   const countryAbbreviation = data.selectedCountry
     .split(' ')
     .map(word => word[0])
     .join('')
     .toUpperCase();
-
-  const city = data.selectedCity;
 
   const included = data.includedTypes.map(type => type.replace('_', ' ')).join(' + ');
 
@@ -28,8 +30,12 @@ function autoFillLegendFormat(data) {
     data.excludedTypes.length > 0
       ? ' + not ' + data.excludedTypes.map(type => type.replace('_', ' ')).join(' + not ')
       : '';
-
-  return `${countryAbbreviation} ${city} ${included}${excluded}`;
+  // Handle special cases for action
+  if (actionAbbreviation === 'full') {
+    return `${actionAbbreviation}-${countryAbbreviation}-${cityAbbreviartion}-${included}${excluded}`;
+  } else {
+    return `${countryAbbreviation}-${cityAbbreviartion}-${included}${excluded}`;
+  }
 }
 
 function CustomizeLayer() {
