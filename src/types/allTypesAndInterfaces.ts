@@ -111,7 +111,7 @@ export interface CatalogContextType {
   setGeoPoints: React.Dispatch<React.SetStateAction<MapFeatures[]>>;
   selectedColor: { name: string; hex: string } | null;
   setSelectedColor: React.Dispatch<React.SetStateAction<{ name: string; hex: string } | null>>;
-  resetState: () => void;
+  resetState: (keepGeoPointsState?: boolean) => void;
   saveResponse: SaveResponse | null;
   saveResponseMsg: string;
   saveReqId: string;
@@ -130,6 +130,7 @@ export interface CatalogContextType {
   updateLayerColor: (layerId: number, newColor: string) => void;
   updateLayerDisplay: (layerIndex: number, display: boolean) => void;
   updateLayerHeatmap: (layerIndex: number, isHeatmap: boolean) => void;
+  handleStoreUnsavedGeoPoint: (geoPoints: any) => void;
   removeLayer: (layerIndex: number) => void;
   isAdvanced: boolean;
   setIsAdvanced: React.Dispatch<React.SetStateAction<boolean>>;
