@@ -50,6 +50,7 @@ function CatalogMenu() {
     if (savedGeoPoints) {
       setGeoPoints(prevGeoPoints => [...prevGeoPoints, ...JSON.parse(savedGeoPoints)]);
     }
+    localStorage.removeItem('unsavedGeoPoints');
     setShowRestorePrompt(false);
   }
 
