@@ -26,11 +26,12 @@ function CircleControl(props: CircleControlProps) {
     button.style.width = "29px";
     button.style.height = "29px";
     
-    if (isMobile) {
-      button.addEventListener("touchend", clickHandler);
-    } else {
-      button.addEventListener("click", clickHandler);
-    }
+    button.addEventListener("touchend", (e) => {
+      e.preventDefault();
+      clickHandler();
+    });
+    button.addEventListener("click", clickHandler);
+    
     return button;
   };
 

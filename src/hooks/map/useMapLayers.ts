@@ -81,7 +81,7 @@ const getGradientCirclePaint = (defaultColor: string) => ({
 
 
 export function useMapLayers() {
-  const { mapRef, shouldInitializeFeatures } = useMapContext()
+  const { mapRef, shouldInitializeFeatures, gridSize } = useMapContext()
   const { isMobile } = useUIContext()
   const map = mapRef.current
   const { geoPoints } = useCatalogContext()
@@ -297,7 +297,7 @@ export function useMapLayers() {
               }
 
               // Create grid
-              const cellSide = defaultMapConfig.radiusInMeters / 1000
+              const cellSide = gridSize / 1000
               const options = { units: 'kilometers' as const }
               const grid = turf.squareGrid(bounds, cellSide, options)
               const emptyProperties: Record<string, null> = Object.keys(featureCollection.features[0].properties).reduce((acc, key) => {

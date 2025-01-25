@@ -37,17 +37,10 @@ export function useGridInteraction(
 
     // Clean up any existing popup
     cleanupGridPopup();
-
-    // Get cell data
-    const density = feature.properties?.density || 0;
-    const basedonValue = feature.properties?.[basedonField] || 0;
     
     // Get center coordinates from properties
     const center = feature.properties?.center;
-    
-    console.log('Center from properties:', center);
-    console.log('Center type:', typeof center);
-    
+        
     // Check if center is a string (might be serialized JSON)
     let centerObj;
     if (typeof center === 'string') {
@@ -73,8 +66,6 @@ export function useGridInteraction(
     // Convert to array format for Mapbox
     const coordinates: [number, number] = [centerObj.lng, centerObj.lat];
 
-    console.log('Final coordinates for popup:', coordinates);
-
     // Create popup with all properties
     createGridPopup(
       coordinates,
@@ -89,11 +80,6 @@ export function useGridInteraction(
         const next = new Set(prev);
         next.delete(cellId);
         return next;
-      });
-
-      console.log('Cell left:', {
-        cellId,
-        remainingCells: Array.from(selectedCells)
       });
 
       // Only cleanup if no cells are selected
@@ -126,7 +112,6 @@ export function useGridInteraction(
         
         if (gridLayer) {
           gridLayerIdRef.current = gridLayer.id;
-          console.log('Found grid layer:', gridLayer.id);
         }
       } catch (error) {
         console.debug('Style not ready:', error);
@@ -155,12 +140,6 @@ export function useGridInteraction(
       try {
         const features = map.queryRenderedFeatures(e.point, { 
           layers: [gridLayerIdRef.current] 
-        });
-        
-        console.log('Query features:', {
-          point: e.point,
-          layerId: gridLayerIdRef.current,
-          featuresFound: features.length
         });
 
         const feature = features[0];
@@ -208,10 +187,8 @@ export function useGridInteraction(
 
   // Add cleanupHoverState function before return
   const cleanupGridSelection = useCallback((gridSourceId: string) => {
-    console.log('Cleaning up hover state...', { gridSourceId, selectedGridId });
     if (selectedGridId !== null && map) {
       try {
-        console.log('Removing feature state for:', { source: gridSourceId, id: selectedGridId });
         map.removeFeatureState({
           source: gridSourceId,
           id: selectedGridId
