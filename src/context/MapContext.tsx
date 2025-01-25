@@ -15,7 +15,8 @@ export function MapProvider({ children }: { children: ReactNode }) {
   const [mapState, setMapState] = useState({
     isStyleLoaded: false,
     currentZoom: defaultMapConfig.zoom,
-    backendZoom: defaultMapConfig.zoomLevel
+    backendZoom: defaultMapConfig.zoomLevel,
+    gridSize: defaultMapConfig.gridSize
   });
 
   const handleZoomChange = useCallback(() => {
@@ -23,6 +24,8 @@ export function MapProvider({ children }: { children: ReactNode }) {
     
     const mapboxZoom = mapRef.current.getZoom();
     const mappedZoom = mapToBackendZoom(mapboxZoom);
+    const hadZoomedIn = mapboxZoom > mapState.currentZoom;
+    const mapGridSize = mapState.gridSize * (hadZoomedIn ? 0.75 : 1.5);
         
     // Force state update
     setMapState(prevState => {
@@ -30,7 +33,8 @@ export function MapProvider({ children }: { children: ReactNode }) {
       const newState = {
         ...prevState,
         currentZoom: mapboxZoom,
-        backendZoom: mappedZoom
+        backendZoom: mappedZoom,
+        gridSize: mapGridSize
       };
       return newState;
     });
@@ -58,6 +62,7 @@ export function MapProvider({ children }: { children: ReactNode }) {
       setMapState(prev => ({ ...prev, isStyleLoaded: loaded })),
     currentZoom: mapState.currentZoom,
     backendZoom: mapState.backendZoom,
+    gridSize: mapState.gridSize,
     shouldInitializeFeatures: mapState.isStyleLoaded && mapRef.current !== null
   }), [mapState]);
 

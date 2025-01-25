@@ -1,0 +1,50 @@
+.population-control {
+  transition: all 0.2s ease;
+  background: #fff;
+}
+
+.population-control[data-active="true"] {
+  background: #115740 !important;
+  color: white;
+}
+
+.population-control[data-active="true"] .population-icon-stroke {
+  stroke: white;
+}
+
+.population-control:hover {
+  background: #f0f0f0;
+}
+
+.population-control[data-active="true"]:hover {
+  background: #0d4432 !important;
+}
+
+.population-control.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.population-control.disabled:hover {
+  background: #fff;
+}
+
+.population-control.disabled .population-icon-stroke {
+  stroke: #999;
+}
+
+.population-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.mapboxgl-ctrl-group .population-control {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  width: 29px;
+  height: 29px;
+} 

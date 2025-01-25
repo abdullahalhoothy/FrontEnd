@@ -296,6 +296,11 @@ export interface LayerContextType {
 
   layerStates: { [layerId: number]: LayerState };
   updateLayerState: (layerId: number, updates: Partial<LayerState>) => void;
+  includePopulation: boolean;
+  setIncludePopulation: React.Dispatch<React.SetStateAction<boolean>>;
+  handlePopulationLayer: (shouldInclude: boolean) => Promise<void>;
+  switchPopulationLayer: (fromSetter: boolean) => Promise<void>;
+  refetchPopulationLayer: () => Promise<void>;
 }
 
 export interface ReqFetchDataset {
@@ -619,6 +624,7 @@ export interface ApiRequestOptions extends AxiosRequestConfig {
   isFormData?: boolean;
   body?: any;
   options?: AxiosRequestConfig;
+  useCache?: boolean;
 }
 
 export interface CategoriesBrowserSubCategoriesProps {
@@ -720,6 +726,7 @@ export type MapContextType = {
   isStyleLoaded: boolean;
   setIsStyleLoaded: (loaded: boolean) => void;
   shouldInitializeFeatures: boolean;
+  gridSize: number;
   currentZoom: number | null;
   backendZoom: number | null;
 };
