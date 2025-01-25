@@ -26,17 +26,13 @@ const detectBlockedByClient = (callback: (isBlocked: boolean) => void) => {
       try {
         const response = await originalFetch.apply(this, args);
         if (!response.ok && response.status === 0) {
-          console.log(
-            `ERR_BLOCKED_BY_CLIENT detected in fetch for URL: ${args[0]}`
-          );
+          console.log(`ERR_BLOCKED_BY_CLIENT detected in fetch for URL: ${args[0]}`);
           callback(true);
         }
         return response;
       } catch (error) {
-        if (error instanceof TypeError && error.message === "Failed to fetch") {
-          console.log(
-            `ERR_BLOCKED_BY_CLIENT detected in fetch for URL: ${args[0]}`
-          );
+        if (error instanceof TypeError && error.message === 'Failed to fetch') {
+          console.log(`ERR_BLOCKED_BY_CLIENT detected in fetch for URL: ${args[0]}`);
           callback(true);
         }
         throw error;

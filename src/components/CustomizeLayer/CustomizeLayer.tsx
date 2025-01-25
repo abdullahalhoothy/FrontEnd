@@ -1,36 +1,33 @@
-import React, { useState, ChangeEvent, useEffect } from "react";
-import styles from "./CustomizeLayer.module.css";
-import ColorSelect from "../ColorSelect/ColorSelect";
-import { useLayerContext } from "../../context/LayerContext";
-import { useAuth } from "../../context/AuthContext";
-import { useNavigate } from "react-router";
-import SavedIconFeedback from "../SavedIconFeedback/SavedIconFeedback";
-import { LayerCustomization } from "../../types/allTypesAndInterfaces";
-import LayerCustomizationItem from "../LayerCustomizationItem/LayerCustomizationItem";
-import { useCatalogContext } from "../../context/CatalogContext";
-import { HiCheck, HiExclamation } from "react-icons/hi";
-import { getDefaultLayerColor } from "../../utils/helperFunctions";
+import React, { useState, ChangeEvent, useEffect } from 'react';
+import styles from './CustomizeLayer.module.css';
+import ColorSelect from '../ColorSelect/ColorSelect';
+import { useLayerContext } from '../../context/LayerContext';
+import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router';
+import SavedIconFeedback from '../SavedIconFeedback/SavedIconFeedback';
+import { LayerCustomization } from '../../types/allTypesAndInterfaces';
+import LayerCustomizationItem from '../LayerCustomizationItem/LayerCustomizationItem';
+import { useCatalogContext } from '../../context/CatalogContext';
+import { HiCheck, HiExclamation } from 'react-icons/hi';
+import { getDefaultLayerColor } from '../../utils/helperFunctions';
 
 function autoFillLegendFormat(data) {
-  if (!data.selectedCountry || !data.selectedCity) return "";
+  if (!data.selectedCountry || !data.selectedCity) return '';
 
   const countryAbbreviation = data.selectedCountry
-    .split(" ")
-    .map((word) => word[0])
-    .join("")
+    .split(' ')
+    .map(word => word[0])
+    .join('')
     .toUpperCase();
 
   const city = data.selectedCity;
 
-  const included = data.includedTypes
-    .map((type) => type.replace("_", " "))
-    .join(" + ");
+  const included = data.includedTypes.map(type => type.replace('_', ' ')).join(' + ');
 
   const excluded =
     data.excludedTypes.length > 0
-      ? " + not " +
-        data.excludedTypes.map((type) => type.replace("_", " ")).join(" + not ")
-      : "";
+      ? ' + not ' + data.excludedTypes.map(type => type.replace('_', ' ')).join(' + not ')
+      : '';
 
   return `${countryAbbreviation} ${city} ${included}${excluded}`;
 }
@@ -60,7 +57,6 @@ function CustomizeLayer() {
   const [allSaved, setAllSaved] = useState(false);
 
   useEffect(() => {
-    
     if (reqFetchDataset?.layers?.length > 0) {
       const initialCustomizations = reqFetchDataset.layers.map(layer => {
         const legendText = autoFillLegendFormat({
@@ -68,8 +64,7 @@ function CustomizeLayer() {
           includedTypes: layer.includedTypes || [],
           excludedTypes: layer.excludedTypes || [],
         });
-        
-        
+
         return {
           layerId: layer.id,
           name: legendText,
@@ -78,20 +73,19 @@ function CustomizeLayer() {
           color: getDefaultLayerColor(layer.id),
         };
       });
-      
+
       setLayerCustomizations(initialCustomizations);
     }
   }, [reqFetchDataset]);
 
   const handleLayerChange = (layerId: number, field: keyof LayerCustomization, value: string) => {
-    
     setLayerCustomizations(prev => {
       const updated = prev.map(layer =>
         layer.layerId === layerId
-          ? { 
-              ...layer, 
+          ? {
+              ...layer,
               [field]: value,
-              ...(field === 'color' ? { color: value } : {})
+              ...(field === 'color' ? { color: value } : {}),
             }
           : layer
       );
@@ -109,7 +103,7 @@ function CustomizeLayer() {
     if (!layer?.name || !layer?.legend) {
       setErrors(prev => ({
         ...prev,
-        [layerId]: "Name and legend are required."
+        [layerId]: 'Name and legend are required.',
       }));
       return false;
     }
@@ -129,7 +123,7 @@ function CustomizeLayer() {
       } catch (error) {
         setErrors(prev => ({
           ...prev,
-          [layerId]: "Failed to save layer. Please try again."
+          [layerId]: 'Failed to save layer. Please try again.',
         }));
       } finally {
         setSavingLayers(prev => {
@@ -149,17 +143,16 @@ function CustomizeLayer() {
         setGlobalSaveError(null);
         const layerIds = layerCustomizations.map(l => l.layerId);
         layerIds.forEach(id => setSavingLayers(prev => new Set(prev).add(id)));
-        
+
         await handleSaveLayer({ layers: layerCustomizations });
-        
+
         setSavedLayers(new Set(layerIds));
         setAllSaved(true);
-
       } catch (error) {
-        setGlobalSaveError("Failed to save layers. Please try again.");
+        setGlobalSaveError('Failed to save layers. Please try again.');
         setErrors(prev => ({
           ...prev,
-          global: "Failed to save layers. Please try again."
+          global: 'Failed to save layers. Please try again.',
         }));
       } finally {
         setIsSavingAll(false);
@@ -200,7 +193,7 @@ function CustomizeLayer() {
         <h1 className="text-lg font-bold">Customize Layers</h1>
       </div>
       <div className="flex flex-col h-auto overflow-y-scroll space-y-6 p-2">
-        {layerCustomizations.map((layer) => (
+        {layerCustomizations.map(layer => (
           <LayerCustomizationItem
             key={layer.layerId}
             layer={layer}
@@ -244,9 +237,25 @@ function CustomizeLayer() {
           >
             {isSavingAll ? (
               <span className="flex items-center gap-2">
-                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <svg
+                  className="animate-spin h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
                 </svg>
                 Saving All...
               </span>

@@ -1,25 +1,23 @@
-import { useEffect, useRef, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
-import urls from "../../urls.json";
-import apiRequest from "../../services/apiRequest";
-import { PiX } from "react-icons/pi";
-import { PaymentMethod, DialogProps } from "../../types/allTypesAndInterfaces";
+import { useEffect, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import urls from '../../urls.json';
+import apiRequest from '../../services/apiRequest';
+import { PiX } from 'react-icons/pi';
+import { PaymentMethod, DialogProps } from '../../types/allTypesAndInterfaces';
 
 const paymentBrandIcons = {
-  visa: "/card-brands/visa.svg",
-  mastercard: "/card-brands/mastercard.svg",
-  amex: "/card-brands/amex.svg",
-  discover: "/card-brands/discover.svg",
-  unknown: "/card-brands/credit-card.svg",
+  visa: '/card-brands/visa.svg',
+  mastercard: '/card-brands/mastercard.svg',
+  amex: '/card-brands/amex.svg',
+  discover: '/card-brands/discover.svg',
+  unknown: '/card-brands/credit-card.svg',
 };
 
 export default function PaymentMethods() {
   const { isAuthenticated, authResponse } = useAuth();
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
-  const [defaultPaymentMethodId, setDefaultPaymentMethodId] = useState<
-    string | null
-  >(null);
+  const [defaultPaymentMethodId, setDefaultPaymentMethodId] = useState<string | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
@@ -32,7 +30,7 @@ export default function PaymentMethods() {
   // Check for success query parameter
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
-    if (queryParams.get("success") === "true") {
+    if (queryParams.get('success') === 'true') {
       setShowSuccessMessage(true);
     }
   }, [location.search]);
@@ -45,10 +43,10 @@ export default function PaymentMethods() {
         const defaultId = customer?.invoice_settings?.default_payment_method;
         if (customer) {
           setDefaultPaymentMethodId(defaultId || null);
-          await fetchPaymentMethods(defaultId || "");
+          await fetchPaymentMethods(defaultId || '');
         }
       } catch (error) {
-        console.error("Error fetching data", error);
+        console.error('Error fetching data', error);
       } finally {
         setIsLoading(false);
       }
@@ -60,16 +58,13 @@ export default function PaymentMethods() {
     try {
       const res = await apiRequest({
         url: urls.get_stripe_customer,
-        method: "post",
+        method: 'post',
         isAuthRequest: true,
         body: { user_id: authResponse?.localId },
       });
       return res.data.data || null;
     } catch (error) {
-      console.error(
-        "Failed to fetch Stripe customer default payment method ID",
-        error
-      );
+      console.error('Failed to fetch Stripe customer default payment method ID', error);
       return null;
     }
   };
@@ -78,13 +73,13 @@ export default function PaymentMethods() {
     try {
       const res = await apiRequest({
         url: `${urls.list_stripe_payment_methods}?user_id=${authResponse?.localId}`,
-        method: "get",
+        method: 'get',
         isAuthRequest: true,
       });
       setPaymentMethods(res.data.data);
       setDefaultPaymentMethodId(defaultId);
     } catch (error) {
-      console.error("Failed to fetch payment methods", error);
+      console.error('Failed to fetch payment methods', error);
     }
   };
 
@@ -94,15 +89,13 @@ export default function PaymentMethods() {
     try {
       await apiRequest({
         url: `${urls.detach_stripe_payment_method}?payment_method_id=${methodToRemove}`,
-        method: "delete",
+        method: 'delete',
         isAuthRequest: true,
       });
-      setPaymentMethods((methods) =>
-        methods.filter((method) => method.id !== methodToRemove)
-      );
+      setPaymentMethods(methods => methods.filter(method => method.id !== methodToRemove));
       setDialogOpen(false);
     } catch (error) {
-      console.error("Failed to remove payment method", error);
+      console.error('Failed to remove payment method', error);
     } finally {
       setSubmitting(false);
       setMethodToRemove(null);
@@ -114,20 +107,18 @@ export default function PaymentMethods() {
     try {
       await apiRequest({
         url: `${urls.set_default_stripe_payment_method}?user_id=${authResponse?.localId}&payment_method_id=${id}`,
-        method: "put",
+        method: 'put',
         isAuthRequest: true,
       });
       setDefaultPaymentMethodId(id);
     } catch (error) {
-      console.error("Failed to set default payment method", error);
+      console.error('Failed to set default payment method', error);
     } finally {
       setSubmitting(false);
     }
   };
 
-  const defaultPaymentMethod = paymentMethods.find(
-    (method) => method.id === defaultPaymentMethodId
-  );
+  const defaultPaymentMethod = paymentMethods.find(method => method.id === defaultPaymentMethodId);
 
   if (isLoading)
     return (
@@ -186,8 +177,8 @@ export default function PaymentMethods() {
 
       <h3 className="font-semibold mb-2">Your credit and debit cards</h3>
       <p className="text-sm text-gray-600 mb-4">
-        Here's a list of your personal credit and debit cards. Select the
-        ellipsis (...) to delete a card or make it the default payment method.
+        Here's a list of your personal credit and debit cards. Select the ellipsis (...) to delete a
+        card or make it the default payment method.
       </p>
       <div className="rounded-md shadow-sm border">
         <table className="w-full">
@@ -204,18 +195,13 @@ export default function PaymentMethods() {
               <tr key={method.id} className="border-b last:border-none text-sm">
                 <td className="p-2 flex items-center gap-2">
                   <img
-                    src={
-                      paymentBrandIcons[method.card.brand] ||
-                      paymentBrandIcons.unknown
-                    }
+                    src={paymentBrandIcons[method.card.brand] || paymentBrandIcons.unknown}
                     alt={`${method.card.brand} logo`}
                     className="w-8 h-8"
                   />
                   {method.card.brand.toUpperCase()} ****{method.card.last4}
                 </td>
-                <td className="p-2">
-                  {method.billing_details.name || "Unknown"}
-                </td>
+                <td className="p-2">{method.billing_details.name || 'Unknown'}</td>
                 <td className="p-2">
                   {method.card.exp_month}/{method.card.exp_year}
                 </td>
@@ -223,9 +209,7 @@ export default function PaymentMethods() {
                   <ActionDropdown
                     isOpen={dropdownOpen === method.id}
                     setDropdownOpen={() =>
-                      setDropdownOpen(
-                        dropdownOpen === method.id ? null : method.id
-                      )
+                      setDropdownOpen(dropdownOpen === method.id ? null : method.id)
                     }
                     onRemove={() => {
                       setMethodToRemove(method.id);
@@ -241,10 +225,7 @@ export default function PaymentMethods() {
             ))}
             {paymentMethods.length === 0 && (
               <tr>
-                <td
-                  colSpan={4}
-                  className="h-36 text-center text-sm font-semibold py-4"
-                >
+                <td colSpan={4} className="h-36 text-center text-sm font-semibold py-4">
                   No payment methods available
                 </td>
               </tr>
@@ -284,21 +265,15 @@ function DefaultPaymentMethod({
   return paymentMethod ? (
     <div className="flex flex-col justify-between border rounded shadow-sm p-4 max-w-sm mb-4">
       <div className="flex items-start">
-        <div className="mr-3 ">
-          {renderPaymentBrandIcon(paymentMethod.card.brand)}
-        </div>
+        <div className="mr-3 ">{renderPaymentBrandIcon(paymentMethod.card.brand)}</div>
         <div className="uppercase">
           <p className="font-semibold">
             {paymentMethod.card.brand} ****{paymentMethod.card.last4}
           </p>
           <p className="text-sm text-gray-600">
-            Expires on {paymentMethod.card.exp_month}/
-            {paymentMethod.card.exp_year}
+            Expires on {paymentMethod.card.exp_month}/{paymentMethod.card.exp_year}
           </p>
-          <button
-            className="text-blue-600 text-sm font-medium"
-            onClick={onRemove}
-          >
+          <button className="text-blue-600 text-sm font-medium" onClick={onRemove}>
             Remove
           </button>
         </div>
@@ -353,7 +328,7 @@ function ActionDropdown({
       const target = event.target as HTMLElement;
 
       // Skip if clicking on a button or interactive element
-      if (target.tagName === "BUTTON" || target.closest("button")) {
+      if (target.tagName === 'BUTTON' || target.closest('button')) {
         return;
       }
 
@@ -363,11 +338,11 @@ function ActionDropdown({
     };
 
     if (isOpen) {
-      document.addEventListener("mouseup", handleClickOutside);
+      document.addEventListener('mouseup', handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener("mouseup", handleClickOutside);
+      document.removeEventListener('mouseup', handleClickOutside);
     };
   }, [isOpen, setDropdownOpen]);
   const isDefault = defaultPaymentMethodId === paymentMethodId;
@@ -408,9 +383,9 @@ function ActionDropdown({
       {isOpen && (
         <div
           className={`absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-sm z-10 transition-all duration-300 transform ${
-            isOpen ? "opacity-100 scale-100" : "opacity-0 scale-95"
+            isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
           }`}
-          style={{ display: isOpen ? "block" : "none" }}
+          style={{ display: isOpen ? 'block' : 'none' }}
         >
           {!isDefault && (
             <button
@@ -438,8 +413,8 @@ function Dialog({
   isOpen,
   title,
   message,
-  confirmText = "Confirm",
-  cancelText = "Cancel",
+  confirmText = 'Confirm',
+  cancelText = 'Cancel',
   submitting = false,
   onConfirm,
   onCancel,

@@ -5,12 +5,12 @@ import React, {
   ReactNode,
   useLayoutEffect,
   useEffect,
-} from "react";
-import Modal from "../components/Modal/Modal";
-import { useCatalogContext } from "./CatalogContext";
-import { useLayerContext } from "./LayerContext";
-import { ModalOptions, UIContextProps } from "../types/allTypesAndInterfaces";
-import { useLocation } from "react-router";
+} from 'react';
+import Modal from '../components/Modal/Modal';
+import { useCatalogContext } from './CatalogContext';
+import { useLayerContext } from './LayerContext';
+import { ModalOptions, UIContextProps } from '../types/allTypesAndInterfaces';
+import { useLocation } from 'react-router';
 
 const UIContext = createContext<UIContextProps | undefined>(undefined);
 
@@ -18,7 +18,7 @@ const UIContext = createContext<UIContextProps | undefined>(undefined);
 export function useUIContext() {
   const context = useContext(UIContext);
   if (!context) {
-    throw new Error("useUIContext must be used within a UIProvider");
+    throw new Error('useUIContext must be used within a UIProvider');
   }
   return context;
 }
@@ -28,7 +28,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState<ReactNode>(null);
   const [modalOptions, setModalOptions] = useState<ModalOptions>({});
-  const [sidebarMode, setSidebarModeState] = useState("default");
+  const [sidebarMode, setSidebarModeState] = useState('default');
   const [isMenuExpanded, setIsMenuExpanded] = useState(true);
   const [isViewClicked, setIsViewClicked] = useState(false);
   const location = useLocation();
@@ -64,14 +64,14 @@ export function UIProvider({ children }: { children: ReactNode }) {
     setIsModalOpen(false);
     setModalContent(null);
     setModalOptions({});
-    setFormStage("initial");
+    setFormStage('initial');
     setCentralizeOnce(false);
     setInitialFlyToDone(false);
 
     // Reset CatalogContext states if applicable
     if (catalogIsSaved || catalogIsError) {
       setCatalogIsSaved(null);
-      resetFormStage("catalogue");
+      resetFormStage('catalogue');
       resetState();
     }
 
@@ -106,12 +106,12 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
   const [isMobile, setIsMobile] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-    
+
   useEffect(() => {
     const updateState = () => {
       const isMobileView = window.innerWidth <= 1024;
       setIsMobile(isMobileView);
-      if (isMobileView && location.pathname !== "/profile") {
+      if (isMobileView && location.pathname !== '/profile') {
         setIsDrawerOpen(true);
       } else {
         setIsDrawerOpen(false);
@@ -119,9 +119,9 @@ export function UIProvider({ children }: { children: ReactNode }) {
     };
 
     updateState(); // Set initial state
-    window.addEventListener("resize", updateState);
+    window.addEventListener('resize', updateState);
 
-    return () => window.removeEventListener("resize", updateState);
+    return () => window.removeEventListener('resize', updateState);
   }, [location.pathname]); // Track location changes
 
   return (
@@ -141,7 +141,8 @@ export function UIProvider({ children }: { children: ReactNode }) {
         resetViewState,
         isMobile,
         setIsMobile,
-        isDrawerOpen, setIsDrawerOpen
+        isDrawerOpen,
+        setIsDrawerOpen,
       }}
     >
       {children}

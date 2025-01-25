@@ -4,35 +4,31 @@ type SetCurrentStyle = (style: string) => void;
 
 type currentStyle = string;
 
-function StylesControl(
-  currentStyle: currentStyle,
-  setCurrentStyle: SetCurrentStyle
-) {
+function StylesControl(currentStyle: currentStyle, setCurrentStyle: SetCurrentStyle) {
   this.currentStyle = currentStyle;
   this.setCurrentStyle = setCurrentStyle;
 
   this.styles = [
-    { name: "Light", url: "mapbox://styles/mapbox/streets-v11" },
+    { name: 'Light', url: 'mapbox://styles/mapbox/streets-v11' },
     {
-      name: "Satellite Streets",
-      url: "mapbox://styles/mapbox/satellite-streets-v11",
+      name: 'Satellite Streets',
+      url: 'mapbox://styles/mapbox/satellite-streets-v11',
     },
-    { name: "Dark", url: "mapbox://styles/mapbox/dark-v10" },
+    { name: 'Dark', url: 'mapbox://styles/mapbox/dark-v10' },
   ];
 }
 
 // Define the onAdd method
 StylesControl.prototype.onAdd = function (map) {
   this._map = map;
-  this._container = document.createElement("div");
-  this._container.className =
-    "mapboxgl-ctrl mapboxgl-ctrl-group !shadow-none bg-transparent  ";
-  this._container.dir = "rtl";
+  this._container = document.createElement('div');
+  this._container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group !shadow-none bg-transparent  ';
+  this._container.dir = 'rtl';
 
   // Create toggle button with SVG
-  const toggleButton = document.createElement("button");
+  const toggleButton = document.createElement('button');
   toggleButton.className =
-    "!bg-white !w-[29px] !shadow !h-[29px] !rounded-md !flex items-center justify-center hover:bg-gray-100 transition-colors shadow-sm ";
+    '!bg-white !w-[29px] !shadow !h-[29px] !rounded-md !flex items-center justify-center hover:bg-gray-100 transition-colors shadow-sm ';
   toggleButton.innerHTML = `
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <rect x="11" y="2" width="11" height="11" rx="2.5" />
@@ -42,42 +38,41 @@ StylesControl.prototype.onAdd = function (map) {
     `;
 
   // Create styles container (hidden by default)
-  const stylesContainer = document.createElement("div");
-  stylesContainer.className =
-    "hidden mt-2 flex flex-col rounded-md !shadow-md bg-white p-2 gap-2";
+  const stylesContainer = document.createElement('div');
+  stylesContainer.className = 'hidden mt-2 flex flex-col rounded-md !shadow-md bg-white p-2 gap-2';
   stylesContainer.innerHTML = this.styles
     .map(
-      (style) => `
+      style => `
       <button class="bg-gray-200 !rounded text-nowrap !w-auto !h-auto !px-4 !p-2 text-sm font-medium !border-none transition-colors
-     ${style.url === this.currentStyle ? "!bg-primary !text-white" : ""}"
+     ${style.url === this.currentStyle ? '!bg-primary !text-white' : ''}"
          data-style="${style.url}">
         ${style.name}
       </button>
     `
     )
-    .join("");
+    .join('');
 
   this._container.appendChild(toggleButton);
   this._container.appendChild(stylesContainer);
 
   // Toggle visibility of styles container
-  toggleButton.addEventListener("click", () => {
-    stylesContainer.classList.toggle("hidden");
-    toggleButton.classList.toggle("text-primary");
+  toggleButton.addEventListener('click', () => {
+    stylesContainer.classList.toggle('hidden');
+    toggleButton.classList.toggle('text-primary');
   });
 
   // Style selection
-  stylesContainer.addEventListener("click", (e) => {
+  stylesContainer.addEventListener('click', e => {
     const target = e.target;
-    if (target && target.tagName === "BUTTON") {
-      const selectedStyle = target.getAttribute("data-style");
+    if (target && target.tagName === 'BUTTON') {
+      const selectedStyle = target.getAttribute('data-style');
       if (selectedStyle && selectedStyle !== this.currentStyle) {
         this._map.setStyle(selectedStyle);
         this._updateButtons(selectedStyle);
-        this.setCurrentStyle((prev) => selectedStyle);
+        this.setCurrentStyle(prev => selectedStyle);
         this.currentStyle = selectedStyle;
-        stylesContainer.classList.add("hidden");
-        toggleButton.classList.remove("text-primary");
+        stylesContainer.classList.add('hidden');
+        toggleButton.classList.remove('text-primary');
       }
     }
   });
@@ -95,14 +90,14 @@ StylesControl.prototype.onRemove = function () {
 
 // Define the _updateButtons method
 StylesControl.prototype._updateButtons = function (selectedStyle) {
-  const buttons = this._container.querySelectorAll("button[data-style]");
-  buttons.forEach((button) => {
-    if (button.getAttribute("data-style") === selectedStyle) {
-      button.classList.add("!bg-primary", "!text-white");
-      button.classList.remove("text-gray-700", "hover:text-gray-900");
+  const buttons = this._container.querySelectorAll('button[data-style]');
+  buttons.forEach(button => {
+    if (button.getAttribute('data-style') === selectedStyle) {
+      button.classList.add('!bg-primary', '!text-white');
+      button.classList.remove('text-gray-700', 'hover:text-gray-900');
     } else {
-      button.classList.remove("!bg-primary", "!text-white");
-      button.classList.add("text-gray-700", "hover:text-gray-900");
+      button.classList.remove('!bg-primary', '!text-white');
+      button.classList.add('text-gray-700', 'hover:text-gray-900');
     }
   });
 };

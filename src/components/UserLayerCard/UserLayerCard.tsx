@@ -1,8 +1,8 @@
-import React, { useEffect } from "react";
-import styles from "./UserLayerCard.module.css";
-import placeHolderImage from "../../placeholderImage/layer.png";
-import { UserLayerCardProps } from "../../types/allTypesAndInterfaces";
-import { useCatalogContext } from "../../context/CatalogContext";
+import React, { useEffect } from 'react';
+import styles from './UserLayerCard.module.css';
+import placeHolderImage from '../../placeholderImage/layer.png';
+import { UserLayerCardProps } from '../../types/allTypesAndInterfaces';
+import { useCatalogContext } from '../../context/CatalogContext';
 
 function UserLayerCard(props: UserLayerCardProps) {
   const { geoPoints } = useCatalogContext();
@@ -33,12 +33,8 @@ function UserLayerCard(props: UserLayerCardProps) {
             </div>
           </div>
           <div className="mt-2 flex-grow">
-            <span className="block text-sm text-[#888]">
-              Legend: {props.legend}
-            </span>
-            <p className="m-0 text-sm text-[#555]">
-              Description: {props.description}
-            </p>
+            <span className="block text-sm text-[#888]">Legend: {props.legend}</span>
+            <p className="m-0 text-sm text-[#555]">Description: {props.description}</p>
           </div>
         </div>
         <ul className="list-none py-[10px] px-[5px] m-0 flex justify-around bg-[#f0f2f5] border-t border-[#dbdbdb] gap-x-[10px] w-full">

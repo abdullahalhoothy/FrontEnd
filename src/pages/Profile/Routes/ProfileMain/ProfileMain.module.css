@@ -89,7 +89,6 @@
   margin-top: 50px;
 }
 
-
 .section {
   margin-bottom: 20px;
 }
@@ -149,7 +148,6 @@
   margin-top: 20px;
 }
 
-
 .profileHeader {
   display: flex;
   justify-content: space-between;
@@ -176,5 +174,3 @@
 .logoutButton:hover {
   background-color: #d32f2f;
 }
-
-

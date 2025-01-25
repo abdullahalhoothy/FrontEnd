@@ -20,4 +20,4 @@ export function mapToBackendZoom(mapboxZoom: number): number | null {
 export function getZoomRange(backendZoom: number): [number, number] | null {
   const match = zoomLevels.find(({ zoom_level }) => zoom_level === backendZoom);
   return match ? match.zoom_range : null;
-} 
+}

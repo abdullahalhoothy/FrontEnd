@@ -3,12 +3,12 @@
   background: #fff;
 }
 
-.population-control[data-active="true"] {
+.population-control[data-active='true'] {
   background: #115740 !important;
   color: white;
 }
 
-.population-control[data-active="true"] .population-icon-stroke {
+.population-control[data-active='true'] .population-icon-stroke {
   stroke: white;
 }
 
@@ -16,7 +16,7 @@
   background: #f0f0f0;
 }
 
-.population-control[data-active="true"]:hover {
+.population-control[data-active='true']:hover {
   background: #0d4432 !important;
 }
 
@@ -47,4 +47,4 @@
   padding: 0;
   width: 29px;
   height: 29px;
-} 
+}

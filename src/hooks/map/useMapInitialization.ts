@@ -7,12 +7,12 @@ import { useMapContext } from '../../context/MapContext';
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_KEY;
 
 export function useMapInitialization() {
-  const { currentStyle } = usePolygonsContext()
+  const { currentStyle } = usePolygonsContext();
   const { mapRef, mapContainerRef, isStyleLoaded, setIsStyleLoaded } = useMapContext();
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) {
-      return
+      return;
     }
 
     // Initialize RTL plugin if needed
@@ -31,7 +31,7 @@ export function useMapInitialization() {
       center: mapConfig.center as [number, number],
       attributionControl: true,
       zoom: mapConfig.zoom,
-      preserveDrawingBuffer: true
+      preserveDrawingBuffer: true,
     });
 
     mapRef.current.on('style.load', () => {
@@ -48,6 +48,6 @@ export function useMapInitialization() {
   }, [currentStyle, mapContainerRef]);
 
   return isStyleLoaded;
-} 
+}
 
-export const defaultMapConfig = mapConfig
+export const defaultMapConfig = mapConfig;

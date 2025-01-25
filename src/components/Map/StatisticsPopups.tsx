@@ -1,7 +1,7 @@
-import React from "react";
-import { usePolygonsContext } from "../../context/PolygonsContext";
-import StatisticsPopup from "./StatisticsPopup";
-import { PolygonFeature } from "../../types/allTypesAndInterfaces";
+import React from 'react';
+import { usePolygonsContext } from '../../context/PolygonsContext';
+import StatisticsPopup from './StatisticsPopup';
+import { PolygonFeature } from '../../types/allTypesAndInterfaces';
 
 export default function StatisticsPopups() {
   const { polygons } = usePolygonsContext();
@@ -12,10 +12,7 @@ export default function StatisticsPopups() {
   return (
     <>
       {polygonsStatisticsPopups.map((polygon, index) => (
-        <StatisticsPopup
-          key={`statistics-popup-${polygon.id}`}
-          polygon={polygon}
-        />
+        <StatisticsPopup key={`statistics-popup-${polygon.id}`} polygon={polygon} />
       ))}
     </>
   );
