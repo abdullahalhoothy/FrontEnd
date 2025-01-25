@@ -6,15 +6,15 @@ import {
   Elements,
   useElements,
   useStripe,
-} from "@stripe/react-stripe-js";
+} from '@stripe/react-stripe-js';
 
-import { loadStripe } from "@stripe/stripe-js";
-import React, { useState, FormEvent, useLayoutEffect } from "react";
-import { useNavigate } from "react-router";
-import { useAuth } from "../../context/AuthContext";
-import apiRequest from "../../services/apiRequest";
-import urls from "../../urls.json";
-import clsx from "clsx";
+import { loadStripe } from '@stripe/stripe-js';
+import React, { useState, FormEvent, useLayoutEffect } from 'react';
+import { useNavigate } from 'react-router';
+import { useAuth } from '../../context/AuthContext';
+import apiRequest from '../../services/apiRequest';
+import urls from '../../urls.json';
+import clsx from 'clsx';
 
 const PaymentMethodForm: React.FC = () => {
   const { authResponse } = useAuth();
@@ -23,13 +23,13 @@ const PaymentMethodForm: React.FC = () => {
   const elements = useElements();
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [cardBrand, setCardBrand] = useState<string>("unknown");
+  const [cardBrand, setCardBrand] = useState<string>('unknown');
   // State for individual card field errors
   const [cardNumberError, setCardNumberError] = useState<string | null>(null);
   const [cardExpiryError, setCardExpiryError] = useState<string | null>(null);
   const [cardCvcError, setCardCvcError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [cardholderName, setCardholderName] = useState("");
+  const [cardholderName, setCardholderName] = useState('');
 
   const handleCardChange = (event: any) => {
     setCardBrand(event.brand); // Update the brand based on user input
@@ -51,18 +51,18 @@ const PaymentMethodForm: React.FC = () => {
 
   // Card brand icons
   const cardBrands: Record<string, string> = {
-    visa: "/card-brands/visa.svg",
-    mastercard: "/card-brands/mastercard.svg",
-    amex: "/card-brands/amex.svg",
-    discover: "/card-brands/discover.svg",
-    unknown: "/card-brands/credit-card.svg",
+    visa: '/card-brands/visa.svg',
+    mastercard: '/card-brands/mastercard.svg',
+    amex: '/card-brands/amex.svg',
+    discover: '/card-brands/discover.svg',
+    unknown: '/card-brands/credit-card.svg',
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     // Check if Stripe and Elements are initialized
     if (!stripe || !elements) {
-      setErrorMessage("Stripe has not loaded correctly.");
+      setErrorMessage('Stripe has not loaded correctly.');
       return;
     }
 
@@ -73,7 +73,7 @@ const PaymentMethodForm: React.FC = () => {
 
     // Verify that all elements are loaded
     if (!cardNumberElement || !cardExpiryElement || !cardCvcElement) {
-      setErrorMessage("One or more card fields are not loaded.");
+      setErrorMessage('One or more card fields are not loaded.');
       return;
     }
 
@@ -83,25 +83,23 @@ const PaymentMethodForm: React.FC = () => {
 
     try {
       // Step 1: Create the payment method using all card elements
-      const { error: stripeError, paymentMethod } =
-        await stripe.createPaymentMethod({
-          type: "card",
-          card: cardNumberElement,
-          billing_details: {
-            name: cardholderName, // Add the cardholder's name here
-          },
-        });
+      const { error: stripeError, paymentMethod } = await stripe.createPaymentMethod({
+        type: 'card',
+        card: cardNumberElement,
+        billing_details: {
+          name: cardholderName, // Add the cardholder's name here
+        },
+      });
 
       if (stripeError) {
         setErrorMessage(
-          stripeError.message ||
-          "Failed to create the payment method. Please try again."
+          stripeError.message || 'Failed to create the payment method. Please try again.'
         );
         return;
       }
 
       if (!paymentMethod) {
-        setErrorMessage("No payment method was created.");
+        setErrorMessage('No payment method was created.');
         return;
       }
       console.log(paymentMethod);
@@ -112,7 +110,7 @@ const PaymentMethodForm: React.FC = () => {
 
       const response = await apiRequest({
         url: urls.attach_stripe_payment_method,
-        method: "POST",
+        method: 'POST',
         body: {
           payment_method_id: paymentMethodId,
           user_id: authResponse.localId,
@@ -120,11 +118,11 @@ const PaymentMethodForm: React.FC = () => {
         isAuthRequest: true,
       });
 
-      navigate("/profile/payment-methods?success=true");
+      navigate('/profile/payment-methods?success=true');
     } catch (error) {
       console.log(error);
       console.log(error);
-      setErrorMessage("An unexpected error occurred. Please try again later.");
+      setErrorMessage('An unexpected error occurred. Please try again later.');
     } finally {
       setSubmitting(false);
     }
@@ -134,15 +132,15 @@ const PaymentMethodForm: React.FC = () => {
   const elementStyles = {
     style: {
       base: {
-        color: "#32325d",
+        color: '#32325d',
         fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
-        fontSize: "16px",
-        "::placeholder": {
-          color: "#a0a0a0",
+        fontSize: '16px',
+        '::placeholder': {
+          color: '#a0a0a0',
         },
       },
       invalid: {
-        color: "#ef4444",
+        color: '#ef4444',
       },
     },
   };
@@ -150,12 +148,8 @@ const PaymentMethodForm: React.FC = () => {
     <div className="h-full flex items-center ">
       <div className="my-8 border w-full max-w-3xl mx-auto bg-white shadow rounded-lg overflow-hidden">
         <div className="p-4 border-b border-gray-200">
-          <h1 className="text-xl font-semibold text-gray-800">
-            Add Payment Method
-          </h1>
-          <p className="text-gray-500">
-            Enter your card details to add a new payment method.
-          </p>
+          <h1 className="text-xl font-semibold text-gray-800">Add Payment Method</h1>
+          <p className="text-gray-500">Enter your card details to add a new payment method.</p>
         </div>
         <form onSubmit={handleSubmit} className="px-4 py-4">
           <div className="space-y-4">
@@ -164,7 +158,7 @@ const PaymentMethodForm: React.FC = () => {
                 id="cardholder-name"
                 type="text"
                 value={cardholderName}
-                onChange={(e) => setCardholderName(e.target.value)}
+                onChange={e => setCardholderName(e.target.value)}
                 className="w-full p-3 border border-gray-200 shadow-sm rounded-md focus:outline-none"
                 placeholder="Name on card"
                 required
@@ -180,10 +174,7 @@ const PaymentMethodForm: React.FC = () => {
 
                 {cardBrand && (
                   <img
-                    src={
-                      cardBrands[cardBrand] ||
-                      "/placeholder.svg?height=24&width=24"
-                    }
+                    src={cardBrands[cardBrand] || '/placeholder.svg?height=24&width=24'}
                     alt={cardBrand}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2"
                     width={24}
@@ -191,9 +182,7 @@ const PaymentMethodForm: React.FC = () => {
                   />
                 )}
               </div>
-              {cardNumberError && (
-                <p className="text-red-500 text-sm mt-1">{cardNumberError}</p>
-              )}
+              {cardNumberError && <p className="text-red-500 text-sm mt-1">{cardNumberError}</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -203,9 +192,7 @@ const PaymentMethodForm: React.FC = () => {
                   onChange={handleCardExpiryChange}
                   className="w-full p-3 border border-gray-200 shadow-sm rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-                {cardExpiryError && (
-                  <p className="text-red-500 text-sm mt-1">{cardExpiryError}</p>
-                )}
+                {cardExpiryError && <p className="text-red-500 text-sm mt-1">{cardExpiryError}</p>}
               </div>
               <div>
                 <CardCvcElement
@@ -213,9 +200,7 @@ const PaymentMethodForm: React.FC = () => {
                   onChange={handleCardCvcChange}
                   className="w-full p-3 border border-gray-200 shadow-sm rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-                {cardCvcError && (
-                  <p className="text-red-500 text-sm mt-1">{cardCvcError}</p>
-                )}
+                {cardCvcError && <p className="text-red-500 text-sm mt-1">{cardCvcError}</p>}
               </div>
             </div>
           </div>
@@ -274,7 +259,7 @@ const PaymentMethodForm: React.FC = () => {
 };
 
 const stripePromise = loadStripe(
-  "pk_test_51PligvRtvvmhTtnG3whjRPyT3Aclju9ajcwzp9ZCy6ZbOe037NOEzfvih4GdWnJwBYh5UrqDRIE3Eq41OpNEBskQ00C1G2ZjUe"
+  'pk_test_51PligvRtvvmhTtnG3whjRPyT3Aclju9ajcwzp9ZCy6ZbOe037NOEzfvih4GdWnJwBYh5UrqDRIE3Eq41OpNEBskQ00C1G2ZjUe'
 );
 
 // const stripePromise = null;
@@ -282,7 +267,7 @@ const stripePromise = loadStripe(
 const PaymentMethod: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const snapPoints = ["256", 1];
+  const snapPoints = ['256', 1];
   const [isMobile, setIsMobile] = useState(false);
   const [snap, setSnap] = useState<number | string | null>(snapPoints[0]);
 
@@ -292,12 +277,12 @@ const PaymentMethod: React.FC = () => {
     };
 
     handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   if (!isAuthenticated) {
-    navigate("/auth");
+    navigate('/auth');
     return null;
   }
 

@@ -6,16 +6,14 @@ import { useMapContext } from '../../context/MapContext';
 export function useMapStyle() {
   const { mapRef, shouldInitializeFeatures } = useMapContext();
   const map = mapRef.current;
-  const { setGeoPoints } = useCatalogContext()
-  const {currentStyle} = usePolygonsContext()
-    
+  const { setGeoPoints } = useCatalogContext();
+  const { currentStyle } = usePolygonsContext();
+
   useEffect(() => {
     if (!shouldInitializeFeatures || !map) return;
 
     const handleStyleLoad = () => {
-      setGeoPoints(prevGeoPoints => 
-        prevGeoPoints.map(layer => ({ ...layer }))
-      );
+      setGeoPoints(prevGeoPoints => prevGeoPoints.map(layer => ({ ...layer })));
     };
 
     map.once('styledata', handleStyleLoad);
@@ -24,4 +22,4 @@ export function useMapStyle() {
       map?.off('styledata', handleStyleLoad);
     };
   }, [mapRef, currentStyle, shouldInitializeFeatures, setGeoPoints]);
-} 
+}

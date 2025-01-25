@@ -1,8 +1,8 @@
-import React from "react";
-import ReactDOM from "react-dom";
-import styles from "./Modal.module.css";
-import { ModalProps } from "../../types/allTypesAndInterfaces";
-import { useUIContext } from "../../context/UIContext";
+import React from 'react';
+import ReactDOM from 'react-dom';
+import styles from './Modal.module.css';
+import { ModalProps } from '../../types/allTypesAndInterfaces';
+import { useUIContext } from '../../context/UIContext';
 
 function Modal(props: ModalProps) {
   const { children, darkBackground = false, isSmaller = false } = props;
@@ -14,20 +14,18 @@ function Modal(props: ModalProps) {
 
   return ReactDOM.createPortal(
     <div
-      id={"overlay"}
+      id={'overlay'}
       className={`z-20 fixed top-0 left-0 right-0 bottom-0 flex justify-center items-center ${
-        darkBackground ? "bg-black/50" : ""
-      } ${isSmaller ? "pointer-events-none" : ""}`}
-      onClick={(e) => {
+        darkBackground ? 'bg-black/50' : ''
+      } ${isSmaller ? 'pointer-events-none' : ''}`}
+      onClick={e => {
         e.stopPropagation();
         if (e.target.id) closeModal();
       }}
     >
       <div
         className={`bg-white p-5 w-full max-w-[950px] relative lg:h-5/6 lg:rounded-lg h-full border shadow overflow-y-auto ${
-          isSmaller
-            ? "flex justify-center items-center max-w-[400px] absolute left-[120px]"
-            : ""
+          isSmaller ? 'flex justify-center items-center max-w-[400px] absolute left-[120px]' : ''
         } pointer-events-auto`}
       >
         <button

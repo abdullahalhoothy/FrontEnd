@@ -1,49 +1,41 @@
-import { useEffect, MouseEvent as ReactMouseEvent } from 'react'
-import styles from './ColorSelect.module.css'
-import { useCatalogContext } from '../../context/CatalogContext'
-import { useLayerContext } from '../../context/LayerContext'
-import { useUIContext } from '../../context/UIContext'
-import { MdKeyboardArrowDown } from 'react-icons/md'
-import { colorOptions, colorMap, getDefaultLayerColor } from '../../utils/helperFunctions'
+import { useEffect, MouseEvent as ReactMouseEvent } from 'react';
+import styles from './ColorSelect.module.css';
+import { useCatalogContext } from '../../context/CatalogContext';
+import { useLayerContext } from '../../context/LayerContext';
+import { useUIContext } from '../../context/UIContext';
+import { MdKeyboardArrowDown } from 'react-icons/md';
+import { colorOptions, colorMap, getDefaultLayerColor } from '../../utils/helperFunctions';
 import { ColorSelectProps } from '../../types/allTypesAndInterfaces';
 
-function ColorSelect ({ layerId, onColorChange }: ColorSelectProps) {
-  const { sidebarMode } = useUIContext()
-  const catalogContext = useCatalogContext()
-  const {
-    layerStates,
-    updateLayerState,
-    showLoaderTopup,
-  } = useLayerContext()
+function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
+  const { sidebarMode } = useUIContext();
+  const catalogContext = useCatalogContext();
+  const { layerStates, updateLayerState, showLoaderTopup } = useLayerContext();
 
-  const {
-    geoPoints,
-    setGeoPoints,
-    openDropdownIndices,
-    updateDropdownIndex,
-    layerColors
-  } = catalogContext
+  const { geoPoints, setGeoPoints, openDropdownIndices, updateDropdownIndex, layerColors } =
+    catalogContext;
 
   const layerState = layerStates?.[layerId] || {
     selectedColor: null,
-    isLoading: false
-  }
+    isLoading: false,
+  };
 
-  const dropdownIndex = layerId ?? -1
+  const dropdownIndex = layerId ?? -1;
   const currentGeoPoint = geoPoints.find(point => String(point.layerId) === String(layerId));
-  const colorHex = layerState?.selectedColor?.hex || 
-                  currentGeoPoint?.points_color || 
-                  currentGeoPoint?.color || 
-                  getDefaultLayerColor(layerId);
-  const colorName = colorMap.get(colorHex) || ''
+  const colorHex =
+    layerState?.selectedColor?.hex ||
+    currentGeoPoint?.points_color ||
+    currentGeoPoint?.color ||
+    getDefaultLayerColor(layerId);
+  const colorName = colorMap.get(colorHex) || '';
 
-  const isGradient = geoPoints[layerId]?.is_gradient || false
+  const isGradient = geoPoints[layerId]?.is_gradient || false;
 
-  const isOpen = !isGradient && openDropdownIndices[0] === dropdownIndex
+  const isOpen = !isGradient && openDropdownIndices[0] === dropdownIndex;
 
   useEffect(() => {
     const currentGeoPoint = geoPoints.find(point => String(point.layerId) === String(layerId));
-    
+
     const initialColor =
       currentGeoPoint?.points_color ||
       currentGeoPoint?.color ||
@@ -54,72 +46,63 @@ function ColorSelect ({ layerId, onColorChange }: ColorSelectProps) {
       updateLayerState(layerId, {
         selectedColor: {
           name: colorMap.get(initialColor) || '',
-          hex: initialColor
-        }
+          hex: initialColor,
+        },
       });
     }
   }, [layerId, geoPoints, layerColors]);
 
-  function handleOptionClick (
-    optionName: string,
-    hex: string,
-    event: ReactMouseEvent
-  ) {
-    event.stopPropagation()
-    if (showLoaderTopup) return
+  function handleOptionClick(optionName: string, hex: string, event: ReactMouseEvent) {
+    event.stopPropagation();
+    if (showLoaderTopup) return;
 
     updateLayerState(layerId, {
-      selectedColor: { name: optionName, hex }
-    })
+      selectedColor: { name: optionName, hex },
+    });
 
-    setGeoPoints((prevPoints: MapFeatures[]) => 
-      prevPoints.map((point) => 
-        point.layerId === String(layerId)
-          ? { ...point, points_color: hex, color: hex }
-          : point
+    setGeoPoints((prevPoints: MapFeatures[]) =>
+      prevPoints.map(point =>
+        point.layerId === String(layerId) ? { ...point, points_color: hex, color: hex } : point
       )
-    )
+    );
 
-    onColorChange(hex)
+    onColorChange(hex);
   }
 
-  function toggleDropdown (event: ReactMouseEvent) {
-    event.stopPropagation()
-    if (isGradient) return
+  function toggleDropdown(event: ReactMouseEvent) {
+    event.stopPropagation();
+    if (isGradient) return;
     if (showLoaderTopup) {
-      console.log('Cannot open dropdown while loading.')
-      return
+      console.log('Cannot open dropdown while loading.');
+      return;
     }
     if (isOpen) {
-      updateDropdownIndex(0, null)
+      updateDropdownIndex(0, null);
     } else {
-      updateDropdownIndex(0, dropdownIndex)
+      updateDropdownIndex(0, dropdownIndex);
     }
   }
 
   useEffect(() => {
-    function handleClickOutside (event: MouseEvent) {
-      const target = event.target as Node
-      const dropdowns = document.querySelectorAll(
-        '.relative.inline-block.w-full'
-      )
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+      const dropdowns = document.querySelectorAll('.relative.inline-block.w-full');
       const clickedOutside = Array.from(dropdowns).every(function (dropdown) {
-        return !dropdown.contains(target)
-      })
+        return !dropdown.contains(target);
+      });
 
       if (clickedOutside) {
-        updateDropdownIndex(0, null)
+        updateDropdownIndex(0, null);
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [updateDropdownIndex])
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [updateDropdownIndex]);
 
-
-  function renderOptions () {
+  function renderOptions() {
     return colorOptions.map(({ name, hex }) => {
       return (
         <div
@@ -129,7 +112,7 @@ function ColorSelect ({ layerId, onColorChange }: ColorSelectProps) {
           } ${showLoaderTopup ? styles.disabledOption : ''}`}
           onClick={e => handleOptionClick(name, hex, e)}
         >
-          {sidebarMode !== 'catalog' && <span className='mr-2.5'>{name}</span>}
+          {sidebarMode !== 'catalog' && <span className="mr-2.5">{name}</span>}
           <span
             className={`w-[14px] h-[14px] rounded-full absolute left-[80px]  ${
               sidebarMode === 'catalog' ? 'w-[14px] h-[14px] static' : ''
@@ -137,8 +120,8 @@ function ColorSelect ({ layerId, onColorChange }: ColorSelectProps) {
             style={{ backgroundColor: hex }}
           />
         </div>
-      )
-    })
+      );
+    });
   }
 
   return (
@@ -153,18 +136,16 @@ function ColorSelect ({ layerId, onColorChange }: ColorSelectProps) {
         } ${isGradient ? 'opacity-50 cursor-not-allowed' : ''}`}
         onClick={toggleDropdown}
       >
-        <div className='flex items-center gap-2'>
+        <div className="flex items-center gap-2">
           <span
-            className='w-5 h-5 rounded-full'
+            className="w-5 h-5 rounded-full"
             style={{ backgroundColor: isGradient ? 'transparent' : colorHex }}
           />
-          <span className='font-medium'>
+          <span className="font-medium">
             {isGradient ? 'Custom' : colorName || 'Select a color'}
           </span>
         </div>
-        <MdKeyboardArrowDown
-          className={`text-2xl ${isOpen ? 'rotate-180' : ''}`}
-        />
+        <MdKeyboardArrowDown className={`text-2xl ${isOpen ? 'rotate-180' : ''}`} />
       </div>
       {isOpen && (
         <div
@@ -178,7 +159,7 @@ function ColorSelect ({ layerId, onColorChange }: ColorSelectProps) {
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export default ColorSelect
+export default ColorSelect;

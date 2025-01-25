@@ -1,12 +1,12 @@
 // src/components/CostEstimatorForm/CostEstimatorForm.tsx
-import React, { useState, useEffect } from "react";
-import { useLayerContext } from "../../../../context/LayerContext";
-import { HttpReq } from "../../../../services/apiService";
-import { CostEstimate } from "../../../../types/allTypesAndInterfaces";
-import { formatSubcategoryName } from "../../../../utils/helperFunctions";
-import styles from "./InternalCostEstimator.module.css";
-import urls from "../../../../urls.json";
-import { FaCaretDown, FaCaretRight } from "react-icons/fa";
+import React, { useState, useEffect } from 'react';
+import { useLayerContext } from '../../../../context/LayerContext';
+import { HttpReq } from '../../../../services/apiService';
+import { CostEstimate } from '../../../../types/allTypesAndInterfaces';
+import { formatSubcategoryName } from '../../../../utils/helperFunctions';
+import styles from './InternalCostEstimator.module.css';
+import urls from '../../../../urls.json';
+import { FaCaretDown, FaCaretRight } from 'react-icons/fa';
 
 function InternalCostEstimator() {
   const {
@@ -44,29 +44,25 @@ function InternalCostEstimator() {
       const requestBody = {
         //included_categories: reqFetchDataset.includedTypes,
         //excluded_categories: reqFetchDataset.excludedTypes,
-        boolean_query: reqFetchDataset.includedTypes?.join(" OR "),
+        boolean_query: reqFetchDataset.includedTypes?.join(' OR '),
         city_name: reqFetchDataset.selectedCity,
         country_name: reqFetchDataset.selectedCountry,
       };
 
       HttpReq<CostEstimate>(
         urls.cost_calculator,
-        (data) => {
-          if (
-            data &&
-            typeof data.cost === "number" &&
-            typeof data.api_calls === "number"
-          ) {
+        data => {
+          if (data && typeof data.cost === 'number' && typeof data.api_calls === 'number') {
             setCostEstimate(data);
           } else {
-            setIsError(new Error("Invalid response from server"));
+            setIsError(new Error('Invalid response from server'));
           }
         },
-        () => { },
-        () => { },
+        () => {},
+        () => {},
         () => setIsLoading(false),
         setIsError,
-        "post",
+        'post',
         requestBody
       );
     }
@@ -75,17 +71,10 @@ function InternalCostEstimator() {
   return (
     <div className="h-full overflow-y-auto relative lg:w-1/3 flex flex-col justify-between items-center ">
       <div className="w-full pl-4 pr-2 px-24">
-        {isError && (
-          <div className="mt-6 text-red-500 font-semibold">
-            {isError.message}
-          </div>
-        )}
+        {isError && <div className="mt-6 text-red-500 font-semibold">{isError.message}</div>}
 
         <div className="pt-4">
-          <label
-            className="block mb-2 text-md font-medium text-black"
-            htmlFor="country"
-          >
+          <label className="block mb-2 text-md font-medium text-black" htmlFor="country">
             Country:
           </label>
           <select
@@ -98,7 +87,7 @@ function InternalCostEstimator() {
             <option value="" disabled>
               Select a country
             </option>
-            {countries.map((country) => (
+            {countries.map(country => (
               <option key={country} value={country}>
                 {country}
               </option>
@@ -107,10 +96,7 @@ function InternalCostEstimator() {
         </div>
 
         <div className="mb-5">
-          <label
-            className="block mb-2 text-md font-medium text-black"
-            htmlFor="city"
-          >
+          <label className="block mb-2 text-md font-medium text-black" htmlFor="city">
             City:
           </label>
           <select
@@ -124,7 +110,7 @@ function InternalCostEstimator() {
             <option value="" disabled>
               Select a city
             </option>
-            {cities.map((city) => (
+            {cities.map(city => (
               <option key={city.name} value={city.name}>
                 {city.name}
               </option>
@@ -141,55 +127,48 @@ function InternalCostEstimator() {
                   className="font-semibold cursor-pointer flex justify-start items-center w-full hover:bg-gray-200 transition-all rounded"
                   onClick={() => {
                     if (openedCategories.includes(category)) {
-                      setOpenedCategories([
-                        ...openedCategories.filter((x) => x !== category),
-                      ]);
+                      setOpenedCategories([...openedCategories.filter(x => x !== category)]);
                       return;
                     }
                     setOpenedCategories([...openedCategories.concat(category)]);
                   }}
                 >
-                  {" "}
+                  {' '}
                   <span>
-                    {openedCategories.includes(category) ? (
-                      <FaCaretDown />
-                    ) : (
-                      <FaCaretRight />
-                    )}
-                  </span>{" "}
+                    {openedCategories.includes(category) ? <FaCaretDown /> : <FaCaretRight />}
+                  </span>{' '}
                   {category}
                 </button>
 
                 <div
                   className={
-                    " w-full basis-full overflow-hidden transition-all" +
-                    (!openedCategories.includes(category) && " h-0")
+                    ' w-full basis-full overflow-hidden transition-all' +
+                    (!openedCategories.includes(category) && ' h-0')
                   }
                 >
                   <div className="flex flex-wrap gap-3 mt-3">
                     {(types as string[]).map((type: string) => {
-                      const included =
-                        reqFetchDataset.includedTypes.includes(type);
-                      const excluded =
-                        reqFetchDataset.excludedTypes.includes(type);
+                      const included = reqFetchDataset.includedTypes.includes(type);
+                      const excluded = reqFetchDataset.excludedTypes.includes(type);
                       return (
                         <button
                           key={type}
                           type="button"
-                          className={`p-2 rounded border transition-all ${included
-                              ? "bg-green-600 text-white border-green-700"
+                          className={`p-2 rounded border transition-all ${
+                            included
+                              ? 'bg-green-600 text-white border-green-700'
                               : excluded
-                                ? "bg-red-600 text-white border-red-700"
-                                : "bg-gray-100 border-gray-300"
-                            }`}
-                          onClick={(e) => {
+                                ? 'bg-red-600 text-white border-red-700'
+                                : 'bg-gray-100 border-gray-300'
+                          }`}
+                          onClick={e => {
                             e.preventDefault();
                             handleTypeToggle(type);
                           }}
                         >
                           {formatSubcategoryName(type)}
                           <span className="ml-2 font-bold">
-                            {included ? "✓" : excluded ? "−" : "+"}
+                            {included ? '✓' : excluded ? '−' : '+'}
                           </span>
                         </button>
                       );
@@ -210,14 +189,14 @@ function InternalCostEstimator() {
           disabled={isLoading}
           onClick={handleCostEstimate}
         >
-          {isLoading ? "Estimating..." : "Estimate Cost"}
+          {isLoading ? 'Estimating...' : 'Estimate Cost'}
         </button>
 
         {costEstimate && (
           <div className="h-16 ">
             <h3 className="font-bold">Cost Estimate</h3>
-            <p>Estimated Cost: ${costEstimate.cost?.toFixed(2) ?? "N/A"}</p>
-            <p>API Calls: {costEstimate.api_calls ?? "N/A"}</p>
+            <p>Estimated Cost: ${costEstimate.cost?.toFixed(2) ?? 'N/A'}</p>
+            <p>API Calls: {costEstimate.api_calls ?? 'N/A'}</p>
           </div>
         )}
       </div>

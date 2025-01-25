@@ -1,10 +1,7 @@
-
 /**
  * Generates HTML content for grid popup
  */
-export function generateGridPopupContent(
-  properties: Record<string, number>,
-): string | null {
+export function generateGridPopupContent(properties: Record<string, number>): string | null {
   if (!properties) {
     console.log('Missing properties data');
     return null;
@@ -14,7 +11,7 @@ export function generateGridPopupContent(
   let content = '<div class="popup-content">';
   content += '<div class="grid-popup-body">';
 
-  console.log({properties})
+  console.log({ properties });
   // Loop through properties and display them
   Object.entries(properties)
     .filter(([key]) => !['density', 'center', 'pointCount'].includes(key)) // Exclude internal properties
@@ -27,9 +24,12 @@ export function generateGridPopupContent(
           .join(' ');
 
         // Format the value
-        const displayValue = typeof value === 'number' 
-          ? (Number.isInteger(value) ? value : Number(value.toFixed(2)))
-          : value;
+        const displayValue =
+          typeof value === 'number'
+            ? Number.isInteger(value)
+              ? value
+              : Number(value.toFixed(2))
+            : value;
 
         content += `
           <div class="grid-popup-row">
@@ -41,4 +41,4 @@ export function generateGridPopupContent(
 
   content += '</div></div>';
   return content;
-} 
+}

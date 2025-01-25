@@ -1,9 +1,9 @@
-import React, { useState, FormEvent } from "react";
-import { useNavigate } from "react-router";
-import { useAuth } from "../../context/AuthContext";
-import { HttpReq } from "../../services/apiService";
-import urls from "./../../urls.json";
-import apiRequest from "../../services/apiRequest";
+import React, { useState, FormEvent } from 'react';
+import { useNavigate } from 'react-router';
+import { useAuth } from '../../context/AuthContext';
+import { HttpReq } from '../../services/apiService';
+import urls from './../../urls.json';
+import apiRequest from '../../services/apiRequest';
 
 const ChangeEmail: React.FC = () => {
   const { isAuthenticated, authResponse } = useAuth();
@@ -18,22 +18,18 @@ const ChangeEmail: React.FC = () => {
 
     const formData = new FormData(e.target as HTMLFormElement);
     const data = Object.fromEntries(formData.entries());
-    if (
-      data.new_email === "" ||
-      data.confirm_email === "" ||
-      data.password === ""
-    ) {
+    if (data.new_email === '' || data.confirm_email === '' || data.password === '') {
       setError({
-        message: "All fields are required",
-        name: "All fields are required",
+        message: 'All fields are required',
+        name: 'All fields are required',
       });
       return;
     }
 
     if (data.new_email !== data.confirm_email) {
       setError({
-        message: "Emails do not match",
-        name: "Emails do not match",
+        message: 'Emails do not match',
+        name: 'Emails do not match',
       });
       return;
     }
@@ -56,7 +52,7 @@ const ChangeEmail: React.FC = () => {
     try {
       const res = await apiRequest({
         url: urls.change_email,
-        method: "post",
+        method: 'post',
         body: data,
         isAuthRequest: true,
       });
@@ -68,7 +64,7 @@ const ChangeEmail: React.FC = () => {
   };
 
   if (!isAuthenticated) {
-    navigate("/auth");
+    navigate('/auth');
     return null;
   }
 

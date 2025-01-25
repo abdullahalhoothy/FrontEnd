@@ -1,5 +1,5 @@
-import { AxiosRequestConfig } from "axios";
-import React, { ReactNode } from "react";
+import { AxiosRequestConfig } from 'axios';
+import React, { ReactNode } from 'react';
 
 export interface ModalProps {
   children: React.ReactNode;
@@ -66,11 +66,7 @@ export interface UserLayerCardProps {
   typeOfCard: string;
   legend: string;
   points_color?: string;
-  onMoreInfo(selectedCatalog: {
-    id: string;
-    name: string;
-    typeOfCard: string;
-  }): void;
+  onMoreInfo(selectedCatalog: { id: string; name: string; typeOfCard: string }): void;
 }
 export interface CardItem {
   id: string;
@@ -84,7 +80,7 @@ export interface CardItem {
 
 // Catalog Context Type
 export interface CatalogContextType {
-  formStage: "catalog" | "catalogDetails" | "save";
+  formStage: 'catalog' | 'catalogDetails' | 'save';
   saveMethod: string;
   isLoading: boolean;
   isError: Error | null;
@@ -92,8 +88,8 @@ export interface CatalogContextType {
   subscriptionPrice: string;
   description: string;
   name: string;
-  selectedContainerType: "Catalogue" | "Layer" | "Home";
-  setFormStage: React.Dispatch<React.SetStateAction<"catalog" | "catalogDetails" | "save">>;
+  selectedContainerType: 'Catalogue' | 'Layer' | 'Home';
+  setFormStage: React.Dispatch<React.SetStateAction<'catalog' | 'catalogDetails' | 'save'>>;
   setSaveMethod: React.Dispatch<React.SetStateAction<string>>;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
   setIsError: React.Dispatch<React.SetStateAction<Error | null>>;
@@ -101,10 +97,16 @@ export interface CatalogContextType {
   setSubscriptionPrice: React.Dispatch<React.SetStateAction<string>>;
   setDescription: React.Dispatch<React.SetStateAction<string>>;
   setName: React.Dispatch<React.SetStateAction<string>>;
-  setSelectedContainerType: React.Dispatch<React.SetStateAction<"Catalogue" | "Layer" | "Home">>;
-  handleAddClick: (id: string, name: string, typeOfCard: string, legend?: string, layers?: { layer_id: string; points_color: string }[]) => void;
+  setSelectedContainerType: React.Dispatch<React.SetStateAction<'Catalogue' | 'Layer' | 'Home'>>;
+  handleAddClick: (
+    id: string,
+    name: string,
+    typeOfCard: string,
+    legend?: string,
+    layers?: { layer_id: string; points_color: string }[]
+  ) => void;
   handleSaveCatalog: () => Promise<void>;
-  resetFormStage: (resetTo: "catalog") => void;
+  resetFormStage: (resetTo: 'catalog') => void;
   geoPoints: MapFeatures[];
   setGeoPoints: React.Dispatch<React.SetStateAction<MapFeatures[]>>;
   selectedColor: { name: string; hex: string } | null;
@@ -227,9 +229,7 @@ export interface LayerContextType {
   saveResponse: SaveResponse | null;
   setFormStage: React.Dispatch<React.SetStateAction<string>>;
   setIsError: React.Dispatch<React.SetStateAction<Error | null>>;
-  setManyFetchDatasetResp: React.Dispatch<
-    React.SetStateAction<FetchDatasetResponse | undefined>
-  >;
+  setManyFetchDatasetResp: React.Dispatch<React.SetStateAction<FetchDatasetResponse | undefined>>;
   setSaveMethod: React.Dispatch<React.SetStateAction<string>>;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
   incrementFormStage(): void;
@@ -270,14 +270,10 @@ export interface LayerContextType {
   cities: City[];
   setCities: React.Dispatch<React.SetStateAction<City[]>>;
   citiesData: { [country: string]: City[] };
-  setCitiesData: React.Dispatch<
-    React.SetStateAction<{ [country: string]: City[] }>
-  >;
+  setCitiesData: React.Dispatch<React.SetStateAction<{ [country: string]: City[] }>>;
   categories: CategoryData;
   setCategories: React.Dispatch<React.SetStateAction<CategoryData>>;
-  handleCountryCitySelection: (
-    event: React.ChangeEvent<HTMLSelectElement>
-  ) => void;
+  handleCountryCitySelection: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   handleTypeToggle: (type: string) => void;
   validateFetchDatasetForm: () => true | Error;
   resetFetchDatasetForm(): void;
@@ -363,16 +359,16 @@ export interface BoxmapProperties {
 }
 
 export interface Feature {
-  type: "Feature";
+  type: 'Feature';
   properties: BoxmapProperties;
   display: boolean;
   geometry: {
-    type: "Point";
+    type: 'Point';
     coordinates: [number, number];
   };
 }
 export interface FetchDatasetResponse {
-  type: "FeatureCollection";
+  type: 'FeatureCollection';
   features: Feature[];
   bknd_dataset_id: string;
   prdcer_lyr_id: string;
@@ -442,11 +438,7 @@ export interface User {
   name: string;
 }
 
-export type AuthResponse =
-  | AuthSuccessResponse
-  | AuthFailedResponse
-  | object
-  | null;
+export type AuthResponse = AuthSuccessResponse | AuthFailedResponse | object | null;
 
 export interface AuthContextType {
   authResponse: AuthResponse;
@@ -531,13 +523,11 @@ export interface GradientGroup {
   count: number;
 }
 
-
 export const DisplayType = {
   REGULAR: 'regular',
   HEATMAP: 'heatmap',
-  GRID: 'grid'
+  GRID: 'grid',
 } as const;
-
 
 export interface PolygonFeature {
   id: string;
@@ -558,7 +548,6 @@ export interface MapLegendProps {
   geoPoints: MapFeatures[];
 }
 
-
 export type ProviderProps = {
   children: React.ReactNode;
 };
@@ -575,7 +564,6 @@ export type GeoPoint = {
   city_name?: string;
   percentageInside?: number;
 };
-
 
 export type Section = {
   title: string;
@@ -610,9 +598,8 @@ export type PolygonContextType = {
 
 export type Benchmark = {
   title: string;
-  value: number | "";
+  value: number | '';
 };
-
 
 export interface IAuthResponse {
   idToken: string;
@@ -632,8 +619,8 @@ export interface CategoriesBrowserSubCategoriesProps {
   openedCategories: string[];
   onToggleCategory: (category: string) => void;
   getTypeCounts: (type: string) => {
-      includedCount: number[];
-      excludedCount: number[];
+    includedCount: number[];
+    excludedCount: number[];
   };
   onRemoveType: (type: string, layerId: number, isExcluded: boolean) => void;
   onAddToIncluded: (type: string) => void;
@@ -641,8 +628,8 @@ export interface CategoriesBrowserSubCategoriesProps {
 }
 
 export interface ColorSelectProps {
-  layerId: number
-  onColorChange: (color: string) => void
+  layerId: number;
+  onColorChange: (color: string) => void;
 }
 
 export interface DropdownColorSelectProps {
@@ -650,15 +637,15 @@ export interface DropdownColorSelectProps {
 }
 
 export interface LayerCustomizationItemProps {
-    layer: LayerCustomization;
-    isCollapsed: boolean;
-    error?: string;
-    onToggleCollapse: (layerId: number) => void;
-    onLayerChange: (layerId: number, field: keyof LayerCustomization, value: string) => void;
-    onDiscard: (layerId: number) => void;
-    onSave: (layerId: number) => void;
-    isSaving?: boolean;
-    isSaved?: boolean;
+  layer: LayerCustomization;
+  isCollapsed: boolean;
+  error?: string;
+  onToggleCollapse: (layerId: number) => void;
+  onLayerChange: (layerId: number, field: keyof LayerCustomization, value: string) => void;
+  onDiscard: (layerId: number) => void;
+  onSave: (layerId: number) => void;
+  isSaving?: boolean;
+  isSaved?: boolean;
 }
 
 export interface UserProfile {
@@ -673,11 +660,10 @@ export interface UserProfile {
 }
 
 export interface PopupInfo {
-  type: "dataset" | "layer" | "catalog";
+  type: 'dataset' | 'layer' | 'catalog';
   name: string;
   data: any;
 }
-
 
 export interface PaymentMethod {
   id: number;
@@ -716,8 +702,7 @@ export interface LayerDisplaySubCategoriesProps {
   onRemoveType: (type: string) => void;
   onToggleTypeInLayer: (type: string) => void;
   onNameChange: (layerIndex: number, newName: string) => void;
-} 
-
+}
 
 export type MapContextType = {
   mapRef: React.MutableRefObject<mapboxgl.Map | null>;

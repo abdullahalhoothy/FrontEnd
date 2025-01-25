@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import styles from "./ProfileMain.module.css";
+import React, { useEffect, useState } from 'react';
+import styles from './ProfileMain.module.css';
 import {
   FaTimes,
   FaSignOutAlt,
@@ -8,13 +8,12 @@ import {
   FaDatabase,
   FaLayerGroup,
   FaBook,
-} from "react-icons/fa";
-import { useNavigate } from "react-router";
-import urls from "../../../../urls.json";
-import { useAuth } from "../../../../context/AuthContext";
-import apiRequest from "../../../../services/apiRequest";
-import { UserProfile, PopupInfo } from "../../../../types/allTypesAndInterfaces";
-
+} from 'react-icons/fa';
+import { useNavigate } from 'react-router';
+import urls from '../../../../urls.json';
+import { useAuth } from '../../../../context/AuthContext';
+import apiRequest from '../../../../services/apiRequest';
+import { UserProfile, PopupInfo } from '../../../../types/allTypesAndInterfaces';
 
 const ProfileMain: React.FC = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -26,15 +25,15 @@ const ProfileMain: React.FC = () => {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate("/auth");
+      navigate('/auth');
       return;
     }
 
     const fetchProfile = async () => {
-      if (!authResponse || !("idToken" in authResponse)) {
-        setError(new Error("Authentication information is missing."));
+      if (!authResponse || !('idToken' in authResponse)) {
+        setError(new Error('Authentication information is missing.'));
         setIsLoading(false);
-        navigate("/auth");
+        navigate('/auth');
         return;
       }
 
@@ -52,16 +51,16 @@ const ProfileMain: React.FC = () => {
         // );
         const res = await apiRequest({
           url: urls.user_profile,
-          method: "POST",
+          method: 'POST',
           isAuthRequest: true,
           body: { user_id: authResponse.localId },
         });
         setProfile(res.data.data);
       } catch (err) {
-        console.error("Unexpected error:", err);
+        console.error('Unexpected error:', err);
         logout();
-        setError(new Error("An unexpected error occurred. Please try again."));
-        navigate("/auth");
+        setError(new Error('An unexpected error occurred. Please try again.'));
+        navigate('/auth');
       } finally {
         setIsLoading(false);
       }
@@ -85,7 +84,7 @@ const ProfileMain: React.FC = () => {
       );
     }
 
-    if (typeof value === "object") {
+    if (typeof value === 'object') {
       return (
         <div className={styles.nestedObject}>
           {Object.entries(value).map(([nestedKey, nestedValue]) => (
@@ -101,11 +100,7 @@ const ProfileMain: React.FC = () => {
     return <span>{value.toString()}</span>;
   };
 
-  const handleItemClick = (
-    type: "dataset" | "layer" | "catalog",
-    name: string,
-    data: any
-  ) => {
+  const handleItemClick = (type: 'dataset' | 'layer' | 'catalog', name: string, data: any) => {
     setPopupInfo({ type, name, data });
   };
 
@@ -115,16 +110,11 @@ const ProfileMain: React.FC = () => {
     return (
       <div className={styles.popupOverlay}>
         <div className={styles.popup}>
-          <button
-            className={styles.closeButton}
-            onClick={() => setPopupInfo(null)}
-          >
+          <button className={styles.closeButton} onClick={() => setPopupInfo(null)}>
             <FaTimes />
           </button>
           <h3>{popupInfo.name}</h3>
-          <div className={styles.popupContent}>
-            {renderValue(popupInfo.name, popupInfo.data)}
-          </div>
+          <div className={styles.popupContent}>{renderValue(popupInfo.name, popupInfo.data)}</div>
         </div>
       </div>
     );
@@ -134,7 +124,7 @@ const ProfileMain: React.FC = () => {
     title: string,
     icon: JSX.Element,
     items: Record<string, any>,
-    type: "dataset" | "layer" | "catalog"
+    type: 'dataset' | 'layer' | 'catalog'
   ) => {
     return (
       <div className={styles.section}>
@@ -162,23 +152,22 @@ const ProfileMain: React.FC = () => {
 
   const handleLogout = () => {
     logout();
-    navigate("/");
+    navigate('/');
   };
 
   if (!isAuthenticated) {
-    setTimeout(() => navigate("/auth"), 500);
+    setTimeout(() => navigate('/auth'), 500);
     return null;
   }
-  if (isLoading)
-    return <div className={styles.loading}>Loading profile...</div>;
+  if (isLoading) return <div className={styles.loading}>Loading profile...</div>;
 
   if (error) {
-    setTimeout(() => navigate("/auth"), 500);
+    setTimeout(() => navigate('/auth'), 500);
     return null;
   }
 
   if (!profile) {
-    setTimeout(() => navigate("/auth"), 500);
+    setTimeout(() => navigate('/auth'), 500);
     return null;
   }
 
@@ -186,9 +175,7 @@ const ProfileMain: React.FC = () => {
     <div className="w-full h-full overflow-y-auto lg:px-10 px-4 text-sm">
       <div className="m-5 mx-auto p-5 bg-[#f0f8f0] rounded-lg lg:shadow-md shadow-sm">
         <div className="flex justify-between items-center mb-5">
-          <h2 className="lg:text-2xl text-lg text-[#006400] mb-5 text-center">
-            User Profile
-          </h2>
+          <h2 className="lg:text-2xl text-lg text-[#006400] mb-5 text-center">User Profile</h2>
           <button
             onClick={handleLogout}
             className="flex items-center px-4 h-9 lg:text-lg text-base bg-red-600 text-white rounded cursor-pointer  hover:bg-red-700"
@@ -209,27 +196,10 @@ const ProfileMain: React.FC = () => {
           </div>
           {profile.prdcer && (
             <div>
-              <h3 className="text-lg text-[#006400] mt-5 mb-2">
-                Producer Information
-              </h3>
-              {renderSection(
-                "Datasets",
-                <FaDatabase />,
-                profile.prdcer.prdcer_dataset,
-                "dataset"
-              )}
-              {renderSection(
-                "Layers",
-                <FaLayerGroup />,
-                profile.prdcer.prdcer_lyrs,
-                "layer"
-              )}
-              {renderSection(
-                "Catalogs",
-                <FaBook />,
-                profile.prdcer.prdcer_ctlgs,
-                "catalog"
-              )}
+              <h3 className="text-lg text-[#006400] mt-5 mb-2">Producer Information</h3>
+              {renderSection('Datasets', <FaDatabase />, profile.prdcer.prdcer_dataset, 'dataset')}
+              {renderSection('Layers', <FaLayerGroup />, profile.prdcer.prdcer_lyrs, 'layer')}
+              {renderSection('Catalogs', <FaBook />, profile.prdcer.prdcer_ctlgs, 'catalog')}
             </div>
           )}
         </div>

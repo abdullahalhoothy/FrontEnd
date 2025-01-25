@@ -1,5 +1,5 @@
-import { CustomProperties } from "../../types/allTypesAndInterfaces";
-import urls from "../../urls.json";
+import { CustomProperties } from '../../types/allTypesAndInterfaces';
+import urls from '../../urls.json';
 const googleStreetViewUrl = urls.street_view_link;
 
 export function generatePopupContent(
@@ -10,25 +10,22 @@ export function generatePopupContent(
 ): string {
   let content = `<div class="popup-content">`;
 
-  if(properties.name) content += `<strong class="popup-content-strong">${properties.name}</strong>`;
+  if (properties.name)
+    content += `<strong class="popup-content-strong">${properties.name}</strong>`;
 
   // Dynamically included fields in the middle
   for (const key in properties) {
     const value = properties[key];
     if (
-      key !== "name" &&
-      key !== "user_ratings_total" &&
-      key !== "rating" &&
+      key !== 'name' &&
+      key !== 'user_ratings_total' &&
+      key !== 'rating' &&
       value !== undefined &&
       value !== null &&
-      value !== ""
+      value !== ''
     ) {
       let parsedValue = value;
-      if (
-        typeof value === "string" &&
-        value.startsWith("[") &&
-        value.endsWith("]")
-      ) {
+      if (typeof value === 'string' && value.startsWith('[') && value.endsWith(']')) {
         try {
           parsedValue = JSON.parse(value);
         } catch (e) {
@@ -37,15 +34,20 @@ export function generatePopupContent(
       }
 
       if (Array.isArray(parsedValue)) {
-        content += `<div class="popup-content-div">${key}: ${parsedValue.join(", ")}</div>`;
+        content += `<div class="popup-content-div">${key}: ${parsedValue.join(', ')}</div>`;
       } else {
-        content += (typeof parsedValue === "string" && parsedValue.startsWith("http"))?`<div class="popup-content-div">${key}: <a target='_blank' class="text-xs text-blue-500 underline" href=${parsedValue}>Click Here</a></div>`:`<div class="popup-content-div">${key}: ${parsedValue}</div>`;
+        content +=
+          typeof parsedValue === 'string' && parsedValue.startsWith('http')
+            ? `<div class="popup-content-div">${key}: <a target='_blank' class="text-xs text-blue-500 underline" href=${parsedValue}>Click Here</a></div>`
+            : `<div class="popup-content-div">${key}: ${parsedValue}</div>`;
       }
     }
   }
 
-  if(properties.user_ratings_total) content += `<div class="popup-content-div popup-content-total-ratings">Total Ratings: ${properties.user_ratings_total}</div>`;
-  if(properties.rating) content += `<div class="popup-content-div popup-content-rating">Rating: ${properties.rating}</div>`;
+  if (properties.user_ratings_total)
+    content += `<div class="popup-content-div popup-content-total-ratings">Total Ratings: ${properties.user_ratings_total}</div>`;
+  if (properties.rating)
+    content += `<div class="popup-content-div popup-content-rating">Rating: ${properties.rating}</div>`;
 
   if (loading) {
     content += `<div class="flex items-center gap-2 text-sm font-semibold">

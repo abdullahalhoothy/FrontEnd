@@ -1,4 +1,4 @@
-import "../../styles/mapControls.css";
+import '../../styles/mapControls.css';
 
 type PopulationControlProps = {
   switchPopulationLayer: (fromSetter: boolean) => void;
@@ -14,19 +14,19 @@ function PopulationControl(props: PopulationControlProps) {
       console.log('[PopulationControl] Updating button state:', { isEnabled });
       button.disabled = !isEnabled;
       button.classList.toggle('disabled', !isEnabled);
-      button.title = isEnabled 
-        ? "Population Intelligence" 
-        : "Please select a city and country first";
+      button.title = isEnabled
+        ? 'Population Intelligence'
+        : 'Please select a city and country first';
     }
   };
 
   const createButton = (title: string, clickHandler: () => void): HTMLButtonElement => {
-    button = document.createElement("button");
-    button.className = "mapboxgl-ctrl-icon population-control !flex !items-center !justify-center";
-    button.type = "button";
-    
+    button = document.createElement('button');
+    button.className = 'mapboxgl-ctrl-icon population-control !flex !items-center !justify-center';
+    button.type = 'button';
+
     button.setAttribute('data-active', 'false');
-    
+
     button.innerHTML = `
       <div class="population-icon-container">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="18" height="18">
@@ -41,9 +41,9 @@ function PopulationControl(props: PopulationControlProps) {
         </svg>
       </div>
     `;
-    
+
     updateButtonState(false);
-    
+
     const handleClick = () => {
       if (!button.disabled) {
         const currentState = button.getAttribute('data-active') === 'true';
@@ -51,13 +51,13 @@ function PopulationControl(props: PopulationControlProps) {
         clickHandler();
       }
     };
-    
-    button.addEventListener("click", handleClick);
-    button.addEventListener("touchend", (e) => {
+
+    button.addEventListener('click', handleClick);
+    button.addEventListener('touchend', e => {
       e.preventDefault();
       handleClick();
     });
-    
+
     return button;
   };
 
@@ -65,26 +65,33 @@ function PopulationControl(props: PopulationControlProps) {
     onAdd(): HTMLElement {
       container = document.createElement('div');
       container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group';
-      container.appendChild(createButton("Population Intelligence", ()=>switchPopulationLayer(false)));
-      
-      const cityCountryChangeHandler = (e: CustomEvent<{hasCity: boolean, hasCountry: boolean}>) => {
+      container.appendChild(
+        createButton('Population Intelligence', () => switchPopulationLayer(false))
+      );
+
+      const cityCountryChangeHandler = (
+        e: CustomEvent<{ hasCity: boolean; hasCountry: boolean }>
+      ) => {
         const { hasCity, hasCountry } = e.detail;
         updateButtonState(hasCity && hasCountry);
       };
 
       container.dataset.eventHandler = 'true';
       document.addEventListener('cityCountryChanged', cityCountryChangeHandler as EventListener);
-      
+
       (container as any)._cityCountryHandler = cityCountryChangeHandler;
-      
+
       return container;
     },
     onRemove(): void {
       if ((container as any)._cityCountryHandler) {
-        document.removeEventListener('cityCountryChanged', (container as any)._cityCountryHandler as EventListener);
+        document.removeEventListener(
+          'cityCountryChanged',
+          (container as any)._cityCountryHandler as EventListener
+        );
       }
       container.remove();
-    }
+    },
   };
 }
 
