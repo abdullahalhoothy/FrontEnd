@@ -66,8 +66,6 @@ export function useGridInteraction(
     // Convert to array format for Mapbox
     const coordinates: [number, number] = [centerObj.lng, centerObj.lat];
 
-    console.log('Final coordinates for popup:', coordinates);
-
     // Create popup with all properties
     createGridPopup(
       coordinates,
@@ -82,11 +80,6 @@ export function useGridInteraction(
         const next = new Set(prev);
         next.delete(cellId);
         return next;
-      });
-
-      console.log('Cell left:', {
-        cellId,
-        remainingCells: Array.from(selectedCells)
       });
 
       // Only cleanup if no cells are selected
@@ -119,7 +112,6 @@ export function useGridInteraction(
         
         if (gridLayer) {
           gridLayerIdRef.current = gridLayer.id;
-          console.log('Found grid layer:', gridLayer.id);
         }
       } catch (error) {
         console.debug('Style not ready:', error);
@@ -148,12 +140,6 @@ export function useGridInteraction(
       try {
         const features = map.queryRenderedFeatures(e.point, { 
           layers: [gridLayerIdRef.current] 
-        });
-        
-        console.log('Query features:', {
-          point: e.point,
-          layerId: gridLayerIdRef.current,
-          featuresFound: features.length
         });
 
         const feature = features[0];

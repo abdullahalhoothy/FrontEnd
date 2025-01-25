@@ -76,8 +76,7 @@ const generateCacheKey = (url: string, method: string, data: any): string => {
     method,
     data: keyData
   });
-  
-  console.log('Generated cache key:', cacheKey);
+
   return cacheKey;
 };
 
@@ -85,19 +84,16 @@ const getCachedResponse = (key: string): any | null => {
   try {
     const cached = localStorage.getItem(key);
     if (!cached) {
-      console.log('Cache miss for key:', key);
       return null;
     }
 
     const { data, timestamp } = JSON.parse(cached) as CacheEntry;
     
     if (Date.now() - timestamp > CACHE_EXPIRY) {
-      console.log('Cache expired for key:', key);
       localStorage.removeItem(key);
       return null;
     }
 
-    console.log('Cache hit for key:', key);
     return data;
   } catch (error) {
     console.error('Error reading from cache:', error);
@@ -112,7 +108,6 @@ const setCacheEntry = (key: string, data: any) => {
       timestamp: Date.now()
     };
     localStorage.setItem(key, JSON.stringify(entry));
-    console.log('Cached response for:', key);
   } catch (error) {
     console.error('Error writing to cache:', error);
     // If localStorage is full, clear it and try again
@@ -139,7 +134,7 @@ export const clearCache = () => {
       localStorage.removeItem(key);
     }
   }
-  console.log('Cache cleared');
+  console.info('Cache cleared');
 };
 
 const cleanupCache = () => {
