@@ -131,7 +131,11 @@ function CatalogMenu() {
             <div className="flex w-full space-x-2">
               <button
                 onClick={() => {
-                  resetState(true);
+                  if (geoPoints.length > 0) {
+                    resetState(true);
+                  } else {
+                    resetState();
+                  }
                   setShowRestorePrompt(false);
                 }}
                 className="w-full h-full bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
