@@ -91,7 +91,7 @@ export function HomeContent() {
 
   const [selectedTab, setSelectedTab] = useState<'LAYER' | 'CATALOG'>('LAYER');
 
-  const { setSelectedContainerType } = useCatalogContext();
+  const { setSelectedContainerType, geoPoints, handleStoreUnsavedGeoPoint } = useCatalogContext();
   const handleTabSwitch = (tab: 'LAYER' | 'CATALOG') => {
     setSelectedTab(tab);
     setSelectedContainerType(tab === 'CATALOG' ? 'Catalogue' : 'Layer');
@@ -121,7 +121,10 @@ export function HomeContent() {
               ? ' bg-white border-b-0 text-lg'
               : ' cursor-pointer bg-slate-200 border-b-slate-300 hover:bg-gray-50 text-gray-500 hover:text-black')
           }
-          onClick={() => handleTabSwitch('LAYER')}
+          onClick={() => {
+            handleStoreUnsavedGeoPoint(geoPoints);
+            handleTabSwitch('LAYER');
+          }}
         >
           Layer
           <span className="ml-2">
@@ -136,7 +139,9 @@ export function HomeContent() {
               ? ' bg-white border-b-0 text-lg'
               : ' cursor-pointer bg-slate-200 border-b-slate-300  hover:bg-gray-50 text-gray-500 hover:text-black')
           }
-          onClick={() => handleTabSwitch('CATALOG')}
+          onClick={() => {
+            handleTabSwitch('CATALOG');
+          }}
         >
           Catalog
           <span className="ml-2">
