@@ -274,6 +274,11 @@ export function LayerProvider(props: { children: ReactNode }) {
         ? [reqFetchDataset.layers.find((l) => l.id === layerId)]
         : reqFetchDataset.layers
 
+      setReqFetchDataset((prev) => ({
+        ...prev,
+        action: action,
+      }))
+
       for (const layer of layers) {
         try {
           if (!layer) continue
@@ -284,7 +289,7 @@ export function LayerProvider(props: { children: ReactNode }) {
             continue
           }
 
-          const defaultName = `${reqFetchDataset.selectedCountry} ${
+          const defaultName = ` ${reqFetchDataset.selectedCountry} ${
             reqFetchDataset.selectedCity
           } ${
             layer.includedTypes
