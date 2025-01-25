@@ -183,11 +183,9 @@ const makeApiCall = async ({
   isFormData?: boolean;
   useCache?: boolean;
 }) => {
-  console.log('makeApiCall', { url, method, useCache, isFormData });
 
   // Skip cache for form data or when caching is not requested
   if (isFormData || !useCache) {
-    console.log('Skipping cache due to:', isFormData ? 'form data' : 'useCache false');
     return await axiosInstance({
       url,
       method,
@@ -211,11 +209,9 @@ const makeApiCall = async ({
   const cachedResponse = getCachedResponse(cacheKey);
   
   if (cachedResponse) {
-    console.log('Returning cached response for:', url);
     return cachedResponse;
   }
 
-  console.log('Making new request for:', url);
   // Make the request and cache the response
   const response = await axiosInstance({
     url,
@@ -253,7 +249,6 @@ const apiRequest = async ({
   isFormData = false,
   useCache = false,
 }: ApiRequestOptions): Promise<any> => {
-  console.log("Making apiRequest with", {useCache})
   const authResponse = getAuthResponse();
   if (authResponse?.idToken) {
     setAuthorizationHeader(options, authResponse.idToken);
