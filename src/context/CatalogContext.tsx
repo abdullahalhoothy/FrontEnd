@@ -183,9 +183,12 @@ export function CatalogProvider(props: { children: ReactNode }) {
   }
 
   function handleStoreUnsavedGeoPoint(geoPoints: any) {
-    if (geoPoints.length > 0) {
-      localStorage.setItem('unsavedGeoPoints', JSON.stringify(geoPoints));
-    }
+    // Retrieve existing items from local storage
+    const existingGeoPoints = JSON.parse(localStorage.getItem('unsavedGeoPoints') || '[]');
+
+    const updatedGeoPoints = [...existingGeoPoints, ...geoPoints];
+
+    localStorage.setItem('unsavedGeoPoints', JSON.stringify(updatedGeoPoints));
   }
 
   async function generateThumbnail(): Promise<string> {
