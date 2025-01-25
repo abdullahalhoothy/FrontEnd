@@ -48,7 +48,7 @@ function CatalogMenu() {
   function handleRestoreClick() {
     const savedGeoPoints = localStorage.getItem('unsavedGeoPoints');
     if (savedGeoPoints) {
-      setGeoPoints(JSON.parse(savedGeoPoints));
+      setGeoPoints(prevGeoPoints => [...prevGeoPoints, ...JSON.parse(savedGeoPoints)]);
     }
     setShowRestorePrompt(false);
   }
@@ -130,8 +130,7 @@ function CatalogMenu() {
             <div className="flex w-full space-x-2">
               <button
                 onClick={() => {
-                  resetState();
-
+                  resetState(true);
                   setShowRestorePrompt(false);
                 }}
                 className="w-full h-full bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg

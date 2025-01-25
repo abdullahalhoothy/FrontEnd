@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { FaChevronDown, FaTrash } from 'react-icons/fa';
 import styles from './MultipleLayersSetting.module.css';
 import ColorSelect from '../ColorSelect/ColorSelect';
@@ -60,6 +60,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     gradientColorBasedOnZone,
   } = useCatalogContext();
   const layer = geoPoints[layerIndex];
+
   const { prdcer_layer_name, is_zone_lyr, display, is_heatmap, is_grid, city_name } = layer;
   const [isZoneLayer, setIsZoneLayer] = useState(is_zone_lyr);
   const [isDisplay, setIsDisplay] = useState(display);
@@ -104,18 +105,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     },
     [layer.is_zone_lyr, layer.display, layer.is_heatmap]
   );
-  useEffect(() => {
-    // Skip the effect on the first render (e.g., page refresh)
-    if (isFirstRender.current) {
-      isFirstRender.current = false; // Set to false after the first render
-      return;
-    }
-
-    // If not the first render and geoPoints has items, store them
-    if (geoPoints.length > 0) {
-      localStorage.setItem('unsavedGeoPoints', JSON.stringify(geoPoints));
-    }
-  }, [geoPoints]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

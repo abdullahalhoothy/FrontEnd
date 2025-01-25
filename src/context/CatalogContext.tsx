@@ -182,6 +182,12 @@ export function CatalogProvider(props: { children: ReactNode }) {
     fetchGeoPoints(id, typeOfCard);
   }
 
+  function handleStoreUnsavedGeoPoint(geoPoints: any) {
+    if (geoPoints.length > 0) {
+      localStorage.setItem('unsavedGeoPoints', JSON.stringify(geoPoints));
+    }
+  }
+
   async function generateThumbnail(): Promise<string> {
     const mapContainer = document.getElementById('map-container');
     if (!mapContainer) {
@@ -271,8 +277,10 @@ export function CatalogProvider(props: { children: ReactNode }) {
     setFormStage(resetTo);
   }
 
-  function resetState() {
-    setGeoPoints([]);
+  function resetState(keepGeoPointsState?: boolean) {
+    if (!keepGeoPointsState) {
+      setGeoPoints([]);
+    }
     setLastGeoIdRequest(undefined);
     setLastGeoMessageRequest(undefined);
     setLastGeoError(null);
@@ -460,7 +468,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
         setGeoPoints,
         selectedColor,
         setSelectedColor,
-
         resetState,
         saveResponse,
         saveResponseMsg,
@@ -504,6 +511,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
         basedOnProperty,
         setBasedOnProperty,
         updateLayerLegend,
+        handleStoreUnsavedGeoPoint,
       }}
     >
       {children}
