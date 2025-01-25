@@ -1,44 +1,50 @@
-import React, { useState, ChangeEvent, useEffect } from "react";
-import styles from "./CustomizeLayer.module.css";
-import ColorSelect from "../ColorSelect/ColorSelect";
-import { useLayerContext } from "../../context/LayerContext";
-import { useAuth } from "../../context/AuthContext";
-import { useNavigate } from "react-router";
-import SavedIconFeedback from "../SavedIconFeedback/SavedIconFeedback";
-import { LayerCustomization } from "../../types/allTypesAndInterfaces";
-import LayerCustomizationItem from "../LayerCustomizationItem/LayerCustomizationItem";
-import { useCatalogContext } from "../../context/CatalogContext";
-import { HiCheck, HiExclamation } from "react-icons/hi";
-import { getDefaultLayerColor } from "../../utils/helperFunctions";
+import React, { useState, ChangeEvent, useEffect } from "react"
+import styles from "./CustomizeLayer.module.css"
+import ColorSelect from "../ColorSelect/ColorSelect"
+import { useLayerContext } from "../../context/LayerContext"
+import { useAuth } from "../../context/AuthContext"
+import { useNavigate } from "react-router"
+import SavedIconFeedback from "../SavedIconFeedback/SavedIconFeedback"
+import { LayerCustomization } from "../../types/allTypesAndInterfaces"
+import LayerCustomizationItem from "../LayerCustomizationItem/LayerCustomizationItem"
+import { useCatalogContext } from "../../context/CatalogContext"
+import { HiCheck, HiExclamation } from "react-icons/hi"
+import { getDefaultLayerColor } from "../../utils/helperFunctions"
 
 function autoFillLegendFormat(data) {
-  if (!data.selectedCountry || !data.selectedCity) return "";
+  if (!data.selectedCountry || !data.selectedCity) return ""
+
+  const actionAbbreviation = data.action.split(" ")[0]
+
+  const cityAbbreviartion = data.selectedCity.slice(0, 3).toUpperCase()
 
   const countryAbbreviation = data.selectedCountry
     .split(" ")
     .map((word) => word[0])
     .join("")
-    .toUpperCase();
-
-  const city = data.selectedCity;
+    .toUpperCase()
 
   const included = data.includedTypes
     .map((type) => type.replace("_", " "))
-    .join(" + ");
+    .join(" + ")
 
   const excluded =
     data.excludedTypes.length > 0
       ? " + not " +
         data.excludedTypes.map((type) => type.replace("_", " ")).join(" + not ")
-      : "";
-
-  return `${countryAbbreviation} ${city} ${included}${excluded}`;
+      : ""
+  // Handle special cases for action
+  if (actionAbbreviation === "full") {
+    return `${actionAbbreviation}-${countryAbbreviation}-${cityAbbreviartion}-${included}${excluded}`
+  } else {
+    return `${countryAbbreviation}-${cityAbbreviartion}-${included}${excluded}`
+  }
 }
 
 function CustomizeLayer() {
-  const nav = useNavigate();
+  const nav = useNavigate()
 
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth()
 
   const {
     resetFormStage,
@@ -46,153 +52,161 @@ function CustomizeLayer() {
     reqFetchDataset,
     handleSaveLayer,
     updateLayerState,
-  } = useLayerContext();
+  } = useLayerContext()
 
-  const { removeLayer } = useCatalogContext();
+  const { removeLayer } = useCatalogContext()
 
-  const [layerCustomizations, setLayerCustomizations] = useState<LayerCustomization[]>([]);
-  const [errors, setErrors] = useState<{ [layerId: number]: string }>({});
-  const [collapsedLayers, setCollapsedLayers] = useState<Set<number>>(new Set());
-  const [savingLayers, setSavingLayers] = useState<Set<number>>(new Set());
-  const [savedLayers, setSavedLayers] = useState<Set<number>>(new Set());
-  const [isSavingAll, setIsSavingAll] = useState(false);
-  const [globalSaveError, setGlobalSaveError] = useState<string | null>(null);
-  const [allSaved, setAllSaved] = useState(false);
+  const [layerCustomizations, setLayerCustomizations] = useState<
+    LayerCustomization[]
+  >([])
+  const [errors, setErrors] = useState<{ [layerId: number]: string }>({})
+  const [collapsedLayers, setCollapsedLayers] = useState<Set<number>>(new Set())
+  const [savingLayers, setSavingLayers] = useState<Set<number>>(new Set())
+  const [savedLayers, setSavedLayers] = useState<Set<number>>(new Set())
+  const [isSavingAll, setIsSavingAll] = useState(false)
+  const [globalSaveError, setGlobalSaveError] = useState<string | null>(null)
+  const [allSaved, setAllSaved] = useState(false)
 
   useEffect(() => {
-    
     if (reqFetchDataset?.layers?.length > 0) {
-      const initialCustomizations = reqFetchDataset.layers.map(layer => {
+      const initialCustomizations = reqFetchDataset.layers.map((layer) => {
         const legendText = autoFillLegendFormat({
           ...reqFetchDataset,
           includedTypes: layer.includedTypes || [],
           excludedTypes: layer.excludedTypes || [],
-        });
-        
-        
+        })
+
         return {
           layerId: layer.id,
           name: legendText,
           legend: legendText,
-          description: '',
+          description: "",
           color: getDefaultLayerColor(layer.id),
-        };
-      });
-      
-      setLayerCustomizations(initialCustomizations);
-    }
-  }, [reqFetchDataset]);
+        }
+      })
 
-  const handleLayerChange = (layerId: number, field: keyof LayerCustomization, value: string) => {
-    
-    setLayerCustomizations(prev => {
-      const updated = prev.map(layer =>
+      setLayerCustomizations(initialCustomizations)
+    }
+  }, [reqFetchDataset])
+
+  console.log(reqFetchDataset)
+
+  const handleLayerChange = (
+    layerId: number,
+    field: keyof LayerCustomization,
+    value: string
+  ) => {
+    setLayerCustomizations((prev) => {
+      const updated = prev.map((layer) =>
         layer.layerId === layerId
-          ? { 
-              ...layer, 
+          ? {
+              ...layer,
               [field]: value,
-              ...(field === 'color' ? { color: value } : {})
+              ...(field === "color" ? { color: value } : {}),
             }
           : layer
-      );
-      return updated;
-    });
+      )
+      return updated
+    })
 
     // Update layer state if the field is 'name'
-    if (field === 'name') {
-      updateLayerState(layerId, { customName: value });
+    if (field === "name") {
+      updateLayerState(layerId, { customName: value })
     }
-  };
+  }
 
   const validateLayer = (layerId: number) => {
-    const layer = layerCustomizations.find(l => l.layerId === layerId);
+    const layer = layerCustomizations.find((l) => l.layerId === layerId)
     if (!layer?.name || !layer?.legend) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [layerId]: "Name and legend are required."
-      }));
-      return false;
+        [layerId]: "Name and legend are required.",
+      }))
+      return false
     }
-    setErrors(prev => ({ ...prev, [layerId]: '' }));
-    return true;
-  };
+    setErrors((prev) => ({ ...prev, [layerId]: "" }))
+    return true
+  }
 
   const saveLayer = async (layerId: number) => {
     if (validateLayer(layerId)) {
       try {
-        setSavingLayers(prev => new Set(prev).add(layerId));
-        const layerData = layerCustomizations.find(l => l.layerId === layerId);
+        setSavingLayers((prev) => new Set(prev).add(layerId))
+        const layerData = layerCustomizations.find((l) => l.layerId === layerId)
         if (layerData) {
-          await handleSaveLayer({ layers: [layerData] });
-          setSavedLayers(prev => new Set(prev).add(layerId));
+          await handleSaveLayer({ layers: [layerData] })
+          setSavedLayers((prev) => new Set(prev).add(layerId))
         }
       } catch (error) {
-        setErrors(prev => ({
+        setErrors((prev) => ({
           ...prev,
-          [layerId]: "Failed to save layer. Please try again."
-        }));
+          [layerId]: "Failed to save layer. Please try again.",
+        }))
       } finally {
-        setSavingLayers(prev => {
-          const next = new Set(prev);
-          next.delete(layerId);
-          return next;
-        });
+        setSavingLayers((prev) => {
+          const next = new Set(prev)
+          next.delete(layerId)
+          return next
+        })
       }
     }
-  };
+  }
 
   const handleSaveAllLayers = async () => {
-    const allValid = layerCustomizations.every(layer => validateLayer(layer.layerId));
+    const allValid = layerCustomizations.every((layer) =>
+      validateLayer(layer.layerId)
+    )
     if (allValid) {
       try {
-        setIsSavingAll(true);
-        setGlobalSaveError(null);
-        const layerIds = layerCustomizations.map(l => l.layerId);
-        layerIds.forEach(id => setSavingLayers(prev => new Set(prev).add(id)));
-        
-        await handleSaveLayer({ layers: layerCustomizations });
-        
-        setSavedLayers(new Set(layerIds));
-        setAllSaved(true);
+        setIsSavingAll(true)
+        setGlobalSaveError(null)
+        const layerIds = layerCustomizations.map((l) => l.layerId)
+        layerIds.forEach((id) =>
+          setSavingLayers((prev) => new Set(prev).add(id))
+        )
 
+        await handleSaveLayer({ layers: layerCustomizations })
+
+        setSavedLayers(new Set(layerIds))
+        setAllSaved(true)
       } catch (error) {
-        setGlobalSaveError("Failed to save layers. Please try again.");
-        setErrors(prev => ({
+        setGlobalSaveError("Failed to save layers. Please try again.")
+        setErrors((prev) => ({
           ...prev,
-          global: "Failed to save layers. Please try again."
-        }));
+          global: "Failed to save layers. Please try again.",
+        }))
       } finally {
-        setIsSavingAll(false);
-        setSavingLayers(new Set());
+        setIsSavingAll(false)
+        setSavingLayers(new Set())
       }
     }
-  };
+  }
 
   const handleDiscardLayer = (layerId: number) => {
-    setLayerCustomizations(prev => {
-      const updated = prev.filter(l => l.layerId !== layerId);
+    setLayerCustomizations((prev) => {
+      const updated = prev.filter((l) => l.layerId !== layerId)
       // If this was the last layer, perform discard all actions
       if (updated.length === 0) {
-        resetFetchDatasetForm();
-        resetFormStage();
+        resetFetchDatasetForm()
+        resetFormStage()
       }
-      return updated;
-    });
-    removeLayer(layerId);
-  };
+      return updated
+    })
+    removeLayer(layerId)
+  }
 
   const handleDiscardAll = () => {
-    resetFetchDatasetForm();
-    resetFormStage();
-  };
+    resetFetchDatasetForm()
+    resetFormStage()
+  }
 
   const toggleCollapse = (layerId: number) => {
-    setCollapsedLayers(prev => {
-      const newSet = new Set(prev);
-      prev.has(layerId) ? newSet.delete(layerId) : newSet.add(layerId);
-      return newSet;
-    });
-  };
+    setCollapsedLayers((prev) => {
+      const newSet = new Set(prev)
+      prev.has(layerId) ? newSet.delete(layerId) : newSet.add(layerId)
+      return newSet
+    })
+  }
 
   return (
     <div className="flex flex-col p-2 max-h-[100%]">
@@ -237,16 +251,41 @@ function CustomizeLayer() {
             disabled={isSavingAll}
             className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm 
               font-medium text-white 
-              ${allSaved ? 'bg-green-700' : globalSaveError ? 'bg-red-600' : 'bg-green-600'} 
-              ${!isSavingAll && 'hover:' + (globalSaveError ? 'bg-red-700' : 'bg-green-700')}
+              ${
+                allSaved
+                  ? "bg-green-700"
+                  : globalSaveError
+                  ? "bg-red-600"
+                  : "bg-green-600"
+              } 
+              ${
+                !isSavingAll &&
+                "hover:" + (globalSaveError ? "bg-red-700" : "bg-green-700")
+              }
               focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500
               flex items-center justify-center gap-2 min-w-[100px]`}
           >
             {isSavingAll ? (
               <span className="flex items-center gap-2">
-                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <svg
+                  className="animate-spin h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
                 </svg>
                 Saving All...
               </span>
@@ -261,13 +300,13 @@ function CustomizeLayer() {
                 Retry All
               </>
             ) : (
-              'Save All'
+              "Save All"
             )}
           </button>
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export default CustomizeLayer;
+export default CustomizeLayer
