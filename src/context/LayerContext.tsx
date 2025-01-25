@@ -377,6 +377,10 @@ export function LayerProvider(props: { children: ReactNode }) {
         selectedCountry: value,
         selectedCity: "", // Reset city when country changes
       }));
+
+      document.dispatchEvent(new CustomEvent('cityCountryChanged', {
+        detail: { hasCountry: true, hasCity: false }
+      }));
     } else if (name === "selectedCity") {
       // Update city
       setSelectedCity(value);
@@ -385,6 +389,10 @@ export function LayerProvider(props: { children: ReactNode }) {
       setReqFetchDataset(prev => ({
         ...prev,
         selectedCity: value,
+      }));
+
+      document.dispatchEvent(new CustomEvent('cityCountryChanged', {
+        detail: { hasCountry: true, hasCity: true }
       }));
     }
   }
@@ -454,6 +462,10 @@ export function LayerProvider(props: { children: ReactNode }) {
     setSearchType("category_search");
     setPassword("");
     setGeoPoints([]);
+
+    document.dispatchEvent(new CustomEvent('cityCountryChanged', {
+      detail: { hasCountry: false, hasCity: false }
+    }));
   }
 
   useEffect(() => {
@@ -601,6 +613,15 @@ export function LayerProvider(props: { children: ReactNode }) {
     }
     setIncludePopulation(shouldInclude);
   }
+
+  useEffect(() => {
+    document.dispatchEvent(new CustomEvent('cityCountryChanged', {
+      detail: { 
+        hasCountry: !!selectedCountry, 
+        hasCity: !!selectedCity 
+      }
+    }));
+  }, []);
 
   return (
     <LayerContext.Provider

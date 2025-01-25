@@ -7,9 +7,21 @@ type PopulationControlProps = {
 function PopulationControl(props: PopulationControlProps) {
   const { switchPopulationLayer } = props;
   let container: HTMLElement;
+  let button: HTMLButtonElement;
+
+  const updateButtonState = (isEnabled: boolean) => {
+    if (button) {
+      console.log('[PopulationControl] Updating button state:', { isEnabled });
+      button.disabled = !isEnabled;
+      button.classList.toggle('disabled', !isEnabled);
+      button.title = isEnabled 
+        ? "Population Intelligence" 
+        : "Please select a city and country first";
+    }
+  };
 
   const createButton = (title: string, clickHandler: () => void): HTMLButtonElement => {
-    const button = document.createElement("button");
+    button = document.createElement("button");
     button.className = "mapboxgl-ctrl-icon population-control !flex !items-center !justify-center";
     button.type = "button";
     
@@ -30,16 +42,22 @@ function PopulationControl(props: PopulationControlProps) {
       </div>
     `;
     
-    button.title = title;
+    updateButtonState(false);
     
     const handleClick = () => {
-      const currentState = button.getAttribute('data-active') === 'true';
-      button.setAttribute('data-active', (!currentState).toString());
-      clickHandler();
+      if (!button.disabled) {
+        const currentState = button.getAttribute('data-active') === 'true';
+        button.setAttribute('data-active', (!currentState).toString());
+        clickHandler();
+      }
     };
     
     button.addEventListener("click", handleClick);
-    button.addEventListener("touchend", handleClick);
+    button.addEventListener("touchend", (e) => {
+      e.preventDefault();
+      handleClick();
+    });
+    
     return button;
   };
 
@@ -48,9 +66,23 @@ function PopulationControl(props: PopulationControlProps) {
       container = document.createElement('div');
       container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group';
       container.appendChild(createButton("Population Intelligence", ()=>switchPopulationLayer(false)));
+      
+      const cityCountryChangeHandler = (e: CustomEvent<{hasCity: boolean, hasCountry: boolean}>) => {
+        const { hasCity, hasCountry } = e.detail;
+        updateButtonState(hasCity && hasCountry);
+      };
+
+      container.dataset.eventHandler = 'true';
+      document.addEventListener('cityCountryChanged', cityCountryChangeHandler as EventListener);
+      
+      (container as any)._cityCountryHandler = cityCountryChangeHandler;
+      
       return container;
     },
     onRemove(): void {
+      if ((container as any)._cityCountryHandler) {
+        document.removeEventListener('cityCountryChanged', (container as any)._cityCountryHandler as EventListener);
+      }
       container.remove();
     }
   };

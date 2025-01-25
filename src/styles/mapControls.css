@@ -20,6 +20,19 @@
   background: #0d4432 !important;
 }
 
+.population-control.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.population-control.disabled:hover {
+  background: #fff;
+}
+
+.population-control.disabled .population-icon-stroke {
+  stroke: #999;
+}
+
 .population-icon-container {
   display: flex;
   align-items: center;

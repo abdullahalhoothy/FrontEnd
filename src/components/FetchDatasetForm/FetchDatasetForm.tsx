@@ -376,7 +376,6 @@ const FetchDatasetForm = () => {
 
   const handleIncludePopulation = async (e: React.ChangeEvent<HTMLInputElement>) => {
     handlePopulationLayer(e.target.checked);
-    setIncludePopulation(e.target.checked);
   };
 
   const handleReset = () => {

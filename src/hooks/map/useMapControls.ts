@@ -17,12 +17,12 @@ export function useMapControls() {
   const controlsAdded = useRef(false);
   
   useEffect(() => {
+    
     if (!shouldInitializeFeatures) return;
     
     const map = mapRef.current;
     if (!map) return;
 
-    // feat: add new control: Activate Population Intelligence 
     let controls: {
       styles?: mapboxgl.IControl,
       navigation?: mapboxgl.NavigationControl,
