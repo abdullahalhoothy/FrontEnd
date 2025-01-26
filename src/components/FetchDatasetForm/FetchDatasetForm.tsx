@@ -45,9 +45,8 @@ const FetchDatasetForm = () => {
     incrementFormStage,
     isError,
     setIsError,
-    handlePopulationLayer,
+    switchPopulationLayer,
     includePopulation,
-    setIncludePopulation,
   } = useLayerContext();
 
   // AUTH CONTEXT
@@ -374,9 +373,6 @@ const FetchDatasetForm = () => {
     }
   };
 
-  const handleIncludePopulation = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    handlePopulationLayer(e.target.checked);
-  };
 
   const handleReset = () => {
     resetFetchDatasetForm();
@@ -543,23 +539,62 @@ const FetchDatasetForm = () => {
           <div className="pt-4">
             <div
               aria-disabled={!selectedCity || !selectedCountry}
-              className="flex items-center aria-disabled:opacity-50 aria-disabled:cursor-not-allowed"
+              className={`relative flex flex-col p-4 rounded-lg border transition-all duration-200 
+                ${
+                  !selectedCity || !selectedCountry
+                    ? 'text-gray-500 bg-gem/20 border-gray-200'
+                    : 'text-gray-100 bg-gem/90 border-gem-green/20'
+                } 
+                aria-disabled:opacity-80 aria-disabled:cursor-not-allowed`}
               title={
                 !selectedCity || !selectedCountry
                   ? 'Please select a city and country'
-                  : 'Add population data'
+                  : 'Activate area intelligence'
               }
             >
-              <input
-                id="population-toggle"
-                type="checkbox"
-                checked={includePopulation}
-                disabled={!selectedCity || !selectedCountry}
-                onChange={e => handleIncludePopulation(e)}
-                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              />
-              <label htmlFor="population-toggle" className="ml-2 text-sm font-medium text-gray-900">
-                Population Intelligence
+              <label className="font-semibold text-white">Area Intelligence</label>
+              <label
+                htmlFor="population-toggle"
+                aria-disabled={!selectedCity || !selectedCountry}
+                className={`
+                flex items-center justify-between border-t border-gem/20 mt-2 pt-2
+                ${
+                  !selectedCity || !selectedCountry
+                    ? 'bg-white/90 p-3 rounded-md cursor-not-allowed'
+                    : 'bg-white/95 p-3 rounded-md cursor-pointer'
+                }
+              `}
+              >
+                <div className="flex flex-col">
+                  <label className="font-medium text-gem">Area Population Intelligence</label>
+                  <p className="text-sm text-gem/60 mt-1">Enable smart population data</p>
+                </div>
+
+                <div className="relative">
+                  <input
+                    id="population-toggle"
+                    type="checkbox"
+                    checked={includePopulation}
+                    disabled={!selectedCity || !selectedCountry}
+                    onChange={() => {
+                      switchPopulationLayer();
+                      console.log('includePopulation', includePopulation);
+                    }}
+                    className="sr-only peer"
+                  />
+                  <div
+                    className={`
+                    ${!selectedCity || !selectedCountry ? 'cursor-not-allowed' : 'cursor-pointer'} w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 
+                    z-10 peer-focus:ring-gem/20 rounded-full peer 
+                    peer-checked:after:translate-x-[28px] peer-checked:after:border-white 
+                    after:content-[''] after:absolute after:top-[2px] after:left-[2px] 
+                    after:bg-white after:border-gray-300 after:border after:rounded-full 
+                    after:h-6 after:w-6 after:transition-all
+                    peer-checked:bg-gem peer-disabled:cursor-not-allowed
+                    peer-disabled:after:bg-gray-100
+                  `}
+                  ></div>
+                </div>
               </label>
             </div>
           </div>
