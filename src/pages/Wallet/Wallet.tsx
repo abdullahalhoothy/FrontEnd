@@ -1,41 +1,27 @@
-import { useEffect, useRef, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import urls from "../../urls.json";
 import apiRequest from "../../services/apiRequest";
-import { PiX } from "react-icons/pi";
-import { PaymentMethod, DialogProps } from "../../types/allTypesAndInterfaces";
 
-const paymentBrandIcons = {
-  visa: "/card-brands/visa.svg",
-  mastercard: "/card-brands/mastercard.svg",
-  amex: "/card-brands/amex.svg",
-  discover: "/card-brands/discover.svg",
-  unknown: "/card-brands/credit-card.svg",
-};
 
 export default function Wallet() {
-  const { isAuthenticated, authResponse } = useAuth();
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
-  const [defaultPaymentMethodId, setDefaultPaymentMethodId] = useState<
-    string | null
-  >(null);
-  const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const navigate = useNavigate();
+  const { authResponse } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
-  const location = useLocation();
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [methodToRemove, setMethodToRemove] = useState<string | null>(null);
+  const [balance,setBalance]=useState(0.0)
 
   // Check for success query parameter
-  useEffect(() => {
-    const queryParams = new URLSearchParams(location.search);
-    if (queryParams.get("success") === "true") {
-      setShowSuccessMessage(true);
-    }
-  }, [location.search]);
+  const getWallet=async()=>{
+    const res = await  apiRequest({
+      url: urls.fetch_wallet+`?user_id=${authResponse.localId}`,
+      method: "get",
+      isAuthRequest: true
+    });
+    setBalance(res.data.data.balance.toFixed(2))
+  }
+  useEffect(() => { 
+    getWallet()
+  }, []);
 
   useEffect(() => {
     setIsLoading(false);
@@ -56,7 +42,7 @@ export default function Wallet() {
       <div className="flex items-center space-x-4">
         <div>
           <p className="text-sm font-bold text-gray-600">Total amount remaining</p>
-          <p className="text-sm text-gray-600">$0.0</p>
+          <p className="text-sm text-gray-600">${balance}</p>
         </div>
         <div className="w-px h-10 bg-gray-300"></div>
         <Link
