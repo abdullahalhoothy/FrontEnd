@@ -19,8 +19,6 @@ import { colorOptions } from "../../utils/helperFunctions";
 import { useCatalogContext } from "../../context/CatalogContext";
 import { defaultMapConfig } from "../../hooks/map/useMapInitialization";
 import { useMapContext } from '../../context/MapContext';
-
-import { CostEstimate } from "../../types/allTypesAndInterfaces";
 const FetchDatasetForm = () => {
   const nav = useNavigate();
 
@@ -55,7 +53,8 @@ const FetchDatasetForm = () => {
 
   // AUTH CONTEXT
   const { isAuthenticated, authResponse } = useAuth();
-
+  // UI CONTEXT
+  const[isPriceVisible,setIsPriceVisible] =useState<boolean>(false)
   // FETCHED DATA
   const [layers, setLayers] = useState<Layer[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -78,18 +77,19 @@ const FetchDatasetForm = () => {
   const { setGeoPoints } = useCatalogContext();
 
   const { backendZoom } = useMapContext();
-
+  const { logout } = useAuth();
   useEffect(() => {
     resetFetchDatasetForm();
     handleGetCountryCityCategory();
+    fetchProfile();
   }, []);
 
   useEffect(() => {
     if(reqFetchDataset.includedTypes&&reqFetchDataset.selectedCity&&reqFetchDataset.selectedCountry){
-      estimateCost()
+      let total_cost=layers.reduce((sum, layer) => sum + layer.cost, 0);
+      setCostEstimate(total_cost)
     }
-    console.log(reqFetchDataset);
-  }, [reqFetchDataset]);
+  }, [layers,selectedCity,selectedCity]);
 
   const filteredCategories = Object.entries(categories).reduce(
     (acc, [category, types]) => {
@@ -188,38 +188,26 @@ const FetchDatasetForm = () => {
       block: 'start'
     });
   };
-  const estimateCost=()=>{
+  const estimateCost=async(type:string[])=>{
     if (!authResponse || !("idToken" in authResponse)) {
       return;
     }
     console.log('Estimating Cost')
     const requestBody = {
       user_id: authResponse.localId,
-      boolean_query: reqFetchDataset.includedTypes?.join(" OR "),
-      city_name: reqFetchDataset.selectedCity,
-      country_name: reqFetchDataset.selectedCountry,
+      boolean_query: type.join(" OR "),
+      city_name: selectedCity,
+      country_name: selectedCountry,
     };
-    HttpReq<CostEstimate>(
-      urls.cost_calculator,
-      (data) => {
-        if (
-          data &&
-          typeof data.cost === "number" &&
-          typeof data.api_calls === "number"
-        ) {
-          setCostEstimate(data.cost);
-          // console.log('Cost Data:',data)
-        } else {
-          setIsError(new Error("Invalid response from server"));
-        }
-      },
-      () => { },
-      () => { },
-      () => setIsLoading(false),
-      setIsError,
-      "post",
-      requestBody
-    );
+    let res=await apiRequest(
+      {
+        url:urls.cost_calculator,
+        method:'Post',
+        body:requestBody
+      }
+    )
+    let layerCost=res.data.data.cost
+    return layerCost
   }
   // Add new handler to remove type from specific layer
   const removeTypeFromLayer = async(type: string, layerId: number, isExcluded: boolean) => {
@@ -260,7 +248,11 @@ const FetchDatasetForm = () => {
   };
 
   // Add this helper function
-  const addTypeToFirstAvailableLayer = (type: string, setAsExcluded: boolean) => {
+  const addTypeToFirstAvailableLayer = async(type: string, setAsExcluded: boolean) => {
+    let layerCost=0
+    if (!setAsExcluded){
+      layerCost=await estimateCost([type])
+    }
     setLayers(prevLayers => {
       if (prevLayers.length === 0) {
         const newLayer: Layer = {
@@ -270,6 +262,7 @@ const FetchDatasetForm = () => {
           excludedTypes: setAsExcluded ? [type] : [],
           display: true,
           points_color: getDefaultLayerColor(1),
+          cost:layerCost
         };
         return [newLayer];
       }
@@ -290,6 +283,7 @@ const FetchDatasetForm = () => {
           excludedTypes: setAsExcluded ? [type] : [],
           display: true,
           points_color: getDefaultLayerColor(newLayerId),
+          cost:layerCost
         };
         return [...prevLayers, newLayer];
       }
@@ -493,7 +487,29 @@ const FetchDatasetForm = () => {
       ));
     }
   };
+  const fetchProfile = async () => {
+    if (!authResponse || !("idToken" in authResponse)) {
+      setIsLoading(false);
+      nav("/auth");
+      return;
+    }
 
+    try {
+      const res = await apiRequest({
+        url: urls.user_profile,
+        method: "POST",
+        isAuthRequest: true,
+        body: { user_id: authResponse.localId },
+      });
+      await setIsPriceVisible(res.data.data.settings.show_price_on_purchase);
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      logout();
+      nav("/auth");
+    } finally {
+      setIsLoading(false);
+    }
+  };
   const handleReset = () => {
     resetFetchDatasetForm();
     setLayers([]);
@@ -740,7 +756,7 @@ const FetchDatasetForm = () => {
               handleButtonClick("full data", e);
             }}
           >
-              Full Data (${costEstimate})
+              Full Data {isPriceVisible ? `$${costEstimate.toFixed(2)}` : null}
           </button>
         </div>
       </div>

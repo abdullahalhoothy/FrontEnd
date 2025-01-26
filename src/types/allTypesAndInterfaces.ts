@@ -483,6 +483,7 @@ export interface Layer {
   layer_legend?: string;
   layer_description?: string;
   prdcer_lyr_id?: string;
+  cost:number
 }
 
 export interface LayerGroup {
