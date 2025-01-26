@@ -391,7 +391,7 @@ export function LayerProvider(props: { children: ReactNode }) {
 
       document.dispatchEvent(
         new CustomEvent('cityCountryChanged', {
-          detail: { hasCountry: true, hasCity: false },
+          detail: { hasCountry: true, hasCity: true },
         })
       );
     }
@@ -464,7 +464,7 @@ export function LayerProvider(props: { children: ReactNode }) {
 
     document.dispatchEvent(
       new CustomEvent('cityCountryChanged', {
-        detail: { hasCountry: true, hasCity: false },
+        detail: { hasCountry: false, hasCity: false },
       })
     );
   }
@@ -698,6 +698,11 @@ export function LayerProvider(props: { children: ReactNode }) {
         setSelectedCity,
         layerStates,
         updateLayerState,
+        includePopulation,
+        setIncludePopulation,
+        handlePopulationLayer,
+        switchPopulationLayer,
+        refetchPopulationLayer,
       }}
     >
       {children}

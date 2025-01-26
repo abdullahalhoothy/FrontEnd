@@ -127,22 +127,22 @@ export function CatalogProvider(props: { children: ReactNode }) {
         setLastGeoMessageRequest(res.data.message);
         setLastGeoIdRequest(res.data.id);
       }
-
-      if (unprocessedData) {
-        const updatedDataArray = (
-          Array.isArray(unprocessedData) ? unprocessedData : [unprocessedData]
-        ).map(function (layer) {
-          return Object.assign({}, layer, { display: true });
-        });
-        setGeoPoints(function (prevGeoPoints) {
-          return prevGeoPoints.concat(updatedDataArray);
-        });
-      }
     } catch (error) {
       setIsError(error instanceof Error ? error : new Error('Failed to fetch geo points'));
     } finally {
       setIsError(null);
       setIsLoading(false);
+    }
+
+    if (unprocessedData) {
+      const updatedDataArray = (
+        Array.isArray(unprocessedData) ? unprocessedData : [unprocessedData]
+      ).map(function (layer) {
+        return Object.assign({}, layer, { display: true });
+      });
+      setGeoPoints(function (prevGeoPoints) {
+        return prevGeoPoints.concat(updatedDataArray);
+      });
     }
   }
 
