@@ -295,7 +295,7 @@ export interface LayerContextType {
   includePopulation: boolean;
   setIncludePopulation: React.Dispatch<React.SetStateAction<boolean>>;
   handlePopulationLayer: (shouldInclude: boolean) => Promise<void>;
-  switchPopulationLayer: (fromSetter: boolean) => Promise<void>;
+  switchPopulationLayer: () => Promise<void>;
   refetchPopulationLayer: () => Promise<void>;
 }
 

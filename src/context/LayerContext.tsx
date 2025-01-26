@@ -362,6 +362,9 @@ export function LayerProvider(props: { children: ReactNode }) {
       setSelectedCountry(value);
       setSelectedCity('');
 
+      // Reset area intelligence
+      setIncludePopulation(false);
+
       // Get cities for selected country
       const selectedCountryCities = citiesData[value] || [];
       setCities(selectedCountryCities);
@@ -456,6 +459,7 @@ export function LayerProvider(props: { children: ReactNode }) {
     setLayerDataMap({});
     setSelectedCountry(''); // Reset country
     setSelectedCity(''); // Reset city
+    setIncludePopulation(false); // Reset area intelligence
     setTextSearchInput('');
     setSearchType('category_search');
     setPassword('');
@@ -516,7 +520,7 @@ export function LayerProvider(props: { children: ReactNode }) {
   // Add zoom level effect to trigger refetch for all grid population layers
   useEffect(() => {
     // Only refetch if we have existing population grid layers
-    const gridLayers = geoPoints.filter(point => point.is_grid && point.is_population);
+    const gridLayers = geoPoints.filter(point => point.is_grid && point.is_intelligent);
     if (gridLayers.length > 0) {
       console.log('#feat: auto zoom', 'gridLayers', gridLayers);
       refetchPopulationLayer();
@@ -525,21 +529,17 @@ export function LayerProvider(props: { children: ReactNode }) {
 
   const [includePopulation, setIncludePopulation] = useState(false);
 
-  async function switchPopulationLayer(fromSetter: boolean = true) {
-    console.log(
-      '#feat: switchPopulationLayer',
-      'fromSetter',
-      fromSetter,
-      'includePopulation',
-      includePopulation
-    );
+  async function switchPopulationLayer() {
+    // Add detailed logging
+    console.log('#debug: switchPopulationLayer state:', {
+      selectedCity,
+      selectedCountry,
+      includePopulation,
+      fromControl: true,
+    });
+
     const shouldInclude = !includePopulation;
-    if (fromSetter) {
-      handlePopulationLayer(shouldInclude);
-    } else {
-      setIncludePopulation(shouldInclude);
-      handlePopulationLayer(shouldInclude);
-    }
+    handlePopulationLayer(shouldInclude);
   }
 
   async function refetchPopulationLayer() {
@@ -548,7 +548,19 @@ export function LayerProvider(props: { children: ReactNode }) {
   }
 
   async function handlePopulationLayer(shouldInclude: boolean) {
-    console.log('#feat: handlePopulationLayer', shouldInclude, selectedCity, selectedCountry);
+    // Add detailed logging
+    console.log('#debug: handlePopulationLayer state:', {
+      shouldInclude,
+      selectedCity,
+      selectedCountry,
+      currentState: {
+        city: selectedCity,
+        country: selectedCountry,
+      },
+    });
+
+    setIncludePopulation(shouldInclude);
+
     if (shouldInclude) {
       setShowLoaderTopup(true);
       try {
@@ -590,7 +602,7 @@ export function LayerProvider(props: { children: ReactNode }) {
               city_name: selectedCity,
               layer_legend: 'Population Layer',
               is_grid: true,
-              is_population: true,
+              is_intelligent: true,
               basedon: 'population',
               visualization_mode: 'grid',
             };
@@ -610,7 +622,7 @@ export function LayerProvider(props: { children: ReactNode }) {
       }
     } else {
       // Remove population layer
-      setGeoPoints(prev => prev.filter(point => !point.is_population));
+      setGeoPoints(prev => prev.filter(point => !point.is_intelligent));
 
       // Clean up layer data map
       setLayerDataMap(prev => {
@@ -619,7 +631,12 @@ export function LayerProvider(props: { children: ReactNode }) {
         return newMap;
       });
     }
-    setIncludePopulation(shouldInclude);
+    // Dispatch event for PopulationControl
+    document.dispatchEvent(
+      new CustomEvent('populationStateChanged', {
+        detail: { isActive: shouldInclude },
+      })
+    );
   }
 
   useEffect(() => {
@@ -629,6 +646,15 @@ export function LayerProvider(props: { children: ReactNode }) {
           hasCountry: !!selectedCountry,
           hasCity: !!selectedCity,
         },
+      })
+    );
+  }, []);
+
+  // Add effect to sync initial state
+  useEffect(() => {
+    document.dispatchEvent(
+      new CustomEvent('populationStateChanged', {
+        detail: { isActive: includePopulation },
       })
     );
   }, []);

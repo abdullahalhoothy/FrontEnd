@@ -14,6 +14,7 @@ import { useGridPopup } from './useGridPopup';
 import { useGridInteraction } from './useGridInteraction';
 import _ from 'lodash';
 import { PropertyStats } from '../../types/allTypesAndInterfaces';
+import { isIntelligentLayer } from '../../utils/layerUtils';
 const USE_BASEDON = true;
 
 const getGridPaint = (
@@ -242,7 +243,12 @@ export function useMapLayers() {
         };
 
         // Add new layers
-        [...geoPoints].reverse().forEach((featureCollection, index) => {
+        [...geoPoints].reverse()
+        .sort((lyr_a, lyr_b) => {
+          if (isIntelligentLayer(lyr_a) && !isIntelligentLayer(lyr_b)) return -1;
+          if (!isIntelligentLayer(lyr_a) && isIntelligentLayer(lyr_b)) return 1;
+          return 0;
+        }).forEach((featureCollection, index) => {
           if (!featureCollection.type || !Array.isArray(featureCollection.features)) {
             console.error('🗺️ [Map] Invalid GeoJSON structure:', featureCollection);
             return;
