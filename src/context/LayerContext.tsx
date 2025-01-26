@@ -520,7 +520,7 @@ export function LayerProvider(props: { children: ReactNode }) {
   // Add zoom level effect to trigger refetch for all grid population layers
   useEffect(() => {
     // Only refetch if we have existing population grid layers
-    const gridLayers = geoPoints.filter(point => point.is_grid && point.is_population);
+    const gridLayers = geoPoints.filter(point => point.is_grid && point.is_intelligent);
     if (gridLayers.length > 0) {
       console.log('#feat: auto zoom', 'gridLayers', gridLayers);
       refetchPopulationLayer();
@@ -602,7 +602,7 @@ export function LayerProvider(props: { children: ReactNode }) {
               city_name: selectedCity,
               layer_legend: 'Population Layer',
               is_grid: true,
-              is_population: true,
+              is_intelligent: true,
               basedon: 'population',
               visualization_mode: 'grid',
             };
@@ -622,7 +622,7 @@ export function LayerProvider(props: { children: ReactNode }) {
       }
     } else {
       // Remove population layer
-      setGeoPoints(prev => prev.filter(point => !point.is_population));
+      setGeoPoints(prev => prev.filter(point => !point.is_intelligent));
 
       // Clean up layer data map
       setLayerDataMap(prev => {
