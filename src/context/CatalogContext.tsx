@@ -134,6 +134,11 @@ export function CatalogProvider(props: { children: ReactNode }) {
       setIsLoading(false);
     }
 
+    if (isError) {
+      console.error('An error occurred while fetching geo points.');
+      return;
+    }
+
     if (unprocessedData) {
       const updatedDataArray = (
         Array.isArray(unprocessedData) ? unprocessedData : [unprocessedData]
