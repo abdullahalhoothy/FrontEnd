@@ -248,34 +248,51 @@ const apiRequest = async ({
   useCache = false,
 }: ApiRequestOptions): Promise<any> => {
   const authResponse = getAuthResponse();
+
+  // Add the Authorization header if idToken is available
   if (authResponse?.idToken) {
     setAuthorizationHeader(options, authResponse.idToken);
   }
 
+  // Handle requests requiring authentication
   if (isAuthRequest && !authResponse) {
-    console.error('Not authenticated');
+    console.error('User is not authenticated');
     handleAuthError();
-    throw new Error('Not authenticated');
+    return {
+      success: false,
+      error: 'User is not authenticated',
+    };
   }
 
   try {
     const response = await makeApiCall({ url, method, body, options, isFormData, useCache });
-    return response;
+    return response; // Successful API call
   } catch (err: any) {
-    if (err?.response?.status === 403) {
+    // Handle specific HTTP error statuses
+    const status = err?.response?.status;
+
+    // Handle forbidden error
+    if (status === 403) {
+      console.warn('Access forbidden: Clearing authResponse and redirecting to login');
       localStorage.removeItem('authResponse');
       handleAuthError();
-      throw new Error('Access forbidden');
+      return {
+        success: false,
+        error: 'Access forbidden. Please log in again.',
+      };
     }
 
-    if (err?.response?.status === 401) {
-      localStorage.removeItem('authResponse');
+    // Handle unauthorized error
+    if (status === 401) {
+      console.warn('Unauthorized: Attempting to refresh token');
 
+      // If a refresh token is available, attempt token refresh
       if (authResponse?.refreshToken) {
         try {
           const newToken = await refreshAuthToken(authResponse.refreshToken);
           addAuthTokenToLocalStorage(newToken);
 
+          // Retry the original API call with the new token
           setAuthorizationHeader(options, newToken.idToken);
           const retryResponse = await makeApiCall({
             url,
@@ -287,19 +304,29 @@ const apiRequest = async ({
           });
           return retryResponse;
         } catch (tokenErr) {
-          console.error('Token refresh error:', tokenErr);
+          console.error('Token refresh failed:', tokenErr);
           handleAuthError();
-          throw new Error('Unable to refresh token. Please log in again.');
+          return {
+            success: false,
+            error: 'Unable to refresh token. Please log in again.',
+          };
         }
       } else {
-        console.error('No refresh token available');
+        console.error('No refresh token available for authentication');
         handleAuthError();
-        throw new Error('Authentication required');
+        return {
+          success: false,
+          error: 'Authentication required. Please log in again.',
+        };
       }
     }
 
+    // Handle all other errors
     console.error('API request error:', err);
-    throw err;
+    return {
+      success: false,
+      error: err?.message || 'An unexpected error occurred. Please try again later.',
+    };
   }
 };
 
