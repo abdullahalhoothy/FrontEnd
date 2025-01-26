@@ -16,10 +16,23 @@ import { useAuth } from "../../../../context/AuthContext";
 import apiRequest from "../../../../services/apiRequest";
 import { UserProfile, PopupInfo } from "../../../../types/allTypesAndInterfaces";
 
-
 const ProfileMain: React.FC = () => {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<UserProfile>({
+    user_id: '',
+    username: '',
+    email: '',
+    account_type: '',
+    settings: {
+      show_price_on_purchase: false,
+    },
+    prdcer: {
+      prdcer_dataset: {},
+      prdcer_lyrs: {},
+      prdcer_ctlgs: {},
+    },
+  });
   const [isLoading, setIsLoading] = useState(true);
+  const [showPrice,setShowPrice]=useState<boolean|undefined>(false)
   const [error, setError] = useState<Error | null>(null);
   const [popupInfo, setPopupInfo] = useState<PopupInfo | null>(null);
   const { isAuthenticated, authResponse, logout } = useAuth();
@@ -40,24 +53,14 @@ const ProfileMain: React.FC = () => {
       }
 
       try {
-        // await HttpReq<UserProfile>(
-        //   urls.user_profile,
-        //   setProfile,
-        //   setResponseMessage,
-        //   setRequestId,
-        //   setIsLoading,
-        //   setError,
-        //   "post",
-        //   { user_id: authResponse.localId },
-        //   authResponse.idToken
-        // );
         const res = await apiRequest({
           url: urls.user_profile,
           method: "POST",
           isAuthRequest: true,
           body: { user_id: authResponse.localId },
         });
-        setProfile(res.data.data);
+        await setProfile(res.data.data);
+        await setShowPrice(res.data.data.settings.show_price_on_purchase)
       } catch (err) {
         console.error("Unexpected error:", err);
         logout();
@@ -182,7 +185,6 @@ const ProfileMain: React.FC = () => {
     setTimeout(() => navigate("/auth"), 500);
     return null;
   }
-  console.log('profile',JSON.stringify(profile))
   return (
     <div className="w-full h-full overflow-y-auto lg:px-10 px-4 text-sm">
       <div className="m-5 mx-auto p-5 bg-[#f0f8f0] rounded-lg lg:shadow-md shadow-sm">
@@ -217,8 +219,9 @@ const ProfileMain: React.FC = () => {
             <label className="flex items-center mb-4 cursor-pointer">
               <input
                 type="checkbox"
-                checked={profile.settings.show_price_on_purchase}
+                checked={showPrice}
                 onChange={async(e) => {
+                  await setShowPrice(e.target.checked)
                   if (profile.account_type==='admin') {
                     if (!authResponse || !("idToken" in authResponse)) {
                       setError(new Error("Authentication information is missing."));
@@ -235,15 +238,13 @@ const ProfileMain: React.FC = () => {
                         show_price_on_purchase:e.target.checked,
                         username:profile.username,
                         email:profile.email,
-                        password:''
                       },
                     });
-                    console.log(res)
                   }
                 }}
                 disabled={profile.account_type!=='admin'}
                 className={`mr-2 h-4 w-4 border-gray-300 rounded focus:ring-green-600 ${
-                  !profile.account_type ? "opacity-50 cursor-not-allowed" : "text-green-700"
+                  profile.account_type!=='admin' ? "opacity-50 cursor-not-allowed" : "text-green-700"
                 }`}
               />
               <span
