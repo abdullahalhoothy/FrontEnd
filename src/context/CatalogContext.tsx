@@ -120,24 +120,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
           ? urls.fetch_ctlg_lyrs
           : urls.http_catlog_data;
 
-    let unprocessedData: MapFeatures | MapFeatures[] | null = null;
-
-    const callData = function (data: MapFeatures | MapFeatures[]) {
-      unprocessedData = data;
-    };
-
-    // await HttpReq<MapFeatures | MapFeatures[]>(
-    //   url,
-    //   callData,
-    //   setLastGeoMessageRequest,
-    //   setLastGeoIdRequest,
-    //   setIsLoading,
-    //   setIsError,
-    //   "post",
-    //   apiJsonRequest,
-    //   authResponse.idToken
-    // );
-
     try {
       setIsLoading(true);
       const res = await apiRequest({
@@ -146,29 +128,35 @@ export function CatalogProvider(props: { children: ReactNode }) {
         body: apiJsonRequest,
         isAuthRequest: true,
       });
-      callData(res.data.data);
+
+      if (!res.data || !res.data.data) {
+        console.warn('No data received from backend');
+        setLastGeoMessageRequest(res.data?.message || 'No data available');
+        return;
+      }
+
+      const unprocessedData = res.data.data;
+      console.log(unprocessedData);
       setLastGeoMessageRequest(res.data.message);
       setLastGeoIdRequest(res.data.id);
+
+      if (unprocessedData) {
+        const updatedDataArray = (
+          Array.isArray(unprocessedData) ? unprocessedData : [unprocessedData]
+        ).map(function (layer) {
+          return Object.assign({}, layer, { display: true });
+        });
+
+        setGeoPoints(function (prevGeoPoints) {
+          return prevGeoPoints.concat(updatedDataArray);
+        });
+      }
     } catch (error) {
+      console.error('Error fetching geo points:', error);
       setIsError(error);
+      setLastGeoMessageRequest('Failed to load layers');
     } finally {
       setIsLoading(false);
-    }
-    if (isError) {
-      console.error('An error occurred while fetching geo points.');
-      return;
-    }
-
-    if (unprocessedData) {
-      var updatedDataArray = (
-        Array.isArray(unprocessedData) ? unprocessedData : [unprocessedData]
-      ).map(function (layer) {
-        return Object.assign({}, layer, { display: true });
-      });
-
-      setGeoPoints(function (prevGeoPoints) {
-        return prevGeoPoints.concat(updatedDataArray);
-      });
     }
   }
 
