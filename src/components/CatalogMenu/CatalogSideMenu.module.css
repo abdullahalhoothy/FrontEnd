@@ -4,19 +4,19 @@
   justify-content: flex-start;
   border-bottom: 1px solid #1b4f40;
   gap: 15px;
-  padding:  0.75rem;
+  padding: 0.75rem;
 }
 
 .container {
   display: flex;
   flex-direction: column;
-  height: 95vh; 
-  justify-content: space-between; 
+  height: 95vh;
+  justify-content: space-between;
   overflow: auto;
 }
 
 .container::-webkit-scrollbar {
-  width: 6px; 
+  width: 6px;
 }
 
 .container::-webkit-scrollbar-track {
@@ -24,19 +24,14 @@
 }
 
 .container::-webkit-scrollbar-thumb {
-  background-color: rgba(
-    136,
-    136,
-    136,
-    0.5
-  ); 
-  border-radius: 10px; 
-  border: 2px solid transparent; 
-  background-clip: padding-box; 
+  background-color: rgba(136, 136, 136, 0.5);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 .container::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(85, 85, 85, 0.5); 
+  background-color: rgba(85, 85, 85, 0.5);
 }
 
 .icon {
@@ -75,7 +70,9 @@
   text-align: center;
   width: 150px;
   font-size: 14px;
-  transition: background-color 0.3s, border-color 0.3s;
+  transition:
+    background-color 0.3s,
+    border-color 0.3s;
   color: #ffffff;
 }
 
@@ -131,8 +128,7 @@
   justify-content: space-between;
   margin-top: 24px;
   padding: 0 0.75rem;
-    margin-bottom: 20px;
-
+  margin-bottom: 20px;
 }
 
 .content {

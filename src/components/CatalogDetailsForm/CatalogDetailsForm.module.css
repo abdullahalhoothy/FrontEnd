@@ -6,9 +6,9 @@
   padding: 0 20px;
 }
 
-.containerModal{
+.containerModal {
   margin: 40px auto;
-} 
+}
 
 .formGroup {
   margin-bottom: 20px;
@@ -20,19 +20,19 @@
 .label {
   margin-bottom: 10px;
   font-weight: bold;
-  color: #f0f0f0; 
+  color: #f0f0f0;
 }
 
 .select {
   padding: 10px;
-  border: 1px solid #888; 
+  border: 1px solid #888;
   border-radius: 4px;
   background-color: #ffffff;
   font-size: 16px;
 }
 
 .select:focus {
-  border-color: #00cc99; 
+  border-color: #00cc99;
   background-color: #ffffff;
   outline: none;
 }
@@ -51,34 +51,36 @@
 
 .button {
   padding: 12px 20px;
-  background-color: #f0f0f0; 
-  color: #333; 
+  background-color: #f0f0f0;
+  color: #333;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   font-size: 16px;
-  transition: background-color 0.3s ease, transform 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    transform 0.3s ease;
 }
 
 .button:hover {
-  background-color: #d9d9d9; 
-  transform: scale(1.05); 
+  background-color: #d9d9d9;
+  transform: scale(1.05);
 }
 
 .saveButton,
 .discardButton {
   background-color: #f0f0f0;
-  color: #333; 
+  color: #333;
 }
 
 .saveButton:hover,
 .discardButton:hover {
-  background-color: #d9d9d9; 
+  background-color: #d9d9d9;
   transform: scale(1.05);
 }
 
 .error {
-  color: #ff6666; 
+  color: #ff6666;
   margin-top: 10px;
   text-align: center;
 }
@@ -93,7 +95,7 @@
   text-align: center;
   margin-top: 20px;
   font-size: 24px;
-  font-family: "Arial", sans-serif;
+  font-family: 'Arial', sans-serif;
 }
 
 .successIcon {
@@ -111,4 +113,3 @@
 .successMessage {
   color: #333;
 }
-

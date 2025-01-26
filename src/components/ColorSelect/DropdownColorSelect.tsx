@@ -1,12 +1,8 @@
-import React, {
-  useEffect,
-  MouseEvent as ReactMouseEvent,
-  useState,
-} from "react";
+import React, { useEffect, MouseEvent as ReactMouseEvent, useState } from 'react';
 
-import { useCatalogContext } from "../../context/CatalogContext";
-import { useLayerContext } from "../../context/LayerContext";
-import { DropdownColorSelectProps } from "../../types/allTypesAndInterfaces";
+import { useCatalogContext } from '../../context/CatalogContext';
+import { useLayerContext } from '../../context/LayerContext';
+import { DropdownColorSelectProps } from '../../types/allTypesAndInterfaces';
 
 function DropdownColorSelect({ layerIndex }: DropdownColorSelectProps) {
   const catalogContext = useCatalogContext();
@@ -30,11 +26,7 @@ function DropdownColorSelect({ layerIndex }: DropdownColorSelectProps) {
   }, []);
   useEffect(() => {
     // Only update the layer color if layerIndex is provided
-    if (
-      layerIndex !== undefined &&
-      layerIndex !== null &&
-      chosenPallet != null
-    ) {
+    if (layerIndex !== undefined && layerIndex !== null && chosenPallet != null) {
       updateLayerColor(layerIndex, colors[chosenPallet][0]);
     }
   }, [chosenPallet, colors]);
@@ -42,7 +34,7 @@ function DropdownColorSelect({ layerIndex }: DropdownColorSelectProps) {
   function handleOptionClick(optionIndex, event: ReactMouseEvent) {
     event.stopPropagation();
     if (showLoaderTopup) {
-      console.log("Cannot change colors while loading.");
+      console.log('Cannot change colors while loading.');
       return;
     }
     setChosenPallet(optionIndex);
@@ -65,7 +57,7 @@ function DropdownColorSelect({ layerIndex }: DropdownColorSelectProps) {
         className=" cursor-pointer appearance-none w-full h-5 bg-gradient-to-r border border-gray-200 rounded-lg focus:outline-none"
         style={{
           backgroundImage: `linear-gradient(to right, ${
-            colors[chosenPallet || 0]?.join(", ") || ""
+            colors[chosenPallet || 0]?.join(', ') || ''
           })`,
         }}
       ></button>
@@ -79,12 +71,10 @@ function DropdownColorSelect({ layerIndex }: DropdownColorSelectProps) {
           {colors?.map((colorsPallet, index) => (
             <div
               key={index}
-              onClick={(e) => handleOptionClick(index, e)}
+              onClick={e => handleOptionClick(index, e)}
               className="cursor-pointer h-5 border border-gray-200"
               style={{
-                backgroundImage: `linear-gradient(to right, ${
-                  colorsPallet?.join(", ") || ""
-                })`,
+                backgroundImage: `linear-gradient(to right, ${colorsPallet?.join(', ') || ''})`,
               }}
             />
           ))}

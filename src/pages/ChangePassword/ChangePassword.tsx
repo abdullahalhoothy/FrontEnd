@@ -1,9 +1,9 @@
-import React, { useState, FormEvent } from "react";
-import { HttpReq } from "../../services/apiService";
-import { useAuth } from "../../context/AuthContext";
-import { useNavigate } from "react-router";
-import urls from "./../../urls.json";
-import apiRequest from "../../services/apiRequest";
+import React, { useState, FormEvent } from 'react';
+import { HttpReq } from '../../services/apiService';
+import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router';
+import urls from './../../urls.json';
+import apiRequest from '../../services/apiRequest';
 
 const ChangePassword: React.FC = () => {
   const { isAuthenticated, authResponse } = useAuth();
@@ -18,21 +18,17 @@ const ChangePassword: React.FC = () => {
     setError(null);
     const formData = new FormData(e.target as HTMLFormElement);
     const data = Object.fromEntries(formData.entries());
-    if (
-      data.password === "" ||
-      data.new_password === "" ||
-      data.confirm_password === ""
-    ) {
+    if (data.password === '' || data.new_password === '' || data.confirm_password === '') {
       setError({
-        message: "All fields are required",
-        name: "All fields are required",
+        message: 'All fields are required',
+        name: 'All fields are required',
       });
       return;
     }
     if (data.new_password !== data.confirm_password) {
       setError({
-        message: "Passwords do not match",
-        name: "Passwords do not match",
+        message: 'Passwords do not match',
+        name: 'Passwords do not match',
       });
       return;
     }
@@ -55,12 +51,12 @@ const ChangePassword: React.FC = () => {
     try {
       const res = await apiRequest({
         url: urls.change_password,
-        method: "post",
+        method: 'post',
         body: data,
         isAuthRequest: true,
       });
       if (res.status === 200) {
-        navigate("/auth");
+        navigate('/auth');
       }
     } catch (error) {
       setError(error instanceof Error ? error : new Error(String(error)));
@@ -72,19 +68,14 @@ const ChangePassword: React.FC = () => {
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
       <div className="mx-2 max-w-96 space-y-1 mb-4">
-        <h2 className="text-2xl font-semibold text-gray-700 ">
-          Change Password
-        </h2>
+        <h2 className="text-2xl font-semibold text-gray-700 ">Change Password</h2>
       </div>
       <form
         className="p-4 sm:rounded-lg border bg-white shadow mx-2 w-full sm:max-w-96"
         onSubmit={handleSubmit}
       >
         <div className="mb-4">
-          <label
-            className="block text-gray-700 mb-2"
-            htmlFor="current-password"
-          >
+          <label className="block text-gray-700 mb-2" htmlFor="current-password">
             Current Password
           </label>
           <input
@@ -110,10 +101,7 @@ const ChangePassword: React.FC = () => {
         </div>
 
         <div className="mb-4">
-          <label
-            className="block text-gray-700 mb-2"
-            htmlFor="confirm-password"
-          >
+          <label className="block text-gray-700 mb-2" htmlFor="confirm-password">
             Confirm New Password
           </label>
           <input
@@ -134,7 +122,7 @@ const ChangePassword: React.FC = () => {
           className="w-full bg-primary text-white py-2 rounded-lg hover:bg-primary disabled:opacity-50"
           disabled={loading}
         >
-          {loading ? "Changing Password..." : "Change Password"}
+          {loading ? 'Changing Password...' : 'Change Password'}
         </button>
       </form>
     </div>

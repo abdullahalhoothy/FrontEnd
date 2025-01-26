@@ -1,8 +1,8 @@
 // src/components/ErrorIconFeedback/ErrorIconFeedback.tsx
 
-import React from "react";
-import { MdOutlineErrorOutline } from "react-icons/md";
-import styles from "./ErrorIconFeedback.module.css";
+import React from 'react';
+import { MdOutlineErrorOutline } from 'react-icons/md';
+import styles from './ErrorIconFeedback.module.css';
 
 // Component to display error feedback
 function ErrorIconFeedback() {

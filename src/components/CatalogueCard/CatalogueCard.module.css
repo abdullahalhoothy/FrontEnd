@@ -8,7 +8,9 @@
 }
 
 .catalogueWrapper:hover {
-  box-shadow: 0 25.6px 57.6px #00000038, 0 4.8px 14.4px #0000002e;
+  box-shadow:
+    0 25.6px 57.6px #00000038,
+    0 4.8px 14.4px #0000002e;
 }
 
 .ribbonWrapper {

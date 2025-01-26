@@ -1,23 +1,18 @@
-import { useEffect, useState, useRef, useMemo } from "react";
-import { HttpReq } from "../../services/apiService";
+import { useEffect, useState, useRef, useMemo } from 'react';
 import {
   formatSubcategoryName,
   processCityData,
   getDefaultLayerColor,
-} from "../../utils/helperFunctions";
-import urls from "../../urls.json";
-import { CategoryData, City, Layer } from "../../types/allTypesAndInterfaces";
-import { useLayerContext } from "../../context/LayerContext";
-import styles from "./FetchDatasetForm.module.css";
-import { FaCaretDown, FaCaretRight } from "react-icons/fa";
-import { useAuth } from "../../context/AuthContext";
-import { useNavigate } from "react-router";
-import apiRequest from "../../services/apiRequest";
-import LayerDisplaySubCategories from "../LayerDisplaySubCategories/LayerDisplaySubCategories";
-import CategoriesBrowserSubCategories from "../CategoriesBrowserSubCategories/CategoriesBrowserSubCategories";
-import { colorOptions } from "../../utils/helperFunctions";
-import { useCatalogContext } from "../../context/CatalogContext";
-import { defaultMapConfig } from "../../hooks/map/useMapInitialization";
+} from '../../utils/helperFunctions';
+import urls from '../../urls.json';
+import { CategoryData, City, Layer } from '../../types/allTypesAndInterfaces';
+import { useLayerContext } from '../../context/LayerContext';
+import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router';
+import apiRequest from '../../services/apiRequest';
+import LayerDisplaySubCategories from '../LayerDisplaySubCategories/LayerDisplaySubCategories';
+import CategoriesBrowserSubCategories from '../CategoriesBrowserSubCategories/CategoriesBrowserSubCategories';
+import { useCatalogContext } from '../../context/CatalogContext';
 import { useMapContext } from '../../context/MapContext';
 const FetchDatasetForm = () => {
   const nav = useNavigate();
@@ -49,6 +44,8 @@ const FetchDatasetForm = () => {
     incrementFormStage,
     isError,
     setIsError,
+    switchPopulationLayer,
+    includePopulation,
   } = useLayerContext();
 
   // AUTH CONTEXT
@@ -65,13 +62,10 @@ const FetchDatasetForm = () => {
   const [openedCategories, setOpenedCategories] = useState<string[]>([]);
 
   // USER INPUT
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Add ref for the categories section
   const categoriesRef = useRef<HTMLDivElement>(null);
-
-  // Add this near other state declarations
-  const [includePopulation, setIncludePopulation] = useState(false);
 
   // Add this near other context hooks
   const { setGeoPoints } = useCatalogContext();
@@ -91,18 +85,15 @@ const FetchDatasetForm = () => {
     }
   }, [layers,selectedCity,selectedCity]);
 
-  const filteredCategories = Object.entries(categories).reduce(
-    (acc, [category, types]) => {
-      const filteredTypes = (types as string[]).filter((type) =>
-        type.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      if (filteredTypes.length > 0) {
-        acc[category] = filteredTypes;
-      }
-      return acc;
-    },
-    {} as CategoryData
-  );
+  const filteredCategories = Object.entries(categories).reduce((acc, [category, types]) => {
+    const filteredTypes = (types as string[]).filter(type =>
+      type.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    if (filteredTypes.length > 0) {
+      acc[category] = filteredTypes;
+    }
+    return acc;
+  }, {} as CategoryData);
 
   async function handleGetCountryCityCategory() {
     // HttpReq<string[]>(
@@ -116,7 +107,7 @@ const FetchDatasetForm = () => {
     try {
       const res = await apiRequest({
         url: urls.country_city,
-        method: "get",
+        method: 'get',
       });
       setCountries(processCityData(res.data.data, setCitiesData));
     } catch (error) {
@@ -130,7 +121,7 @@ const FetchDatasetForm = () => {
     try {
       const res = await apiRequest({
         url: urls.nearby_categories,
-        method: "get",
+        method: 'get',
       });
       setCategories(res.data.data);
     } catch (error) {
@@ -151,16 +142,13 @@ const FetchDatasetForm = () => {
     // );
   }
 
-  function handleButtonClick(
-    action: string,
-    event: React.MouseEvent<HTMLButtonElement>
-  ) {
+  function handleButtonClick(action: string, event: React.MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
 
     const result = validateFetchDatasetForm();
 
     if (result === true) {
-      if (action === "full data") {
+      if (action === 'full data') {
         setCentralizeOnce(true);
       }
       setShowLoaderTopup(true);
@@ -173,7 +161,7 @@ const FetchDatasetForm = () => {
   }
 
   function handleClear() {
-    setReqFetchDataset((prevData) => ({
+    setReqFetchDataset(prevData => ({
       ...prevData,
       includedTypes: [],
       excludedTypes: [],
@@ -185,7 +173,7 @@ const FetchDatasetForm = () => {
     e.preventDefault();
     categoriesRef.current?.scrollIntoView({
       behavior: 'smooth',
-      block: 'start'
+      block: 'start',
     });
   };
   const estimateCost=async(type:string[])=>{
@@ -210,17 +198,26 @@ const FetchDatasetForm = () => {
     return layerCost
   }
   // Add new handler to remove type from specific layer
-  const removeTypeFromLayer = async(type: string, layerId: number, isExcluded: boolean) => {
-    await setLayers(layers.map(layer => {
-      if (layer.id === layerId) {
-        return {
-          ...layer,
-          includedTypes: isExcluded ? layer.includedTypes : layer.includedTypes.filter(t => t !== type),
-          excludedTypes: isExcluded ? layer.excludedTypes.filter(t => t !== type) : layer.excludedTypes
-        };
-      }
-      return layer;
-    }).filter(layer => layer.includedTypes.length > 0 || layer.excludedTypes.length > 0));
+  const removeTypeFromLayer = (type: string, layerId: number, isExcluded: boolean) => {
+    setLayers(
+      layers
+        .map(layer => {
+          if (layer.id === layerId) {
+            return {
+              ...layer,
+              includedTypes: isExcluded
+                ? layer.includedTypes
+                : layer.includedTypes.filter(t => t !== type),
+              excludedTypes: isExcluded
+                ? layer.excludedTypes.filter(t => t !== type)
+                : layer.excludedTypes,
+            };
+          }
+          return layer;
+        })
+        .filter(layer => layer.includedTypes.length > 0 || layer.excludedTypes.length > 0)
+    );
+
     // Update reqFetchDataset based on remaining types
     const remainingIncluded = layers.flatMap(layer => layer.includedTypes);
     const remainingExcluded = layers.flatMap(layer => layer.excludedTypes);
@@ -228,7 +225,7 @@ const FetchDatasetForm = () => {
     setReqFetchDataset(prevData => ({
       ...prevData,
       includedTypes: remainingIncluded,
-      excludedTypes: remainingExcluded
+      excludedTypes: remainingExcluded,
     }));
   };
 
@@ -243,7 +240,7 @@ const FetchDatasetForm = () => {
 
     return {
       includedCount: includedInLayers,
-      excludedCount: excludedInLayers
+      excludedCount: excludedInLayers,
     };
   };
 
@@ -268,8 +265,8 @@ const FetchDatasetForm = () => {
       }
 
       // Try to find first layer that doesn't have this type
-      let targetLayerIndex = prevLayers.findIndex(layer =>
-        !layer.includedTypes.includes(type) && !layer.excludedTypes.includes(type)
+      let targetLayerIndex = prevLayers.findIndex(
+        layer => !layer.includedTypes.includes(type) && !layer.excludedTypes.includes(type)
       );
 
       // If all existing layers have this type, create new layer
@@ -293,12 +290,8 @@ const FetchDatasetForm = () => {
         if (index === targetLayerIndex) {
           return {
             ...layer,
-            includedTypes: setAsExcluded
-              ? layer.includedTypes
-              : [...layer.includedTypes, type],
-            excludedTypes: setAsExcluded
-              ? [...layer.excludedTypes, type]
-              : layer.excludedTypes
+            includedTypes: setAsExcluded ? layer.includedTypes : [...layer.includedTypes, type],
+            excludedTypes: setAsExcluded ? [...layer.excludedTypes, type] : layer.excludedTypes,
           };
         }
         return layer;
@@ -317,45 +310,48 @@ const FetchDatasetForm = () => {
 
   const handleToggleCategory = (category: string) => {
     if (openedCategories.includes(category)) {
-      setOpenedCategories([...openedCategories.filter((x) => x !== category)]);
+      setOpenedCategories([...openedCategories.filter(x => x !== category)]);
       return;
     }
     setOpenedCategories([...openedCategories.concat(category)]);
   };
 
   // Add this new function
-  const toggleTypeInLayer = async(type: string, layerId: number, setAsExcluded: boolean) => {
-    await setLayers(prevLayers => prevLayers.map(layer => {
-      if (layer.id === layerId) {
-        // If trying to exclude
-        if (setAsExcluded) {
-          // Check if it's already excluded
-          if (layer.excludedTypes.includes(type)) {
-            return layer; // No change needed
+  const toggleTypeInLayer = (type: string, layerId: number, setAsExcluded: boolean) => {
+    setLayers(prevLayers =>
+      prevLayers.map(layer => {
+        if (layer.id === layerId) {
+          // If trying to exclude
+          if (setAsExcluded) {
+            // Check if it's already excluded
+            if (layer.excludedTypes.includes(type)) {
+              return layer; // No change needed
+            }
+            // Move from included to excluded
+            return {
+              ...layer,
+              includedTypes: layer.includedTypes.filter(t => t !== type),
+              excludedTypes: [...layer.excludedTypes, type],
+            };
           }
-          // Move from included to excluded
-          return {
-            ...layer,
-            includedTypes: layer.includedTypes.filter(t => t !== type),
-            excludedTypes: [...layer.excludedTypes, type]
-          };
-        }
-        // If trying to include
-        else {
-          // Check if it's already included
-          if (layer.includedTypes.includes(type)) {
-            return layer; // No change needed
+          // If trying to include
+          else {
+            // Check if it's already included
+            if (layer.includedTypes.includes(type)) {
+              return layer; // No change needed
+            }
+            // Move from excluded to included
+            return {
+              ...layer,
+              excludedTypes: layer.excludedTypes.filter(t => t !== type),
+              includedTypes: [...layer.includedTypes, type],
+            };
           }
-          // Move from excluded to included
-          return {
-            ...layer,
-            excludedTypes: layer.excludedTypes.filter(t => t !== type),
-            includedTypes: [...layer.includedTypes, type]
-          };
         }
-      }
-      return layer;
-    }));
+        return layer;
+      })
+    );
+
     // Update reqFetchDataset based on all layers
     const allIncludedTypes = new Set<string>();
     const allExcludedTypes = new Set<string>();
@@ -368,7 +364,7 @@ const FetchDatasetForm = () => {
     setReqFetchDataset(prevData => ({
       ...prevData,
       includedTypes: Array.from(allIncludedTypes),
-      excludedTypes: Array.from(allExcludedTypes)
+      excludedTypes: Array.from(allExcludedTypes),
     }));
   };
 
@@ -381,16 +377,16 @@ const FetchDatasetForm = () => {
 
   // Update reqFetchDataset when layers change
   useEffect(() => {
-    setReqFetchDataset((prev:any) => ({
+    setReqFetchDataset((prev: any) => ({
       ...prev,
       layers: layers.map(layer => ({
         id: layer.id,
         includedTypes: layer.includedTypes,
-        excludedTypes: layer.excludedTypes
+        excludedTypes: layer.excludedTypes,
       })),
       // Maintain backward compatibility
       includedTypes: layers.flatMap(layer => layer.includedTypes),
-      excludedTypes: layers.flatMap(layer => layer.excludedTypes)
+      excludedTypes: layers.flatMap(layer => layer.excludedTypes),
     }));
   }, [layers, setReqFetchDataset]);
 
@@ -527,7 +523,7 @@ const FetchDatasetForm = () => {
       setReqFetchDataset(prev => {
         const newState = {
           ...prev,
-          zoomLevel: backendZoom
+          zoomLevel: backendZoom,
         };
         return newState;
       });
@@ -538,20 +534,16 @@ const FetchDatasetForm = () => {
     <>
       <div className="flex-1 flex flex-col justify-between overflow-y-auto ">
         <div className="w-full p-4 overflow-y-auto ">
-          {error && (
-            <div className="mt-6 text-red-500 font-semibold">
-              {error}
-            </div>
-          )}
+          {error && <div className="mt-6 text-red-500 font-semibold">{error}</div>}
 
-          <label
-            className="block mb-2 text-base font-medium text-black"
-            htmlFor="layers"
-          >
+          <label className="block mb-2 text-base font-medium text-black" htmlFor="layers">
             Layers
           </label>
           {/* Div to contain all layers should looke like a sub-section with border */}
-          <div id="layers" className="flex text-sm flex-col border border-gray-300 rounded-lg p-4 gap-4">
+          <div
+            id="layers"
+            className="flex text-sm flex-col border border-gray-300 rounded-lg p-4 gap-4"
+          >
             {/* Map through layers to create multiple Layer sections */}
             {layers.map((layer, index) => (
               <LayerDisplaySubCategories
@@ -581,19 +573,15 @@ const FetchDatasetForm = () => {
                   className={`flex items-center justify-between py-2 px-4 bg-[#f0f0f0] border border-[#ccc] rounded cursor-pointer text-[14px] transition-all duration-300 ease-in-out hover:bg-[#e0e0e0]`}
                   onClick={scrollToCategories}
                 >
-                  {formatSubcategoryName("Category")}
-                  <span className="ml-2 font-bold">{"+"}</span>
+                  {formatSubcategoryName('Category')}
+                  <span className="ml-2 font-bold">{'+'}</span>
                 </button>
               </div>
             </div>
-
           </div>
 
           <div className="border-t mt-4 pt-2">
-            <label
-              className="block mb-2 text-md font-medium text-black"
-              htmlFor="searchType"
-            >
+            <label className="block mb-2 text-md font-medium text-black" htmlFor="searchType">
               Search Type
             </label>
             <select
@@ -601,7 +589,7 @@ const FetchDatasetForm = () => {
               id="searchType"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               value={searchType || 'category_search'}
-              onChange={(e) => {
+              onChange={e => {
                 setSearchType(e.target.value);
               }}
             >
@@ -610,7 +598,7 @@ const FetchDatasetForm = () => {
             </select>
           </div>
 
-          {searchType == "keyword_search" && (
+          {searchType == 'keyword_search' && (
             <div className="pt-4">
               <label
                 className="block mb-2 text-md font-medium text-black"
@@ -625,15 +613,12 @@ const FetchDatasetForm = () => {
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                 placeholder="Enter search text"
                 value={textSearchInput}
-                onChange={(e) => setTextSearchInput(e.target.value)}
+                onChange={e => setTextSearchInput(e.target.value)}
               />
             </div>
           )}
           <div className="pt-4">
-            <label
-              className="block mb-2 text-md font-medium text-black"
-              htmlFor="country"
-            >
+            <label className="block mb-2 text-md font-medium text-black" htmlFor="country">
               Country
             </label>
             <select
@@ -641,13 +626,15 @@ const FetchDatasetForm = () => {
               name="selectedCountry"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               value={selectedCountry || ''}
-              onChange={(e) => {
+              onChange={e => {
                 setSelectedCountry(e.target.value);
                 handleCountryCitySelection(e);
               }}
             >
-              <option value="" disabled >Select a country</option>
-              {countries.map((country) => (
+              <option value="" disabled>
+                Select a country
+              </option>
+              {countries.map(country => (
                 <option value={country} key={country}>
                   {country}
                 </option>
@@ -656,10 +643,7 @@ const FetchDatasetForm = () => {
           </div>
 
           <div className="pt-4">
-            <label
-              className="block mb-2 text-md font-medium text-black"
-              htmlFor="city"
-            >
+            <label className="block mb-2 text-md font-medium text-black" htmlFor="city">
               City
             </label>
             <select
@@ -667,14 +651,16 @@ const FetchDatasetForm = () => {
               name="selectedCity"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               value={selectedCity || ''}
-              onChange={(e) => {
+              onChange={e => {
                 setSelectedCity(e.target.value);
                 handleCountryCitySelection(e);
               }}
               disabled={!selectedCountry}
             >
-              <option value="" disabled >Select a city</option>
-              {cities.map((city) => (
+              <option value="" disabled>
+                Select a city
+              </option>
+              {cities.map(city => (
                 <option key={city.name} value={city.name}>
                   {city.name}
                 </option>
@@ -683,30 +669,72 @@ const FetchDatasetForm = () => {
           </div>
 
           <div className="pt-4">
-            <div aria-disabled={!selectedCity || !selectedCountry} className="flex items-center aria-disabled:opacity-50 aria-disabled:cursor-not-allowed" title={!selectedCity || !selectedCountry ? "Please select a city and country" : "Add population data"}  >
-              <input
-                id="population-toggle"
-                type="checkbox"
-                checked={includePopulation}
-                disabled={!selectedCity || !selectedCountry}
-                onChange={(e) => handleIncludePopulation(e)}
-                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              />
+            <div
+              aria-disabled={!selectedCity || !selectedCountry}
+              className={`relative flex flex-col p-4 rounded-lg border transition-all duration-200 
+                ${
+                  !selectedCity || !selectedCountry
+                    ? 'text-gray-500 bg-gem/20 border-gray-200'
+                    : 'text-gray-100 bg-gem/90 border-gem-green/20'
+                } 
+                aria-disabled:opacity-80 aria-disabled:cursor-not-allowed`}
+              title={
+                !selectedCity || !selectedCountry
+                  ? 'Please select a city and country'
+                  : 'Activate area intelligence'
+              }
+            >
+              <label className="font-semibold text-white">Area Intelligence</label>
               <label
                 htmlFor="population-toggle"
-                className="ml-2 text-sm font-medium text-gray-900"
+                aria-disabled={!selectedCity || !selectedCountry}
+                className={`
+                flex items-center justify-between border-t border-gem/20 mt-2 pt-2
+                ${
+                  !selectedCity || !selectedCountry
+                    ? 'bg-white/90 p-3 rounded-md cursor-not-allowed'
+                    : 'bg-white/95 p-3 rounded-md cursor-pointer'
+                }
+              `}
               >
-                Include population data
+                <div className="flex flex-col">
+                  <label className="font-medium text-gem">Area Population Intelligence</label>
+                  <p className="text-sm text-gem/60 mt-1">Enable smart population data</p>
+                </div>
+
+                <div className="relative">
+                  <input
+                    id="population-toggle"
+                    type="checkbox"
+                    checked={includePopulation}
+                    disabled={!selectedCity || !selectedCountry}
+                    onChange={() => {
+                      switchPopulationLayer();
+                      console.log('includePopulation', includePopulation);
+                    }}
+                    className="sr-only peer"
+                  />
+                  <div
+                    className={`
+                    ${!selectedCity || !selectedCountry ? 'cursor-not-allowed' : 'cursor-pointer'} w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 
+                    z-10 peer-focus:ring-gem/20 rounded-full peer 
+                    peer-checked:after:translate-x-[28px] peer-checked:after:border-white 
+                    after:content-[''] after:absolute after:top-[2px] after:left-[2px] 
+                    after:bg-white after:border-gray-300 after:border after:rounded-full 
+                    after:h-6 after:w-6 after:transition-all
+                    peer-checked:bg-gem peer-disabled:cursor-not-allowed
+                    peer-disabled:after:bg-gray-100
+                  `}
+                  ></div>
+                </div>
               </label>
             </div>
           </div>
 
-          {searchType !== "keyword_search" && (
+          {searchType !== 'keyword_search' && (
             <div className="flex flex-col my-5" ref={categoriesRef}>
               <div className="flex justify-between">
-                <label className="mb-4 font-bold">
-                  What are you looking for?
-                </label>
+                <label className="mb-4 font-bold">What are you looking for?</label>
                 <button
                   onClick={handleClear}
                   className="w-16 h-6 text-sm bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer"
@@ -723,7 +751,7 @@ const FetchDatasetForm = () => {
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                   placeholder="Search for a type..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={e => setSearchQuery(e.target.value)}
                 />
               </div>
               <CategoriesBrowserSubCategories
@@ -742,7 +770,7 @@ const FetchDatasetForm = () => {
       <div className="flex-col flex  px-2 py-2 select-none border-t lg:mb-0 mb-14">
         <div className="flex space-x-2">
           <button
-            onClick={(e) => handleButtonClick("sample", e)}
+            onClick={e => handleButtonClick('sample', e)}
             className="w-full h-10 bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
                  hover:bg-white transition-all cursor-pointer"
           >
@@ -751,9 +779,9 @@ const FetchDatasetForm = () => {
 
           <button
             className="w-full h-10 bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer"
-            onClick={(e) => {
-              if (!isAuthenticated) nav("/auth");
-              handleButtonClick("full data", e);
+            onClick={e => {
+              if (!isAuthenticated) nav('/auth');
+              handleButtonClick('full data', e);
             }}
           >
               Full Data {isPriceVisible ? `$${costEstimate.toFixed(2)}` : null}

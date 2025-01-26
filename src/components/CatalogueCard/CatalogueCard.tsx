@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import styles from "./CatalogueCard.module.css";
-import { CatalogueCardProps } from "../../types/allTypesAndInterfaces";
-import { useCatalogContext } from "../../context/CatalogContext";
-import placeholderImage from "../../placeholderImage/catalogue.png";
+import React, { useState } from 'react';
+import styles from './CatalogueCard.module.css';
+import { CatalogueCardProps } from '../../types/allTypesAndInterfaces';
+import { useCatalogContext } from '../../context/CatalogContext';
+import placeholderImage from '../../placeholderImage/catalogue.png';
 
 function Component({
   id,
@@ -22,7 +22,7 @@ function Component({
   }
 
   function renderActionItems() {
-    if (containerType !== "Home") {
+    if (containerType !== 'Home') {
       return (
         <li className="flex items-center justify-center gap-x-[5px] font-medium text-[#1677ff]">
           <div
@@ -43,11 +43,7 @@ function Component({
             >
               {can_access ? <>Load Data</> : <>Subscribe</>}
             </div>
-            <span
-              role="img"
-              aria-label="info-circle"
-              className="anticon anticon-info-circle"
-            >
+            <span role="img" aria-label="info-circle" className="anticon anticon-info-circle">
               <svg
                 viewBox="64 64 896 896"
                 focusable="false"
@@ -70,11 +66,7 @@ function Component({
               >
                 Request Access
               </div>
-              <span
-                role="img"
-                aria-label="info-circle"
-                className="anticon anticon-info-circle"
-              >
+              <span role="img" aria-label="info-circle" className="anticon anticon-info-circle">
                 <svg
                   viewBox="64 64 896 896"
                   focusable="false"
@@ -98,7 +90,7 @@ function Component({
   return (
     <div className="relative transition-all">
       <div className="absolute top-0 left-0 z-10 bg-[#ff0000] text-white py-1.5 px-3 rounded-tl rounded-br">
-        <span>{can_access ? "Free" : "Paid"}</span>
+        <span>{can_access ? 'Free' : 'Paid'}</span>
       </div>
       <div className="border border-[#f0f0f0] rounded overflow-hidden bg-white flex flex-col h-full">
         <div className="overflow-hidden flex justify-center items-center h-[200px]">
@@ -108,7 +100,7 @@ function Component({
             src={isImageError ? placeholderImage : thumbnail_url}
             onError={handleImageError}
             className={`w-full h-full object-cover ${
-              isImageError ? "w-full h-[200px] object-contain scale-[0.8]" : ""
+              isImageError ? 'w-full h-[200px] object-contain scale-[0.8]' : ''
             }`}
             loading="lazy"
           />
@@ -120,9 +112,7 @@ function Component({
             </div>
           </div>
           <div className="mt-2 flex-grow">
-            <span className="block text-sm text-[#888]">
-              {records_number || 0} points
-            </span>
+            <span className="block text-sm text-[#888]">{records_number || 0} points</span>
             <p className="m-0 text-sm text-[#555]">{description}</p>
           </div>
         </div>

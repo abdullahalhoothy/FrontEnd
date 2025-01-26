@@ -13,4 +13,4 @@ const NavigationSetup = ({ children }: NavigationSetupProps) => {
   return <>{children}</>;
 };
 
-export default NavigationSetup; 
+export default NavigationSetup;

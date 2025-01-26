@@ -1,10 +1,10 @@
 // src/components/CreateLayer/CreateLayer.tsx
 
-import { useEffect, useState } from "react";
-import { useLayerContext } from "../../context/LayerContext";
-import CustomizeLayer from "../CustomizeLayer/CustomizeLayer";
-import FetchDatasetForm from "../FetchDatasetForm/FetchDatasetForm";
-import { useUIContext } from "../../context/UIContext";
+import { useEffect, useState } from 'react';
+import { useLayerContext } from '../../context/LayerContext';
+import CustomizeLayer from '../CustomizeLayer/CustomizeLayer';
+import FetchDatasetForm from '../FetchDatasetForm/FetchDatasetForm';
+import { useUIContext } from '../../context/UIContext';
 
 function LayerFormLoader() {
   const { createLayerformStage, resetFormStage } = useLayerContext();
@@ -15,13 +15,13 @@ function LayerFormLoader() {
 
   useEffect(() => {
     resetFormStage();
-    setSidebarMode("default");
+    setSidebarMode('default');
   }, []);
 
   return (
     <>
-      {createLayerformStage === "initial" && <FetchDatasetForm />}
-      {createLayerformStage === "secondStep" && <CustomizeLayer />}
+      {createLayerformStage === 'initial' && <FetchDatasetForm />}
+      {createLayerformStage === 'secondStep' && <CustomizeLayer />}
     </>
   );
 }

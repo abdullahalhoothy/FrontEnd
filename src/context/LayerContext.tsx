@@ -8,8 +8,8 @@ import React, {
   useRef,
   useEffect,
   useMemo,
-} from "react";
-import { HttpReq } from "../services/apiService";
+} from 'react';
+import { HttpReq } from '../services/apiService';
 import {
   FetchDatasetResponse,
   LayerContextType,
@@ -21,15 +21,15 @@ import {
   LayerCustomization,
   LayerState,
   MapFeatures,
-} from "../types/allTypesAndInterfaces";
-import urls from "../urls.json";
-import { useCatalogContext } from "./CatalogContext";
-import userIdData from "../currentUserId.json";
-import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { processCityData, getDefaultLayerColor } from "../utils/helperFunctions";
-import apiRequest from "../services/apiRequest";
-import { defaultMapConfig } from "../hooks/map/useMapInitialization";
+} from '../types/allTypesAndInterfaces';
+import urls from '../urls.json';
+import { useCatalogContext } from './CatalogContext';
+import userIdData from '../currentUserId.json';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { processCityData, getDefaultLayerColor, colorOptions } from '../utils/helperFunctions';
+import apiRequest from '../services/apiRequest';
+import { defaultMapConfig } from '../hooks/map/useMapInitialization';
 import { useMapContext } from './MapContext';
 
 const LayerContext = createContext<LayerContextType | undefined>(undefined);
@@ -42,85 +42,89 @@ export function LayerProvider(props: { children: ReactNode }) {
   // State from useLocationAndCategories
   const [countries, setCountries] = useState<string[]>([]);
   const [cities, setCities] = useState<City[]>([]);
-  const [citiesData, setCitiesData] = useState<{ [country: string]: City[] }>(
-    {}
-  );
+  const [citiesData, setCitiesData] = useState<{ [country: string]: City[] }>({});
   const [categories, setCategories] = useState<CategoryData>({});
   const [reqFetchDataset, setReqFetchDataset] = useState<ReqFetchDataset>({
-    selectedCountry: "",
-    selectedCity: "",
+    selectedCountry: '',
+    selectedCity: '',
     layers: [],
     includedTypes: [],
     excludedTypes: [],
-    zoomLevel: defaultMapConfig.zoomLevel
+    zoomLevel: defaultMapConfig.zoomLevel,
   });
   const [reqSaveLayer, setReqSaveLayer] = useState({
-    legend: "",
-    description: "",
-    name: "",
+    legend: '',
+    description: '',
+    name: '',
   });
 
-  const [createLayerformStage, setCreateLayerformStage] =
-    useState<string>("initial");
+  const [createLayerformStage, setCreateLayerformStage] = useState<string>('initial');
   const [loading, setLoading] = useState<boolean>(false);
   const [isError, setIsError] = useState<Error | null>(null);
   const [manyFetchDatasetResp, setManyFetchDatasetResp] = useState<
     FetchDatasetResponse | undefined
   >(undefined);
-  const [FetchDatasetResp, setFetchDatasetResp] =
-    useState<FetchDatasetResponse | null>(null);
-  const [saveMethod, setSaveMethod] = useState<string>("");
+  const [FetchDatasetResp, setFetchDatasetResp] = useState<FetchDatasetResponse | null>(null);
+  const [saveMethod, setSaveMethod] = useState<string>('');
   const [datasetInfo, setDatasetInfo] = useState<{
     bknd_dataset_id: string;
     prdcer_lyr_id: string;
   } | null>(null);
 
   const [saveResponse, setSaveResponse] = useState<SaveResponse | null>(null);
-  const [saveResponseMsg, setSaveResponseMsg] = useState<string>("");
-  const [saveReqId, setSaveReqId] = useState<string>("");
+  const [saveResponseMsg, setSaveResponseMsg] = useState<string>('');
+  const [saveReqId, setSaveReqId] = useState<string>('');
 
   const [selectedColor, setSelectedColor] = useState<{
     name: string;
     hex: string;
   } | null>(null);
-  const [saveOption, setSaveOption] = useState<string>("");
+  const [saveOption, setSaveOption] = useState<string>('');
 
   const [centralizeOnce, setCentralizeOnce] = useState<boolean>(false);
   const [initialFlyToDone, setInitialFlyToDone] = useState<boolean>(false);
 
   const [showLoaderTopup, setShowLoaderTopup] = useState<boolean>(false);
 
-  const [postResMessage, setPostResMessage] = useState<string>("");
-  const [postResId, setPostResId] = useState<string>("");
+  const [postResMessage, setPostResMessage] = useState<string>('');
+  const [postResId, setPostResId] = useState<string>('');
 
   const [localLoading, setLocalLoading] = useState<boolean>(false);
-  const [textSearchInput, setTextSearchInput] = useState<string>("");
-  const [searchType, setSearchType] = useState<string>("category_search");
-  const [password, setPassword] = useState<string>("");
+  const [textSearchInput, setTextSearchInput] = useState<string>('');
+  const [searchType, setSearchType] = useState<string>('category_search');
+  const [password, setPassword] = useState<string>('');
 
-  const pageCountsRef = useRef<{[layerId: string]: number}>({});
+  const pageCountsRef = useRef<{ [layerId: string]: number }>({});
   const MAX_CALLS = 10;
 
   const [layerDataMap, setLayerDataMap] = useState<LayerDataMap>({});
 
-  const [selectedCountry, setSelectedCountry] = useState<string>("");
-  const [selectedCity, setSelectedCity] = useState<string>("");
+  const [selectedCountry, setSelectedCountry] = useState<string>('');
+  const [selectedCity, setSelectedCity] = useState<string>('');
 
   const [layerStates, setLayerStates] = useState<{ [layerId: number]: LayerState }>({});
 
   const { backendZoom } = useMapContext();
 
   // Memoize the zoom level
-  const currentZoomLevel = useMemo(() => 
-    backendZoom ?? defaultMapConfig.zoomLevel,
-    [backendZoom]
-  );
+  const currentZoomLevel = useMemo(() => backendZoom ?? defaultMapConfig.zoomLevel, [backendZoom]);
+
+  useEffect(() => {
+    console.log('#feat: auto zoom', 'selectedCity', selectedCity);
+  }, [selectedCity]);
+  useEffect(() => {
+    console.log('#feat: auto zoom', 'selectedCountry', selectedCountry);
+  }, [selectedCountry]);
+
+  useEffect(() => {
+    console.log('#feat: auto zoom', 'currentZoomLevel', currentZoomLevel);
+  }, [currentZoomLevel]);
 
   function incrementFormStage() {
-    if (createLayerformStage === "initial") {
-      setCreateLayerformStage("secondStep");
-    } else if (createLayerformStage === "secondStep") {
-      setCreateLayerformStage("thirdStep");
+    if (createLayerformStage === 'initial') {
+      setCreateLayerformStage('secondStep');
+    } else if (createLayerformStage === 'secondStep') {
+      setCreateLayerformStage('thirdStep');
     }
   }
 
@@ -151,7 +155,7 @@ export function LayerProvider(props: { children: ReactNode }) {
     try {
       const res = await apiRequest({
         url: urls.save_layer,
-        method: "post",
+        method: 'post',
         body: postData,
         isAuthRequest: true,
       });
@@ -165,10 +169,14 @@ export function LayerProvider(props: { children: ReactNode }) {
 
   function resetFormStage() {
     setIsError(null);
-    setCreateLayerformStage("initial");
+    setCreateLayerformStage('initial');
   }
 
-  function updateGeoJSONDataset(response: FetchDatasetResponse, layerId: number, defaultName: string) {
+  function updateGeoJSONDataset(
+    response: FetchDatasetResponse,
+    layerId: number,
+    defaultName: string
+  ) {
     setGeoPoints((prevPoints: MapFeatures[] | MapFeatures | any) => {
       const layerKey = String(layerId);
       pageCountsRef.current[layerKey] = (pageCountsRef.current[layerKey] || 0) + 1;
@@ -179,18 +187,20 @@ export function LayerProvider(props: { children: ReactNode }) {
         return prevPoints;
       }
 
-      const existingPoint = prevPoints.find((p: MapFeatures) => String(p.layerId) === String(layerId));
-      
+      const existingPoint = prevPoints.find(
+        (p: MapFeatures) => String(p.layerId) === String(layerId)
+      );
+
       const newPoint = {
         type: 'FeatureCollection',
         features: [
-          ...(existingPoint?.features || []),  // Keep existing features if any
-          ...response.features.map(f => ({ 
+          ...(existingPoint?.features || []), // Keep existing features if any
+          ...response.features.map(f => ({
             type: 'Feature',
             geometry: f.geometry,
             properties: f.properties,
-            layerId: String(layerId)
-          }))
+            layerId: String(layerId),
+          })),
         ],
         display: true,
         points_color: existingPoint?.points_color || getDefaultLayerColor(layerId),
@@ -199,33 +209,31 @@ export function LayerProvider(props: { children: ReactNode }) {
         layer_legend: defaultName,
         prdcer_layer_name: defaultName,
         prdcer_lyr_id: response.prdcer_lyr_id,
-        bknd_dataset_id: response.bknd_dataset_id
+        bknd_dataset_id: response.bknd_dataset_id,
       };
 
-      const filteredPoints = prevPoints.filter(p => 
-        String(p.layerId) !== String(layerId)
-      );
+      const filteredPoints = prevPoints.filter(p => String(p.layerId) !== String(layerId));
       const newPoints = [...filteredPoints, newPoint];
 
       // Continue pagination even if current page had issues
       if (response.next_page_token && pageCountsRef.current[layerKey] < MAX_CALLS) {
-        handleFetchDataset("full data", response.next_page_token).catch(err => {
+        handleFetchDataset('full data', response.next_page_token).catch(err => {
           console.error(`Error fetching page for layer ${layerId}:`, err);
           // Continue to next page despite error
           if (pageCountsRef.current[layerKey] < MAX_CALLS) {
-            handleFetchDataset("full data", response.next_page_token);
+            handleFetchDataset('full data', response.next_page_token);
           }
         });
       } else {
         setShowLoaderTopup(false);
         delete pageCountsRef.current[layerKey];
       }
-      
+
       return newPoints;
     });
   }
 
-  async function handleFetchDataset(action: string, pageToken?: string) {    
+  async function handleFetchDataset(action: string, pageToken?: string) {
     // Clear existing data on initial request (when no pageToken)
     if (!pageToken) {
       setGeoPoints([]);
@@ -236,16 +244,16 @@ export function LayerProvider(props: { children: ReactNode }) {
     let idToken: string;
 
     try {
-      if (authResponse && "idToken" in authResponse) {
+      if (authResponse && 'idToken' in authResponse) {
         user_id = authResponse.localId;
         idToken = authResponse.idToken;
-      } else if (action == "full data") {
-        navigate("/auth");
-        setIsError(new Error("User is not authenticated!"));
+      } else if (action == 'full data') {
+        navigate('/auth');
+        setIsError(new Error('User is not authenticated!'));
         return;
       } else {
-        user_id = "0000";
-        idToken = "";
+        user_id = '0000';
+        idToken = '';
       }
 
       for (const layer of reqFetchDataset.layers) {
@@ -258,29 +266,29 @@ export function LayerProvider(props: { children: ReactNode }) {
 
           // Generate default name for layer
           const defaultName = `${reqFetchDataset.selectedCountry} ${reqFetchDataset.selectedCity} ${
-            layer.includedTypes?.map(type => type.replace("_", " ")).join(" + ") || ''
+            layer.includedTypes?.map(type => type.replace('_', ' ')).join(' + ') || ''
           }${
-            layer.excludedTypes?.length > 0 
-              ? " + not " + layer.excludedTypes.map(type => type.replace("_", " ")).join(" + not ")
-              : ""
+            layer.excludedTypes?.length > 0
+              ? ' + not ' + layer.excludedTypes.map(type => type.replace('_', ' ')).join(' + not ')
+              : ''
           }`;
 
           //TODO: Further improve when working on the "OR" feature
           const res = await apiRequest({
             url: urls.fetch_dataset,
-            method: "post",
+            method: 'post',
             body: {
               country_name: reqFetchDataset.selectedCountry,
               city_name: reqFetchDataset.selectedCity,
               //includedTypes: layer.includedTypes || [],
               //excludedTypes: layer.excludedTypes || [],
-              boolean_query: layer.includedTypes?.join(" OR "),
+              boolean_query: layer.includedTypes?.join(' OR '),
               layerId: layer.id,
               layer_name: defaultName,
               action: action,
               search_type: searchType,
-              text_search: textSearchInput?.trim() || "",
-              page_token: pageToken || "",
+              text_search: textSearchInput?.trim() || '',
+              page_token: pageToken || '',
               user_id: user_id,
               zoom_level: currentZoomLevel,
             },
@@ -290,9 +298,9 @@ export function LayerProvider(props: { children: ReactNode }) {
           if (res?.data?.data) {
             setLayerDataMap(prev => ({
               ...prev,
-              [layer.id]: res.data.data
+              [layer.id]: res.data.data,
             }));
-            
+
             updateGeoJSONDataset(res.data.data, layer.id, defaultName);
           }
         } catch (error) {
@@ -320,7 +328,7 @@ export function LayerProvider(props: { children: ReactNode }) {
     try {
       const res = await apiRequest({
         url: urls.country_city,
-        method: "get",
+        method: 'get',
       });
       setCountries(processCityData(res.data.data, setCitiesData));
     } catch (error) {
@@ -330,7 +338,7 @@ export function LayerProvider(props: { children: ReactNode }) {
     try {
       const res = await apiRequest({
         url: urls.nearby_categories,
-        method: "get",
+        method: 'get',
       });
       setCategories(res.data.data);
     } catch (error) {
@@ -346,16 +354,17 @@ export function LayerProvider(props: { children: ReactNode }) {
     // );
   }
 
-  function handleCountryCitySelection(
-    event: React.ChangeEvent<HTMLSelectElement>
-  ) {
+  function handleCountryCitySelection(event: React.ChangeEvent<HTMLSelectElement>) {
     const { name, value } = event.target;
 
-    if (name === "selectedCountry") {
+    if (name === 'selectedCountry') {
       // Update country and reset city
       setSelectedCountry(value);
-      setSelectedCity("");
-      
+      setSelectedCity('');
+
+      // Reset area intelligence
+      setIncludePopulation(false);
+
       // Get cities for selected country
       const selectedCountryCities = citiesData[value] || [];
       setCities(selectedCountryCities);
@@ -364,32 +373,44 @@ export function LayerProvider(props: { children: ReactNode }) {
       setReqFetchDataset(prev => ({
         ...prev,
         selectedCountry: value,
-        selectedCity: "", // Reset city when country changes
+        selectedCity: '', // Reset city when country changes
       }));
-    } else if (name === "selectedCity") {
+
+      document.dispatchEvent(
+        new CustomEvent('cityCountryChanged', {
+          detail: { hasCountry: true, hasCity: false },
+        })
+      );
+    } else if (name === 'selectedCity') {
       // Update city
       setSelectedCity(value);
-      
+
       // Update reqFetchDataset
       setReqFetchDataset(prev => ({
         ...prev,
         selectedCity: value,
       }));
+
+      document.dispatchEvent(
+        new CustomEvent('cityCountryChanged', {
+          detail: { hasCountry: true, hasCity: true },
+        })
+      );
     }
   }
 
   function handleTypeToggle(type: string) {
-    setReqFetchDataset((prevData) => {
+    setReqFetchDataset(prevData => {
       if (prevData.includedTypes.includes(type)) {
         return {
           ...prevData,
-          includedTypes: prevData.includedTypes.filter((t) => t !== type),
+          includedTypes: prevData.includedTypes.filter(t => t !== type),
           excludedTypes: [...prevData.excludedTypes, type],
         };
       } else if (prevData.excludedTypes.includes(type)) {
         return {
           ...prevData,
-          excludedTypes: prevData.excludedTypes.filter((t) => t !== type),
+          excludedTypes: prevData.excludedTypes.filter(t => t !== type),
         };
       } else {
         return {
@@ -402,47 +423,53 @@ export function LayerProvider(props: { children: ReactNode }) {
 
   function validateFetchDatasetForm() {
     if (!reqFetchDataset.selectedCountry || !reqFetchDataset.selectedCity) {
-      return new Error("Country and city are required.");
+      return new Error('Country and city are required.');
     }
     if (
       reqFetchDataset.includedTypes.length === 0 &&
       reqFetchDataset.excludedTypes.length === 0 &&
-      searchType !== "keyword_search"
+      searchType !== 'keyword_search'
     ) {
-      console.log("At least one category must be included or excluded.", reqFetchDataset, searchType);
-      return new Error("At least one category must be included or excluded.");
-    }
-    if (
-      reqFetchDataset.includedTypes.length > 50 ||
-      reqFetchDataset.excludedTypes.length > 50
-    ) {
-      return new Error(
-        "Up to 50 types can be specified in each type restriction category."
+      console.log(
+        'At least one category must be included or excluded.',
+        reqFetchDataset,
+        searchType
       );
+      return new Error('At least one category must be included or excluded.');
+    }
+    if (reqFetchDataset.includedTypes.length > 50 || reqFetchDataset.excludedTypes.length > 50) {
+      return new Error('Up to 50 types can be specified in each type restriction category.');
     }
     return true;
   }
 
   useEffect(() => {
-    console.log("searchType", searchType);
+    console.log('searchType', searchType);
   }, [searchType]);
 
   function resetFetchDatasetForm() {
     setReqFetchDataset({
-      selectedCountry: "",
-      selectedCity: "",
+      selectedCountry: '',
+      selectedCity: '',
       layers: [],
       includedTypes: [],
       excludedTypes: [],
-      zoomLevel: defaultMapConfig.zoomLevel
+      zoomLevel: defaultMapConfig.zoomLevel,
     });
     setLayerDataMap({});
-    setSelectedCountry(""); // Reset country
-    setSelectedCity(""); // Reset city
-    setTextSearchInput("");
-    setSearchType("category_search");
-    setPassword("");
+    setSelectedCountry(''); // Reset country
+    setSelectedCity(''); // Reset city
+    setIncludePopulation(false); // Reset area intelligence
+    setTextSearchInput('');
+    setSearchType('category_search');
+    setPassword('');
     setGeoPoints([]);
+
+    document.dispatchEvent(
+      new CustomEvent('cityCountryChanged', {
+        detail: { hasCountry: false, hasCity: false },
+      })
+    );
   }
 
   useEffect(() => {
@@ -460,8 +487,8 @@ export function LayerProvider(props: { children: ReactNode }) {
       ...prev,
       [layerId]: {
         ...prev[layerId],
-        ...updates
-      }
+        ...updates,
+      },
     }));
   };
 
@@ -469,23 +496,168 @@ export function LayerProvider(props: { children: ReactNode }) {
     if (reqFetchDataset?.layers?.length > 0) {
       // Initialize layer states while preserving existing states
       setLayerStates(prev => {
-        const initialStates = reqFetchDataset.layers.reduce((acc, layer) => {
-          if (layer && typeof layer.id === 'number') {
-            acc[layer.id] = {
-              ...prev[layer.id], // Preserve existing state if any
-              selectedColor: prev[layer.id]?.selectedColor || null,
-              isLoading: false, // Reset loading state
-              saveResponse: prev[layer.id]?.saveResponse || null,
-              datasetInfo: prev[layer.id]?.datasetInfo || null
-            };
-          }
-          return acc;
-        }, {} as { [key: number]: LayerState });
+        const initialStates = reqFetchDataset.layers.reduce(
+          (acc, layer) => {
+            if (layer && typeof layer.id === 'number') {
+              acc[layer.id] = {
+                ...prev[layer.id], // Preserve existing state if any
+                selectedColor: prev[layer.id]?.selectedColor || null,
+                isLoading: false, // Reset loading state
+                saveResponse: prev[layer.id]?.saveResponse || null,
+                datasetInfo: prev[layer.id]?.datasetInfo || null,
+              };
+            }
+            return acc;
+          },
+          {} as { [key: number]: LayerState }
+        );
 
         return initialStates;
       });
     }
   }, [reqFetchDataset?.layers]);
+
+  // Add zoom level effect to trigger refetch for all grid population layers
+  useEffect(() => {
+    // Only refetch if we have existing population grid layers
+    const gridLayers = geoPoints.filter(point => point.is_grid && point.is_intelligent);
+    if (gridLayers.length > 0) {
+      console.log('#feat: auto zoom', 'gridLayers', gridLayers);
+      refetchPopulationLayer();
+    }
+  }, [currentZoomLevel]);
+
+  const [includePopulation, setIncludePopulation] = useState(false);
+
+  async function switchPopulationLayer() {
+    // Add detailed logging
+    console.log('#debug: switchPopulationLayer state:', {
+      selectedCity,
+      selectedCountry,
+      includePopulation,
+      fromControl: true,
+    });
+
+    const shouldInclude = !includePopulation;
+    handlePopulationLayer(shouldInclude);
+  }
+
+  async function refetchPopulationLayer() {
+    handlePopulationLayer(false);
+    handlePopulationLayer(true);
+  }
+
+  async function handlePopulationLayer(shouldInclude: boolean) {
+    // Add detailed logging
+    console.log('#debug: handlePopulationLayer state:', {
+      shouldInclude,
+      selectedCity,
+      selectedCountry,
+      currentState: {
+        city: selectedCity,
+        country: selectedCountry,
+      },
+    });
+
+    setIncludePopulation(shouldInclude);
+
+    if (shouldInclude) {
+      setShowLoaderTopup(true);
+      try {
+        if (!authResponse || !authResponse.localId || !authResponse.idToken) return;
+
+        if (!selectedCity || !selectedCountry) {
+          console.error('Please select a city and country first', selectedCity, selectedCountry);
+          return;
+        }
+
+        const res = await apiRequest({
+          url: urls.fetch_dataset,
+          method: 'post',
+          body: {
+            text_search: '',
+            page_token: '',
+            user_id: authResponse.localId,
+            idToken: authResponse.idToken,
+            zoom_level: currentZoomLevel,
+            country_name: selectedCountry,
+            city_name: selectedCity,
+            boolean_query: 'TotalPopulation',
+            layer_name: 'Population Layer',
+            action: 'sample',
+            search_type: 'category_search',
+          },
+          isAuthRequest: true,
+          useCache: true,
+        });
+
+        if (res?.data?.data) {
+          setGeoPoints(prevPoints => {
+            const populationLayer = {
+              layerId: 1001, // Special ID for population layer
+              type: 'FeatureCollection',
+              features: res.data.data.features,
+              display: true,
+              points_color: colorOptions[0].hex,
+              city_name: selectedCity,
+              layer_legend: 'Population Layer',
+              is_grid: true,
+              is_intelligent: true,
+              basedon: 'population',
+              visualization_mode: 'grid',
+            };
+            return [...prevPoints, populationLayer];
+          });
+
+          // Update layer data map
+          setLayerDataMap(prev => ({
+            ...prev,
+            1001: res.data.data,
+          }));
+        }
+      } catch (error) {
+        setIsError(error instanceof Error ? error : new Error('Failed to fetch population data'));
+      } finally {
+        setShowLoaderTopup(false);
+      }
+    } else {
+      // Remove population layer
+      setGeoPoints(prev => prev.filter(point => !point.is_intelligent));
+
+      // Clean up layer data map
+      setLayerDataMap(prev => {
+        const newMap = { ...prev };
+        delete newMap[1001];
+        return newMap;
+      });
+    }
+    // Dispatch event for PopulationControl
+    document.dispatchEvent(
+      new CustomEvent('populationStateChanged', {
+        detail: { isActive: shouldInclude },
+      })
+    );
+  }
+
+  useEffect(() => {
+    document.dispatchEvent(
+      new CustomEvent('cityCountryChanged', {
+        detail: {
+          hasCountry: !!selectedCountry,
+          hasCity: !!selectedCity,
+        },
+      })
+    );
+  }, []);
+
+  // Add effect to sync initial state
+  useEffect(() => {
+    document.dispatchEvent(
+      new CustomEvent('populationStateChanged', {
+        detail: { isActive: includePopulation },
+      })
+    );
+  }, []);
 
   return (
     <LayerContext.Provider
@@ -551,6 +723,11 @@ export function LayerProvider(props: { children: ReactNode }) {
         setSelectedCity,
         layerStates,
         updateLayerState,
+        includePopulation,
+        setIncludePopulation,
+        handlePopulationLayer,
+        switchPopulationLayer,
+        refetchPopulationLayer,
       }}
     >
       {children}
@@ -561,7 +738,7 @@ export function LayerProvider(props: { children: ReactNode }) {
 export function useLayerContext() {
   const context = useContext(LayerContext);
   if (!context) {
-    throw new Error("useLayerContext must be used within a LayerProvider");
+    throw new Error('useLayerContext must be used within a LayerProvider');
   }
   return context;
 }

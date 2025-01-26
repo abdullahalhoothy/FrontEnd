@@ -3,27 +3,31 @@ import mapboxgl from 'mapbox-gl';
 import { StylesControl } from '../../components/Map/StylesControl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import { CircleControl } from '../../components/Map/CircleControl';
+import { PopulationControl } from '../../components/Map/PopulationControl';
 import { useUIContext } from '../../context/UIContext';
 import { usePolygonsContext } from '../../context/PolygonsContext';
 import { useMapContext } from '../../context/MapContext';
+import { useLayerContext } from '../../context/LayerContext';
 
 export function useMapControls() {
   const { mapRef, drawRef, shouldInitializeFeatures } = useMapContext();
   const { isMobile } = useUIContext();
   const { currentStyle, setCurrentStyle } = usePolygonsContext();
+  const { switchPopulationLayer, selectedCity, selectedCountry } = useLayerContext();
   const controlsAdded = useRef(false);
-  
+
   useEffect(() => {
     if (!shouldInitializeFeatures) return;
-    
+
     const map = mapRef.current;
     if (!map) return;
 
     let controls: {
-      styles?: mapboxgl.IControl,
-      navigation?: mapboxgl.NavigationControl,
-      circle?: mapboxgl.IControl,
-      draw?: MapboxDraw
+      styles?: mapboxgl.IControl;
+      navigation?: mapboxgl.NavigationControl;
+      circle?: mapboxgl.IControl;
+      draw?: MapboxDraw;
+      population?: mapboxgl.IControl;
     } = {};
 
     const addControls = () => {
@@ -32,6 +36,11 @@ export function useMapControls() {
       }
 
       try {
+        console.log('#debug: Adding controls with context:', {
+          selectedCity,
+          selectedCountry,
+        });
+
         // Add styles control first
         controls.styles = new StylesControl(currentStyle, setCurrentStyle);
         map.addControl(controls.styles, 'top-right');
@@ -47,19 +56,24 @@ export function useMapControls() {
             point: false,
             line_string: false,
             polygon: true,
-            trash: true
-          }
+            trash: true,
+          },
         });
 
         // Add circle control
-        controls.circle = new CircleControl({ 
+        controls.circle = new CircleControl({
           draw: drawRef.current,
-          isMobile 
+          isMobile,
         });
         map.addControl(controls.circle, 'top-right');
-        
+
         // Add draw control last
         map.addControl(drawRef.current);
+
+        // Add population control
+        controls.population = new PopulationControl({ switchPopulationLayer });
+        map.addControl(controls.population, 'top-left');
+
         controlsAdded.current = true;
       } catch (error) {
         console.error('Error adding controls:', error);
@@ -113,7 +127,6 @@ export function useMapControls() {
               }
             }
           });
-
         } catch (error) {
           console.warn('Control cleanup error:', error);
         } finally {
@@ -123,4 +136,4 @@ export function useMapControls() {
       }
     };
   }, [mapRef, drawRef, currentStyle, setCurrentStyle, isMobile, shouldInitializeFeatures]);
-} 
+}
