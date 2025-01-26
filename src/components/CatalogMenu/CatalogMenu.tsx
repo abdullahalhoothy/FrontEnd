@@ -1,14 +1,14 @@
-import React, { useState, MouseEvent, useEffect } from 'react'
-import styles from './CatalogSideMenu.module.css'
-import { MdLayers, MdArrowBackIos } from 'react-icons/md'
-import DataContainer from '../DataContainer/DataContainer'
-import { useCatalogContext } from '../../context/CatalogContext'
-import MultipleLayersSetting from '../MultipleLayersSetting/MultipleLayersSetting'
-import { useUIContext } from '../../context/UIContext'
-import { GradientColorBasedOnZone } from '../../types/allTypesAndInterfaces'
+import React, { useState, MouseEvent, useEffect } from 'react';
+import styles from './CatalogSideMenu.module.css';
+import { MdLayers, MdArrowBackIos } from 'react-icons/md';
+import DataContainer from '../DataContainer/DataContainer';
+import { useCatalogContext } from '../../context/CatalogContext';
+import MultipleLayersSetting from '../MultipleLayersSetting/MultipleLayersSetting';
+import { useUIContext } from '../../context/UIContext';
+import { GradientColorBasedOnZone } from '../../types/allTypesAndInterfaces';
 
-function CatalogMenu () {
-  const { openModal, setSidebarMode } = useUIContext()
+function CatalogMenu() {
+  const { openModal, setSidebarMode } = useUIContext();
 
   const {
     setSelectedContainerType,
@@ -22,84 +22,84 @@ function CatalogMenu () {
     setIsAdvancedMode,
     setGradientColorBasedOnZone,
     setIsRadiusMode,
-    setChosenPallet
-  } = useCatalogContext()
+    setChosenPallet,
+  } = useCatalogContext();
 
-  const [showRestorePrompt, setShowRestorePrompt] = useState(false)
+  const [showRestorePrompt, setShowRestorePrompt] = useState(false);
 
   useEffect(() => {
-    const savedGeoPoints = localStorage.getItem('unsavedGeoPoints')
+    const savedGeoPoints = localStorage.getItem('unsavedGeoPoints');
     if (savedGeoPoints && JSON.parse(savedGeoPoints).length > 0) {
-      setShowRestorePrompt(true)
+      setShowRestorePrompt(true);
     }
-  }, [])
+  }, []);
   useEffect(
     function () {
-      setGeoPoints([])
+      setGeoPoints([]);
     },
     [setGeoPoints]
-  )
+  );
 
   useEffect(() => {
-    resetFormStage('catalog')
-    setSidebarMode('catalog')
-  }, [])
+    resetFormStage('catalog');
+    setSidebarMode('catalog');
+  }, []);
 
-  function handleRestoreClick () {
-    const savedGeoPoints = localStorage.getItem('unsavedGeoPoints')
+  function handleRestoreClick() {
+    const savedGeoPoints = localStorage.getItem('unsavedGeoPoints');
     if (savedGeoPoints) {
-      setGeoPoints(JSON.parse(savedGeoPoints))
+      setGeoPoints(JSON.parse(savedGeoPoints));
     }
-    setShowRestorePrompt(false)
+    setShowRestorePrompt(false);
   }
 
-  function openCatalogModal (contentType: 'Catalogue' | 'Layer') {
-    setSelectedContainerType(contentType)
-    openModal(<DataContainer />)
+  function openCatalogModal(contentType: 'Catalogue' | 'Layer') {
+    setSelectedContainerType(contentType);
+    openModal(<DataContainer />);
   }
 
-  function handleAddCatalogClick (event: MouseEvent) {
-    openCatalogModal('Catalogue')
+  function handleAddCatalogClick(event: MouseEvent) {
+    openCatalogModal('Catalogue');
   }
 
-  function handleAddLayerClick (event: MouseEvent) {
-    openCatalogModal('Layer')
+  function handleAddLayerClick(event: MouseEvent) {
+    openCatalogModal('Layer');
   }
 
-  function handleDiscardClick (event: MouseEvent) {
-    setIsAdvancedMode({})
-    setGradientColorBasedOnZone([] as GradientColorBasedOnZone[])
-    setIsRadiusMode(false)
+  function handleDiscardClick(event: MouseEvent) {
+    setIsAdvancedMode({});
+    setGradientColorBasedOnZone([] as GradientColorBasedOnZone[]);
+    setIsRadiusMode(false);
 
-    resetState()
-    setChosenPallet(null)
-    setLayerColors({})
+    resetState();
+    setChosenPallet(null);
+    setLayerColors({});
   }
 
-  const safeGeoPoints = Array.isArray(geoPoints) ? geoPoints : []
+  const safeGeoPoints = Array.isArray(geoPoints) ? geoPoints : [];
 
-  function handleSaveClick () {
+  function handleSaveClick() {
     const legends = safeGeoPoints
       .map(function (featureCollection) {
-        return featureCollection.layer_legend
+        return featureCollection.layer_legend;
       })
       .filter(function (legend): legend is string {
-        return !!legend
-      })
+        return !!legend;
+      });
 
-    setLegendList(legends)
-    setFormStage('catalogDetails')
-    setSidebarMode('catalogDetails')
+    setLegendList(legends);
+    setFormStage('catalogDetails');
+    setSidebarMode('catalogDetails');
   }
 
   return (
-    <div className='flex flex-col justify-between h-full w-full lg:pr-1.5'>
+    <div className="flex flex-col justify-between h-full w-full lg:pr-1.5">
       <div
         className={`flex flex-col justify-start lg:mt-7 mt-3 ${
           !showRestorePrompt ? 'flex-grow' : ''
         }`}
       >
-        <div className='flex justify-between items-center mx-8 my-2'>
+        <div className="flex justify-between items-center mx-8 my-2">
           <p className={'text-lg font-semibold'}>Datasets</p>
           <button
             className={
@@ -123,48 +123,48 @@ function CatalogMenu () {
         </div>
 
         {showRestorePrompt && (
-          <div className='ms-8 me-8 m-auto border-solid rounded border-2 border-[#115740] p-2 mt-5 '>
-            <p className='text-lg text-center font-semibold flex pb-3'>
+          <div className="ms-8 me-8 m-auto border-solid rounded border-2 border-[#115740] p-2 mt-5 ">
+            <p className="text-lg text-center font-semibold flex pb-3">
               You have unsaved data. Would you like to restore it?
             </p>
-            <div className='flex w-full space-x-2'>
+            <div className="flex w-full space-x-2">
               <button
                 onClick={() => {
-                  resetState()
+                  resetState();
 
-                  setShowRestorePrompt(false)
+                  setShowRestorePrompt(false);
                 }}
-                className='w-full h-full bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
-              hover:bg-white transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-slate-100 disabled:cursor-not-allowed'
+                className="w-full h-full bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
+              hover:bg-white transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-slate-100 disabled:cursor-not-allowed"
               >
                 No
               </button>
 
               <button
                 onClick={handleRestoreClick}
-                className='w-full h-full bg-[#115740] border-[#115740] border-2 text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] 
-         transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-[#115740] disabled:cursor-not-allowed'
+                className="w-full h-full bg-[#115740] border-[#115740] border-2 text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] 
+         transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-[#115740] disabled:cursor-not-allowed"
               >
                 Yes
               </button>
             </div>
           </div>
         )}
-        <div className='block overflow-y-auto overflow-x-hidden h-[calc(100vh-20rem)]'>
-          <div className='flex flex-col flex-grow justify-start items-center px-4'>
+        <div className="block overflow-y-auto overflow-x-hidden h-[calc(100vh-20rem)]">
+          <div className="flex flex-col flex-grow justify-start items-center px-4">
             {safeGeoPoints.map(function (_, index) {
-              return <MultipleLayersSetting key={index} layerIndex={index} />
+              return <MultipleLayersSetting key={index} layerIndex={index} />;
             })}
           </div>
         </div>
       </div>
-      <div className='w-full flex-col lg:h-[9%] flex px-2 py-2 select-none border-t lg:mb-0 mb-14'>
-        <div className='flex w-full space-x-2'>
+      <div className="w-full flex-col lg:h-[9%] flex px-2 py-2 select-none border-t lg:mb-0 mb-14">
+        <div className="flex w-full space-x-2">
           <button
             disabled={!(safeGeoPoints.length > 0)}
             onClick={handleDiscardClick}
-            className='w-full h-10  bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
-                 hover:bg-white transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-slate-100 disabled:cursor-not-allowed'
+            className="w-full h-10  bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
+                 hover:bg-white transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-slate-100 disabled:cursor-not-allowed"
           >
             Discard
           </button>
@@ -172,15 +172,15 @@ function CatalogMenu () {
           <button
             onClick={handleSaveClick}
             disabled={!(safeGeoPoints.length > 0)}
-            className='w-full h-10  bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] 
-            transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-[#115740] disabled:cursor-not-allowed'
+            className="w-full h-10  bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] 
+            transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-[#115740] disabled:cursor-not-allowed"
           >
             Save
           </button>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default CatalogMenu
+export default CatalogMenu;

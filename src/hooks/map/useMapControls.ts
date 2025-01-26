@@ -15,20 +15,19 @@ export function useMapControls() {
   const { currentStyle, setCurrentStyle } = usePolygonsContext();
   const { switchPopulationLayer } = useLayerContext();
   const controlsAdded = useRef(false);
-  
+
   useEffect(() => {
-    
     if (!shouldInitializeFeatures) return;
-    
+
     const map = mapRef.current;
     if (!map) return;
 
     let controls: {
-      styles?: mapboxgl.IControl,
-      navigation?: mapboxgl.NavigationControl,
-      circle?: mapboxgl.IControl,
-      draw?: MapboxDraw,
-      population?: mapboxgl.IControl
+      styles?: mapboxgl.IControl;
+      navigation?: mapboxgl.NavigationControl;
+      circle?: mapboxgl.IControl;
+      draw?: MapboxDraw;
+      population?: mapboxgl.IControl;
     } = {};
 
     const addControls = () => {
@@ -52,23 +51,23 @@ export function useMapControls() {
             point: false,
             line_string: false,
             polygon: true,
-            trash: true
-          }
+            trash: true,
+          },
         });
 
         // Add circle control
-        controls.circle = new CircleControl({ 
+        controls.circle = new CircleControl({
           draw: drawRef.current,
-          isMobile 
+          isMobile,
         });
         map.addControl(controls.circle, 'top-right');
-        
+
         // Add draw control last
         map.addControl(drawRef.current);
 
         // Add population control
-        controls.population = new PopulationControl({ 
-          switchPopulationLayer
+        controls.population = new PopulationControl({
+          switchPopulationLayer,
         });
         map.addControl(controls.population, 'top-right');
 
@@ -125,7 +124,6 @@ export function useMapControls() {
               }
             }
           });
-
         } catch (error) {
           console.warn('Control cleanup error:', error);
         } finally {
@@ -135,4 +133,4 @@ export function useMapControls() {
       }
     };
   }, [mapRef, drawRef, currentStyle, setCurrentStyle, isMobile, shouldInitializeFeatures]);
-} 
+}

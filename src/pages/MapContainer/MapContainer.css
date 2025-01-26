@@ -45,7 +45,7 @@
   border-radius: 8px;
   padding: 15px;
   color: #333;
-  font-family: "Arial", sans-serif;
+  font-family: 'Arial', sans-serif;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -78,7 +78,7 @@
 .mapboxgl-ctrl-group {
   background: #fff;
   border-radius: 4px;
-  box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
   position: relative;
   z-index: 1;
   margin-bottom: 10px !important;

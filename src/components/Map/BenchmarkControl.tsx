@@ -1,22 +1,15 @@
-import { useLayoutEffect, useState } from "react";
-import { usePolygonsContext } from "../../context/PolygonsContext";
+import { useLayoutEffect, useState } from 'react';
+import { usePolygonsContext } from '../../context/PolygonsContext';
 
 const BenchmarkControl = () => {
-  const {
-    benchmarks,
-    setBenchmarks,
-    polygons,
-    isBenchmarkControlOpen,
-    setIsBenchmarkControlOpen,
-  } = usePolygonsContext();
+  const { benchmarks, setBenchmarks, polygons, isBenchmarkControlOpen, setIsBenchmarkControlOpen } =
+    usePolygonsContext();
 
   const [controlHeight, setControlHeight] = useState(0);
 
   useLayoutEffect(() => {
     const checkControlHeight = () => {
-      const mapboxControlContainer = document.querySelector(
-        ".mapboxgl-ctrl-top-left"
-      );
+      const mapboxControlContainer = document.querySelector('.mapboxgl-ctrl-top-left');
       // If the container is found, get its height
       if (mapboxControlContainer) {
         const height = mapboxControlContainer.getBoundingClientRect().height;
@@ -38,10 +31,10 @@ const BenchmarkControl = () => {
 
   const handleBenchmarkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    
-    setBenchmarks((prev) => {
-      const updated = prev.map((benchmark) => {
-        if (benchmark && benchmark?.title &&benchmark.title === name) {
+
+    setBenchmarks(prev => {
+      const updated = prev.map(benchmark => {
+        if (benchmark && benchmark?.title && benchmark.title === name) {
           return { ...benchmark, value: parseFloat(value) };
         }
         return benchmark;
@@ -63,14 +56,11 @@ const BenchmarkControl = () => {
         <div className="min-w-48 w-auto mt-2 flex flex-col rounded-md shadow-sm bg-white p-4 gap-4">
           {benchmarks
             .filter(benchmark => !!benchmark?.title)
-            .map((benchmark) => {
+            .map(benchmark => {
               return (
-                <div
-                  className="flex justify-between items-center gap-6"
-                  key={benchmark?.title}
-                >
+                <div className="flex justify-between items-center gap-6" key={benchmark?.title}>
                   <label className="text-sm font-medium text-gray-700 capitalize">
-                    {benchmark?.title?.split("_")?.join(" ")}
+                    {benchmark?.title?.split('_')?.join(' ')}
                   </label>
                   <input
                     type="number"

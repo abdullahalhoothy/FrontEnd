@@ -44,20 +44,15 @@ export const useGetQueryParamObj = () => {
 export function createQueryString(queryObject: any = {}) {
   let queryString = Object.keys(queryObject)
     .filter(
-      (key) =>
-        queryObject[key] &&
-        !(Array.isArray(queryObject[key]) && !queryObject[key].length)
+      key => queryObject[key] && !(Array.isArray(queryObject[key]) && !queryObject[key].length)
     )
-    .map((key) => {
+    .map(key => {
       return Array.isArray(queryObject[key])
         ? queryObject[key]
-            .map(
-              (item: any) =>
-                `${encodeURIComponent(key)}=${encodeURIComponent(item)}`
-            )
-            .join("&")
+            .map((item: any) => `${encodeURIComponent(key)}=${encodeURIComponent(item)}`)
+            .join('&')
         : `${encodeURIComponent(key)}=${encodeURIComponent(queryObject[key])}`;
     })
-    .join("&");
-  return queryString ? `?${queryString}` : "";
+    .join('&');
+  return queryString ? `?${queryString}` : '';
 }

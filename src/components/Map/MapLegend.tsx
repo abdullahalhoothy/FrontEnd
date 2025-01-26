@@ -1,5 +1,5 @@
-import { MapFeatures } from "../../types/allTypesAndInterfaces";
-import defaultMapConfig from "../../mapConfig.json";
+import { MapFeatures } from '../../types/allTypesAndInterfaces';
+import defaultMapConfig from '../../mapConfig.json';
 
 function MapLegend(legendElement: HTMLDivElement, geoPoints: MapFeatures[]) {
   // Clear existing content
@@ -43,6 +43,6 @@ function MapLegend(legendElement: HTMLDivElement, geoPoints: MapFeatures[]) {
   });
 
   legendElement.appendChild(content);
-} 
+}
 
 export default MapLegend;

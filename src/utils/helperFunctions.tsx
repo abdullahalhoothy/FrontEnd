@@ -1,13 +1,13 @@
 // helperFunctions.tsx
 export function formatSubcategoryName(name: string): string {
   return name
-    .split("_")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 }
 
 export function processCityData(data: any, setData: Function): string[] {
-  if (typeof data === "object" && data !== null) {
+  if (typeof data === 'object' && data !== null) {
     const keys = Object.keys(data);
     setData(data);
     return keys;
@@ -16,18 +16,18 @@ export function processCityData(data: any, setData: Function): string[] {
 }
 
 export const colorOptions = [
-  { name: "Red", hex: "#FF5733" },
-  { name: "Green", hex: "#28A745" },
-  { name: "Blue", hex: "#007BFF" },
-  { name: "Yellow", hex: "#FFC107" },
-  { name: "Black", hex: "#343A40" },
+  { name: 'Red', hex: '#FF5733' },
+  { name: 'Green', hex: '#28A745' },
+  { name: 'Blue', hex: '#007BFF' },
+  { name: 'Yellow', hex: '#FFC107' },
+  { name: 'Black', hex: '#343A40' },
 ];
 
 export const colorMap = new Map(colorOptions.map(color => [color.hex, color.name]));
 
 export const getDefaultLayerColor = (layerId: number): string => {
   return colorOptions[layerId % colorOptions.length]?.hex || '#28A745';
-}; 
+};
 
 export function isValidColor(color: string): boolean {
   // Check if the color is a valid hex color
@@ -37,7 +37,7 @@ export function isValidColor(color: string): boolean {
   }
 
   // Check if the color is a valid named color using CSS
-  const option = document.createElement("div");
+  const option = document.createElement('div');
   option.style.color = color;
-  return option.style.color !== "";
+  return option.style.color !== '';
 }

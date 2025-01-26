@@ -7,6 +7,6 @@ export function useMapConfig() {
     preserveDrawingBuffer: true,
     maxBounds: mapConfig.maxBounds,
     minZoom: mapConfig.minZoom,
-    maxZoom: mapConfig.maxZoom
+    maxZoom: mapConfig.maxZoom,
   };
-} 
+}

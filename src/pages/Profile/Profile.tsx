@@ -1,9 +1,9 @@
-import React, { useEffect, useLayoutEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router";
-import { useAuth } from "../../context/AuthContext";
-import { Link } from "react-router-dom";
-import { useUIContext } from "../../context/UIContext";
-import BottomDrawer from "../../components/BottomDrawer/BottomDrawer";
+import React, { useEffect, useLayoutEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router';
+import { useAuth } from '../../context/AuthContext';
+import { Link } from 'react-router-dom';
+import { useUIContext } from '../../context/UIContext';
+import BottomDrawer from '../../components/BottomDrawer/BottomDrawer';
 
 const Profile = () => {
   const { isMobile, isDrawerOpen, setIsDrawerOpen } = useUIContext();
@@ -12,7 +12,7 @@ const Profile = () => {
   const location = useLocation();
 
   if (!isAuthenticated) {
-    nav("/auth");
+    nav('/auth');
   }
 
   return (
@@ -21,9 +21,25 @@ const Profile = () => {
         location.pathname === '/profile' && (
           <>
             <ProfileDrawer />
-            <button className="bg-white border p-2.5 fixed w-full bottom-0 left-0 right-0 z-[5] flex items-center gap-2 text-gray-400 font-normal" onClick={() => setIsDrawerOpen(true)}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor">
-                <path d="M18 15L12 9L6 15" stroke-width="1.5" stroke-miterlimit="16" stroke-linecap="round" stroke-linejoin="round" />
+            <button
+              className="bg-white border p-2.5 fixed w-full bottom-0 left-0 right-0 z-[5] flex items-center gap-2 text-gray-400 font-normal"
+              onClick={() => setIsDrawerOpen(true)}
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                stroke="currentColor"
+              >
+                <path
+                  d="M18 15L12 9L6 15"
+                  stroke-width="1.5"
+                  stroke-miterlimit="16"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
               </svg>
               Tap to see more options
             </button>
@@ -36,7 +52,6 @@ const Profile = () => {
           </div>
         </div>
       )}
-
     </div>
   );
 };
@@ -47,7 +62,7 @@ function ProfileContent() {
   });
 
   const toggleExpand = (section: keyof typeof isExpanded) => {
-    setIsExpanded((prev) => ({ ...prev, [section]: !prev[section] }));
+    setIsExpanded(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
   return (
@@ -60,7 +75,7 @@ function ProfileContent() {
         <ExpandableMenuItem
           label="Billing"
           isExpanded={isExpanded.billing}
-          onClick={() => toggleExpand("billing")}
+          onClick={() => toggleExpand('billing')}
         >
           <SubMenuItem label="Payment methods" to="/profile/payment-methods" />
         </ExpandableMenuItem>
@@ -70,7 +85,7 @@ function ProfileContent() {
 }
 
 function ProfileDrawer() {
-  const snapPoints = ["192", 1];
+  const snapPoints = ['192', 1];
   const [snap, setSnap] = useState<number | string | null>(snapPoints[0]);
   const location = useLocation();
   const contentRef = React.useRef<HTMLDivElement>(null);
@@ -84,14 +99,20 @@ function ProfileDrawer() {
     const drawerContent = contentRef.current;
     if (drawerContent) {
       // Remove potential focus-trap attributes
-      drawerContent.removeAttribute("aria-hidden");
-      drawerContent.removeAttribute("tabIndex");
+      drawerContent.removeAttribute('aria-hidden');
+      drawerContent.removeAttribute('tabIndex');
     }
   }, []);
 
   return (
     <>
-      <BottomDrawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen} modal={false} defaultSnap={0.375} snapPoints={[0, 0.375, 1]}>
+      <BottomDrawer
+        open={isDrawerOpen}
+        onOpenChange={setIsDrawerOpen}
+        modal={false}
+        defaultSnap={0.375}
+        snapPoints={[0, 0.375, 1]}
+      >
         <div className="flex flex-col h-full overflow-hidden">
           <ProfileContent />
         </div>
@@ -154,19 +175,13 @@ function ExpandableMenuItem({
               stroke="currentColor"
               xmlns="http://www.w3.org/2000/svg"
             >
-              <path
-                d="M9.00005 6L15 12L9 18"
-                strokeWidth="1.5"
-                strokeMiterlimit="16"
-              />
+              <path d="M9.00005 6L15 12L9 18" strokeWidth="1.5" strokeMiterlimit="16" />
             </svg>
           )}
         </span>
       </button>
       {isExpanded && (
-        <div className="flex flex-col justify-between w-full text-base mb-2">
-          {children}
-        </div>
+        <div className="flex flex-col justify-between w-full text-base mb-2">{children}</div>
       )}
     </>
   );
