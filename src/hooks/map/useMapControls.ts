@@ -13,7 +13,7 @@ export function useMapControls() {
   const { mapRef, drawRef, shouldInitializeFeatures } = useMapContext();
   const { isMobile } = useUIContext();
   const { currentStyle, setCurrentStyle } = usePolygonsContext();
-  const { switchPopulationLayer } = useLayerContext();
+  const { switchPopulationLayer, selectedCity, selectedCountry } = useLayerContext();
   const controlsAdded = useRef(false);
 
   useEffect(() => {
@@ -36,6 +36,11 @@ export function useMapControls() {
       }
 
       try {
+        console.log('#debug: Adding controls with context:', {
+          selectedCity,
+          selectedCountry,
+        });
+
         // Add styles control first
         controls.styles = new StylesControl(currentStyle, setCurrentStyle);
         map.addControl(controls.styles, 'top-right');
@@ -66,10 +71,8 @@ export function useMapControls() {
         map.addControl(drawRef.current);
 
         // Add population control
-        controls.population = new PopulationControl({
-          switchPopulationLayer,
-        });
-        map.addControl(controls.population, 'top-right');
+        controls.population = new PopulationControl({ switchPopulationLayer });
+        map.addControl(controls.population, 'top-left');
 
         controlsAdded.current = true;
       } catch (error) {

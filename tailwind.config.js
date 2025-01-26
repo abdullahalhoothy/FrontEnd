@@ -6,6 +6,11 @@ export default {
     extend: {
       colors: {
         primary: "#115740",
+        gem: {
+          DEFAULT: "#7a3d84",
+          dark:"#282d37",
+          green:"#3fc99b"
+        }
       },
     },
   },
