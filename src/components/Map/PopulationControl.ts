@@ -1,7 +1,7 @@
 import '../../styles/mapControls.css';
 
 type PopulationControlProps = {
-  switchPopulationLayer: (fromSetter: boolean) => void;
+  switchPopulationLayer: () => void;
 };
 
 function PopulationControl(props: PopulationControlProps) {
@@ -17,6 +17,13 @@ function PopulationControl(props: PopulationControlProps) {
       button.title = isEnabled
         ? 'Population Intelligence'
         : 'Please select a city and country first';
+    }
+  };
+
+  const updateActiveState = (isActive: boolean) => {
+    if (button) {
+      console.log('[PopulationControl] Updating active state:', { isActive });
+      button.setAttribute('data-active', isActive.toString());
     }
   };
 
@@ -46,8 +53,10 @@ function PopulationControl(props: PopulationControlProps) {
 
     const handleClick = () => {
       if (!button.disabled) {
-        const currentState = button.getAttribute('data-active') === 'true';
-        button.setAttribute('data-active', (!currentState).toString());
+        console.log('#debug: PopulationControl click', {
+          disabled: button.disabled,
+          active: button.getAttribute('data-active'),
+        });
         clickHandler();
       }
     };
@@ -62,12 +71,11 @@ function PopulationControl(props: PopulationControlProps) {
   };
 
   return {
-    onAdd(): HTMLElement {
+    onAdd() {
       container = document.createElement('div');
       container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group';
-      container.appendChild(
-        createButton('Population Intelligence', () => switchPopulationLayer(false))
-      );
+
+      container.appendChild(createButton('Population Intelligence', switchPopulationLayer));
 
       const cityCountryChangeHandler = (
         e: CustomEvent<{ hasCity: boolean; hasCountry: boolean }>
@@ -76,10 +84,16 @@ function PopulationControl(props: PopulationControlProps) {
         updateButtonState(hasCity && hasCountry);
       };
 
+      const populationStateHandler = (e: CustomEvent<{ isActive: boolean }>) => {
+        updateActiveState(e.detail.isActive);
+      };
+
       container.dataset.eventHandler = 'true';
       document.addEventListener('cityCountryChanged', cityCountryChangeHandler as EventListener);
+      document.addEventListener('populationStateChanged', populationStateHandler as EventListener);
 
       (container as any)._cityCountryHandler = cityCountryChangeHandler;
+      (container as any)._populationStateHandler = populationStateHandler;
 
       return container;
     },
@@ -88,6 +102,12 @@ function PopulationControl(props: PopulationControlProps) {
         document.removeEventListener(
           'cityCountryChanged',
           (container as any)._cityCountryHandler as EventListener
+        );
+      }
+      if ((container as any)._populationStateHandler) {
+        document.removeEventListener(
+          'populationStateChanged',
+          (container as any)._populationStateHandler as EventListener
         );
       }
       container.remove();
