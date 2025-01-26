@@ -111,6 +111,17 @@ export function LayerProvider(props: { children: ReactNode }) {
   // Memoize the zoom level
   const currentZoomLevel = useMemo(() => backendZoom ?? defaultMapConfig.zoomLevel, [backendZoom]);
 
+  useEffect(() => {
+    console.log('#feat: auto zoom', 'selectedCity', selectedCity);
+  }, [selectedCity]);
+  useEffect(() => {
+    console.log('#feat: auto zoom', 'selectedCountry', selectedCountry);
+  }, [selectedCountry]);
+
+  useEffect(() => {
+    console.log('#feat: auto zoom', 'currentZoomLevel', currentZoomLevel);
+  }, [currentZoomLevel]);
+
   function incrementFormStage() {
     if (createLayerformStage === 'initial') {
       setCreateLayerformStage('secondStep');
@@ -171,7 +182,6 @@ export function LayerProvider(props: { children: ReactNode }) {
     setGeoPoints((prevPoints: MapFeatures[] | MapFeatures | any) => {
       const layerKey = String(layerId);
 
-      // Increment the call count for this layer
       pageCountsRef.current[layerKey] = (pageCountsRef.current[layerKey] || 0) + 1;
 
       // Skip merging if response has no features
@@ -208,13 +218,12 @@ export function LayerProvider(props: { children: ReactNode }) {
       const filteredPoints = prevPoints.filter(p => String(p.layerId) !== String(layerId));
       const newPoints = [...filteredPoints, newPoint];
 
-      // Handle pagination
       if (response.next_page_token && pageCountsRef.current[layerKey] < MAX_CALLS) {
         handleFetchDataset('full data', response.next_page_token, layerId).catch(err => {
           console.error(`Error fetching page for layer ${layerId}:`, err);
         });
       } else {
-        delete pageCountsRef.current[layerKey]; // Remove from tracking
+        delete pageCountsRef.current[layerKey];
       }
 
       return newPoints;
@@ -222,7 +231,6 @@ export function LayerProvider(props: { children: ReactNode }) {
   }
 
   async function handleFetchDataset(action: string, pageToken?: string, layerId?: number) {
-    // Clear existing data on the initial request
     if (!pageToken && !layerId) {
       setGeoPoints([]);
       setLayerDataMap({});
@@ -257,7 +265,6 @@ export function LayerProvider(props: { children: ReactNode }) {
         try {
           if (!layer) continue;
 
-          // Verify that this layer ID isn't already processed
           if (layerDataMap[layer.id]) {
             console.warn(`Layer ${layer.id} already processed, skipping...`);
             continue;
@@ -370,6 +377,11 @@ export function LayerProvider(props: { children: ReactNode }) {
         selectedCountry: value,
         selectedCity: '', // Reset city when country changes
       }));
+      document.dispatchEvent(
+        new CustomEvent('cityCountryChanged', {
+          detail: { hasCountry: true, hasCity: false },
+        })
+      );
     } else if (name === 'selectedCity') {
       // Update city
       setSelectedCity(value);
@@ -379,6 +391,12 @@ export function LayerProvider(props: { children: ReactNode }) {
         ...prev,
         selectedCity: value,
       }));
+
+      document.dispatchEvent(
+        new CustomEvent('cityCountryChanged', {
+          detail: { hasCountry: true, hasCity: false },
+        })
+      );
     }
   }
 
@@ -447,6 +465,12 @@ export function LayerProvider(props: { children: ReactNode }) {
     setSearchType('category_search');
     setPassword('');
     setGeoPoints([]);
+
+    document.dispatchEvent(
+      new CustomEvent('cityCountryChanged', {
+        detail: { hasCountry: true, hasCity: false },
+      })
+    );
   }
 
   useEffect(() => {
