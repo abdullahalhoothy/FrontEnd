@@ -43,18 +43,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
     hex: string;
   } | null>(null);
 
-  // const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(
-  //   null
-  // );
-  // const [openDropdownIndex1, setOpenDropdownIndex1] = useState<number | null>(
-  //   null
-  // );
-  // const [openDropdownIndex2, setOpenDropdownIndex2] = useState<number | null>(
-  //   null
-  // );
-  // const [openDropdownIndex3, setOpenDropdownIndex3] = useState<number | null>(
-  //   null
-  // );
   const [openDropdownIndices, setOpenDropdownIndices] = useState<(number | null)[]>([
     null,
     null,
@@ -126,18 +114,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
       unprocessedData = data;
     };
 
-    // await HttpReq<MapFeatures | MapFeatures[]>(
-    //   url,
-    //   callData,
-    //   setLastGeoMessageRequest,
-    //   setLastGeoIdRequest,
-    //   setIsLoading,
-    //   setIsError,
-    //   "post",
-    //   apiJsonRequest,
-    //   authResponse.idToken
-    // );
-
     try {
       setIsLoading(true);
       const res = await apiRequest({
@@ -146,29 +122,27 @@ export function CatalogProvider(props: { children: ReactNode }) {
         body: apiJsonRequest,
         isAuthRequest: true,
       });
-      callData(res.data.data);
-      setLastGeoMessageRequest(res.data.message);
-      setLastGeoIdRequest(res.data.id);
+      if (res?.data?.data) {
+        callData(res.data.data);
+        setLastGeoMessageRequest(res.data.message);
+        setLastGeoIdRequest(res.data.id);
+      }
+
+      if (unprocessedData) {
+        const updatedDataArray = (
+          Array.isArray(unprocessedData) ? unprocessedData : [unprocessedData]
+        ).map(function (layer) {
+          return Object.assign({}, layer, { display: true });
+        });
+        setGeoPoints(function (prevGeoPoints) {
+          return prevGeoPoints.concat(updatedDataArray);
+        });
+      }
     } catch (error) {
-      setIsError(error);
+      setIsError(error instanceof Error ? error : new Error('Failed to fetch geo points'));
     } finally {
+      setIsError(null);
       setIsLoading(false);
-    }
-    if (isError) {
-      console.error('An error occurred while fetching geo points.');
-      return;
-    }
-
-    if (unprocessedData) {
-      var updatedDataArray = (
-        Array.isArray(unprocessedData) ? unprocessedData : [unprocessedData]
-      ).map(function (layer) {
-        return Object.assign({}, layer, { display: true });
-      });
-
-      setGeoPoints(function (prevGeoPoints) {
-        return prevGeoPoints.concat(updatedDataArray);
-      });
     }
   }
 
