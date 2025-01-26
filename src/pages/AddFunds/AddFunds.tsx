@@ -5,14 +5,14 @@ import { useAuth } from "../../context/AuthContext";
 import apiRequest from "../../services/apiRequest";
 import urls from "../../urls.json";
 
-const PaymentMethodForm: React.FC = () => {
+const AddFundsForm: React.FC = () => {
   const { authResponse } = useAuth();
   const navigate = useNavigate();
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   // State for individual card field errors
   const [submitting, setSubmitting] = useState(false);
-  const [cardholderName, setCardholderName] = useState('');
+  const [cost, setCost] = useState<number | null>(null);
 
 
 
@@ -29,7 +29,7 @@ const PaymentMethodForm: React.FC = () => {
         url: urls.top_up_wallet,
         method: "POST",
         body: {
-          payment_method_id: paymentMethodId,
+          amount: cost * 100, //multiply by 100 to convert cents to dollars
           user_id: authResponse.localId,
         },
         isAuthRequest: true,
@@ -59,8 +59,8 @@ const PaymentMethodForm: React.FC = () => {
               <input
                 id="cardholder-name"
                 type="text"
-                value={cardholderName}
-                onChange={(e) => setCardholderName(e.target.value)}
+                value={cost}
+                onChange={(e) => setCost(e.target.value)}
                 className="w-full p-3 border border-gray-200 shadow-sm rounded-md focus:outline-none"
                 placeholder="Amount (USD)"
                 required
@@ -90,19 +90,6 @@ const PaymentMethodForm: React.FC = () => {
 const AddFunds: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const snapPoints = ["256", 1];
-  const [isMobile, setIsMobile] = useState(false);
-  const [snap, setSnap] = useState<number | string | null>(snapPoints[0]);
-
-  useLayoutEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   if (!isAuthenticated) {
     navigate("/auth");
@@ -111,7 +98,7 @@ const AddFunds: React.FC = () => {
 
   return (
     <>
-        <PaymentMethodForm />
+        <AddFundsForm />
     </>
   );
 };
