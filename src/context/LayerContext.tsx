@@ -27,7 +27,7 @@ import { useCatalogContext } from './CatalogContext';
 import userIdData from '../currentUserId.json';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { processCityData, getDefaultLayerColor } from '../utils/helperFunctions';
+import { processCityData, getDefaultLayerColor, colorOptions } from '../utils/helperFunctions';
 import apiRequest from '../services/apiRequest';
 import { defaultMapConfig } from '../hooks/map/useMapInitialization';
 import { useMapContext } from './MapContext';
