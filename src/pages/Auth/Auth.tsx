@@ -234,13 +234,15 @@ const Auth = () => {
           {renderForm()}
           <div className="flex justify-between mt-4">
             <button
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setIsPasswordReset(false);
+              onClick={(e) => {
+                if(e.target.innerText!=='Need to register?'){
+                  setIsLogin(!isLogin)
+                  setIsPasswordReset(false)
+                }
               }}
               className="text-[#006400] text-sm hover:underline"
             >
-              {isLogin ? 'Need to register?' : 'Already have an account?'}
+              {isLogin ? <a href='https://www.s-locator.com/' target='_blank'>Need to register?</a> : 'Already have an account?'}
             </button>
             {isLogin && (
               <button

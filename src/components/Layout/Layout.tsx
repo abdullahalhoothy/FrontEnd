@@ -19,7 +19,8 @@ import ChangePassword from '../../pages/ChangePassword/ChangePassword';
 import PaymentMethods from '../../pages/PaymentMethods/PaymentMethods';
 import PaymentMethod from '../../pages/PaymentMethod/PaymentMethod';
 import MobileNavbar from '../MobileNavbar/MobileNavbar';
-import clsx from 'clsx';
+import Wallet from "../../pages/Wallet/Wallet";
+import AddFunds from "../../pages/AddFunds/AddFunds";
 
 const Layout = () => {
   return (
@@ -49,6 +50,8 @@ const Layout = () => {
             <Route path="change-email" element={<ChangeEmail />} />
             <Route path="payment-methods" element={<PaymentMethods />} />
             <Route path="payment-methods/add" element={<PaymentMethod />} />
+            <Route path="wallet" element={<Wallet/>}/>
+            <Route path="wallet/add" element={<AddFunds/>}/>
           </Route>
           <Route path={'/organization'} element={<OrganizationLayout />}>
             <Route path="" element={<CommingSoon data={'Organization Features'} />} />
