@@ -50,13 +50,13 @@ const FetchDatasetForm = () => {
   } = useLayerContext();
 
   // AUTH CONTEXT
-  const { isAuthenticated, authResponse } = useAuth();
-
+  const { isAuthenticated, authResponse, logout } = useAuth();
+  const[isPriceVisible,setIsPriceVisible] =useState<boolean>(false)
   // FETCHED DATA
   const [layers, setLayers] = useState<Layer[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [citiesData, setCitiesData] = useState<{ [country: string]: City[] }>({});
-
+  const [costEstimate, setCostEstimate] = useState<number>(0.0);
   // COLBASE CATEGORY
   const [openedCategories, setOpenedCategories] = useState<string[]>([]);
 
@@ -74,11 +74,34 @@ const FetchDatasetForm = () => {
   useEffect(() => {
     resetFetchDatasetForm();
     handleGetCountryCityCategory();
+    fetchProfile();
   }, []);
+  const fetchProfile = async () => {
+    if (!authResponse || !("idToken" in authResponse)) {
+      nav("/auth");
+      return;
+    }
 
+    try {
+      const res = await apiRequest({
+        url: urls.user_profile,
+        method: "POST",
+        isAuthRequest: true,
+        body: { user_id: authResponse.localId },
+      });
+      await setIsPriceVisible(res.data.data.settings.show_price_on_purchase);
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      logout();
+      nav("/auth");
+    }
+  };
   useEffect(() => {
-    console.log(reqFetchDataset);
-  }, [reqFetchDataset]);
+    if(reqFetchDataset.includedTypes&&reqFetchDataset.selectedCity&&reqFetchDataset.selectedCountry){
+      let total_cost=layers.reduce((sum, layer) => sum + layer.cost, 0);
+      setCostEstimate(total_cost)
+    }
+  }, [layers,selectedCity,selectedCity]);
 
   const filteredCategories = Object.entries(categories).reduce((acc, [category, types]) => {
     const filteredTypes = (types as string[]).filter(type =>
@@ -136,7 +159,27 @@ const FetchDatasetForm = () => {
     //   setIsError
     // );
   }
-
+  const estimateCost=async(type:string[])=>{
+    if (!authResponse || !("idToken" in authResponse)) {
+      return;
+    }
+    console.log('Estimating Cost')
+    const requestBody = {
+      user_id: authResponse.localId,
+      boolean_query: type.join(" OR "),
+      city_name: selectedCity,
+      country_name: selectedCountry,
+    };
+    let res=await apiRequest(
+      {
+        url:urls.cost_calculator,
+        method:'Post',
+        body:requestBody
+      }
+    )
+    let layerCost=res.data.data.cost
+    return layerCost
+  }
   function handleButtonClick(action: string, event: React.MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
 
@@ -220,7 +263,11 @@ const FetchDatasetForm = () => {
   };
 
   // Add this helper function
-  const addTypeToFirstAvailableLayer = (type: string, setAsExcluded: boolean) => {
+  const addTypeToFirstAvailableLayer =async (type: string, setAsExcluded: boolean) => {
+    let layerCost=0
+    if (!setAsExcluded){
+      layerCost=await estimateCost([type])
+    }
     setLayers(prevLayers => {
       if (prevLayers.length === 0) {
         const newLayer: Layer = {
@@ -230,6 +277,7 @@ const FetchDatasetForm = () => {
           excludedTypes: setAsExcluded ? [type] : [],
           display: true,
           points_color: getDefaultLayerColor(1),
+          cost:layerCost
         };
         return [newLayer];
       }
@@ -250,6 +298,7 @@ const FetchDatasetForm = () => {
           excludedTypes: setAsExcluded ? [type] : [],
           display: true,
           points_color: getDefaultLayerColor(newLayerId),
+          cost:layerCost
         };
         return [...prevLayers, newLayer];
       }
@@ -647,12 +696,28 @@ const FetchDatasetForm = () => {
 
           <button
             className="w-full h-10 bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer"
-            onClick={e => {
+            onClick={async(e) => {
+              const res = await apiRequest({
+                url: `${urls.list_stripe_payment_methods}?user_id=${authResponse?.localId}`,
+                method: 'get',
+                isAuthRequest: true,
+              });
+              if (res.data.data.length===0) nav('/profile/payment-methods');
               if (!isAuthenticated) nav('/auth');
+              await apiRequest(
+                {
+                  url:urls.deduct_wallet,
+                  method:'Post',
+                  body:{
+                    user_id:authResponse?.localId,
+                    amount:costEstimate*100
+                  }
+                }
+              )
               handleButtonClick('full data', e);
             }}
           >
-            Full Data
+            Full Data {isPriceVisible ? `($${costEstimate.toFixed(2)})` : null}
           </button>
         </div>
       </div>
