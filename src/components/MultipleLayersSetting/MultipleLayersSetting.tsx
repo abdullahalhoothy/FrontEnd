@@ -61,7 +61,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   } = useCatalogContext();
   const layer = geoPoints[layerIndex];
 
-  const { prdcer_layer_name, is_zone_lyr, display, is_heatmap, is_grid, city_name } = layer;
+  const { prdcer_layer_name, layer_legend, is_zone_lyr, display, is_heatmap, is_grid, city_name } = layer;
   const [isZoneLayer, setIsZoneLayer] = useState(is_zone_lyr);
   const [isDisplay, setIsDisplay] = useState(display);
   const [isHeatmap, setIsHeatmap] = useState(is_heatmap);
@@ -483,7 +483,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
           <div className="font-bold text-[#333] w-[105px] overflow-hidden">
             <span className="text-sm text-[#333] block truncate" title={prdcer_layer_name}>
-              {prdcer_layer_name}
+              {prdcer_layer_name ||  layer_legend}
             </span>
           </div>
           <div className="flex">
@@ -522,7 +522,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         <div className=" w-full">
           <div className="flex flex-col gap-2 mt-4   py-3 px-4 w-full bg-white border border-gray-300 rounded-lg shadow-lg z-50">
             <div className="flex justify-between items-center">
-              <p className="text-base mb-0 capitalize font-medium">{prdcer_layer_name}</p>
+              <p className="text-base mb-0 capitalize font-medium">{prdcer_layer_name || layer_legend}</p>
               <div className="flex items-center  gap-2">
                 <p className="text-xs mb-0 font-medium">Advanced</p>
                 <div
