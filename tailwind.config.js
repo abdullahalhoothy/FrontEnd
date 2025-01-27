@@ -7,11 +7,14 @@ export default {
       colors: {
         primary: "#115740",
         gem: {
-          DEFAULT: "#7a3d84",
+          DEFAULT: "#7D00B8",
           dark:"#282d37",
-          green:"#3fc99b"
-        }
+          green:"#19802A"
+        },
       },
+      backgroundImage: {
+        "gem-gradient": "linear-gradient(162deg, #7D00B8 31%, #19802A 87%)"
+      }
     },
   },
   plugins: [],

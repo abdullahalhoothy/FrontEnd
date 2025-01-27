@@ -543,7 +543,7 @@ const FetchDatasetForm = () => {
                 ${
                   !selectedCity || !selectedCountry
                     ? 'text-gray-500 bg-gem/20 border-gray-200'
-                    : 'text-gray-100 bg-gem/90 border-gem-green/20'
+                    : 'text-gray-100 bg-gem-gradient border-gem-green/20'
                 } 
                 aria-disabled:opacity-80 aria-disabled:cursor-not-allowed`}
               title={
@@ -567,7 +567,7 @@ const FetchDatasetForm = () => {
               >
                 <div className="flex flex-col">
                   <label className="font-medium text-gem">Area Population Intelligence</label>
-                  <p className="text-sm text-gem/60 mt-1">Enable smart population data</p>
+                  <p className="text-sm text-gem/80 mt-1">Enable smart population data</p>
                 </div>
 
                 <div className="relative">
@@ -585,12 +585,12 @@ const FetchDatasetForm = () => {
                   <div
                     className={`
                     ${!selectedCity || !selectedCountry ? 'cursor-not-allowed' : 'cursor-pointer'} w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 
-                    z-10 peer-focus:ring-gem/20 rounded-full peer 
+                    z-10 peer-focus:ring-gem-green/20 rounded-full peer 
                     peer-checked:after:translate-x-[28px] peer-checked:after:border-white 
                     after:content-[''] after:absolute after:top-[2px] after:left-[2px] 
                     after:bg-white after:border-gray-300 after:border after:rounded-full 
                     after:h-6 after:w-6 after:transition-all
-                    peer-checked:bg-gem peer-disabled:cursor-not-allowed
+                    peer-checked:bg-gem-green peer-disabled:cursor-not-allowed
                     peer-disabled:after:bg-gray-100
                   `}
                   ></div>

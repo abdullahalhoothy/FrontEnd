@@ -43,7 +43,7 @@ const BenchmarkControl = () => {
     });
   };
   return (
-    <div className="absolute top-0 left-0 ml-[10px]" style={benchmarkStyle}>
+    <div className="" style={benchmarkStyle}>
       <button
         className="!bg-white !w-auto !h-auto !rounded-md !p-2 hover:bg-gray-100 transition-colors shadow-sm !border !border-gray-200"
         onClick={() => {
