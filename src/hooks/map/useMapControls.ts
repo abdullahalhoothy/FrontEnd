@@ -27,6 +27,7 @@ export function useMapControls() {
       navigation?: mapboxgl.NavigationControl;
       circle?: mapboxgl.IControl;
       draw?: MapboxDraw;
+      scale?: mapboxgl.ScaleControl;
     } = {};
 
     const addControls = () => {
@@ -40,11 +41,11 @@ export function useMapControls() {
           selectedCountry,
         });
 
-        // Add styles control first
+        // Add styles control
         controls.styles = new StylesControl(currentStyle, setCurrentStyle);
         map.addControl(controls.styles, 'top-right');
 
-        // Add navigation control second
+        // Add navigation control
         controls.navigation = new mapboxgl.NavigationControl();
         map.addControl(controls.navigation, 'top-right');
 
@@ -66,8 +67,15 @@ export function useMapControls() {
         });
         map.addControl(controls.circle, 'top-right');
 
-        // Add draw control last
+        // Add draw control
         map.addControl(drawRef.current);
+
+        // Add scale control
+        controls.scale = new mapboxgl.ScaleControl({
+          maxWidth: 200,
+          unit: 'metric',
+        });
+        map.addControl(controls.scale, 'bottom-left');
 
         controlsAdded.current = true;
       } catch (error) {
