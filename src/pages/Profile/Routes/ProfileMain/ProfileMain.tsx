@@ -8,6 +8,7 @@ import {
   FaDatabase,
   FaLayerGroup,
   FaBook,
+  FaIdCard
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router';
 import urls from '../../../../urls.json';
@@ -16,8 +17,22 @@ import apiRequest from '../../../../services/apiRequest';
 import { UserProfile, PopupInfo } from '../../../../types/allTypesAndInterfaces';
 
 const ProfileMain: React.FC = () => {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<UserProfile>({
+    user_id: '',
+    username: '',
+    email: '',
+    account_type: '',
+    settings: {
+      show_price_on_purchase: false,
+    },
+    prdcer: {
+      prdcer_dataset: {},
+      prdcer_lyrs: {},
+      prdcer_ctlgs: {},
+    },
+  });
   const [isLoading, setIsLoading] = useState(true);
+  const [showPrice,setShowPrice]=useState<boolean|undefined>(false)
   const [error, setError] = useState<Error | null>(null);
   const [popupInfo, setPopupInfo] = useState<PopupInfo | null>(null);
   const { isAuthenticated, authResponse, logout } = useAuth();
@@ -56,6 +71,7 @@ const ProfileMain: React.FC = () => {
           body: { user_id: authResponse.localId },
         });
         setProfile(res.data.data);
+        setShowPrice(res.data.data.settings.show_price_on_purchase)
       } catch (err) {
         console.error('Unexpected error:', err);
         logout();
@@ -193,6 +209,47 @@ const ProfileMain: React.FC = () => {
             <FaEnvelope className="mr-2 text-[#006400]" />
             <span className="font-bold mr-1 min-w-[100px]">Email:</span>
             {profile.email}
+          </div>
+          <div className="flex items-start mb-2">
+            <label className="flex items-center mb-4 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showPrice}
+                onChange={async(e) => {
+                  await setShowPrice(e.target.checked)
+                  if (profile.account_type==='admin') {
+                    if (!authResponse || !("idToken" in authResponse)) {
+                      setError(new Error("Authentication information is missing."));
+                      setIsLoading(false);
+                      navigate("/auth");
+                      return;
+                    }
+                    const res = await apiRequest({
+                      url: urls.update_user_profile,
+                      method: "POST",
+                      isAuthRequest: true,
+                      body: { 
+                        user_id: authResponse.localId,
+                        show_price_on_purchase:e.target.checked,
+                        username:profile.username,
+                        email:profile.email,
+                      },
+                    });
+                  }
+                }}
+                disabled={profile.account_type!=='admin'}
+                className={`mr-2 h-4 w-4 border-gray-300 rounded focus:ring-green-600 ${
+                  profile.account_type!=='admin' ? "opacity-50 cursor-not-allowed" : "text-green-700"
+                }`}
+              />
+              <span
+                className={`text-gray-700 font-medium ${
+                  (profile.account_type!=='admin') ? "text-gray-400" : ""
+                }`}
+              >
+                Show Price
+              </span>
+            </label>
           </div>
           {profile.prdcer && (
             <div>
