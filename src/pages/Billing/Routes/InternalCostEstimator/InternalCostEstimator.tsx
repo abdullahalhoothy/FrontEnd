@@ -7,7 +7,7 @@ import { formatSubcategoryName } from '../../../../utils/helperFunctions';
 import styles from './InternalCostEstimator.module.css';
 import urls from '../../../../urls.json';
 import { FaCaretDown, FaCaretRight } from 'react-icons/fa';
-
+import { useAuth } from "../../../../context/AuthContext";
 function InternalCostEstimator() {
   const {
     countries,
@@ -24,7 +24,7 @@ function InternalCostEstimator() {
 
   // COLBASE CATEGORY
   const [openedCategories, setOpenedCategories] = useState<string[]>([]);
-
+  const{authResponse}=useAuth();
   // when form first loads, reset previous form data setReqFetchDataset()to its initial state
   // The empty dependency array [] at the end of the useEffect hook means this effect will
   // only run once, after the initial render, and when the component unmounts.
@@ -47,6 +47,7 @@ function InternalCostEstimator() {
         boolean_query: reqFetchDataset.includedTypes?.join(' OR '),
         city_name: reqFetchDataset.selectedCity,
         country_name: reqFetchDataset.selectedCountry,
+        user_id: authResponse.localId,
       };
 
       HttpReq<CostEstimate>(
