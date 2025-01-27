@@ -301,15 +301,6 @@ export function useMapLayers() {
               const cellSide = gridSize / 1000;
               const options = { units: 'kilometers' as const };
               const grid = turf.squareGrid(bounds, cellSide, options);
-              const emptyProperties: Record<string, null> = Object.keys(
-                featureCollection.features[0].properties
-              ).reduce(
-                (acc, key) => {
-                  acc[key] = null;
-                  return acc;
-                },
-                {} as Record<string, null>
-              );
 
               // Calculate density for each cell
               grid.features = grid.features.map((cell, index) => {
