@@ -31,6 +31,7 @@ import { processCityData, getDefaultLayerColor, colorOptions } from '../utils/he
 import apiRequest from '../services/apiRequest';
 import { defaultMapConfig } from '../hooks/map/useMapInitialization';
 import { useMapContext } from './MapContext';
+import { isIntelligentLayer } from '../utils/layerUtils';
 
 const LayerContext = createContext<LayerContextType | undefined>(undefined);
 
@@ -232,7 +233,7 @@ export function LayerProvider(props: { children: ReactNode }) {
 
   async function handleFetchDataset(action: string, pageToken?: string, layerId?: number) {
     if (!pageToken && !layerId) {
-      setGeoPoints([]);
+      setGeoPoints(prev => prev.filter(p => isIntelligentLayer(p)));
       setLayerDataMap({});
     }
 

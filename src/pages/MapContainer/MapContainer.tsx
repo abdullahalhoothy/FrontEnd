@@ -12,6 +12,7 @@ import { useLegendManager } from '../../hooks/map/useLegendManager';
 import { useMapStyle } from '../../hooks/map/useMapStyle';
 import StatisticsPopups from '../../components/Map/StatisticsPopups';
 import BenchmarkControl from '../../components/Map/BenchmarkControl';
+import {PopulationControl} from '../../components/Map/PopulationControl';
 import { useMapContext } from '../../context/MapContext';
 
 // Main container component that handles map initialization and state
@@ -30,7 +31,12 @@ function Container() {
     <div className="flex-1 relative" id="map-container">
       <div className="lg:absolute w-full h-full overflow-hidden" ref={mapContainerRef} />
       <StatisticsPopups />
-      {shouldInitializeFeatures && <BenchmarkControl />}
+      {shouldInitializeFeatures && (
+        <div className="absolute top-4 left-4 flex items-start gap-2 z-[1]">
+          <BenchmarkControl />
+          <PopulationControl />
+        </div>
+      )}
     </div>
   );
 }

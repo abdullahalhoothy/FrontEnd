@@ -27,7 +27,6 @@ export function useMapControls() {
       navigation?: mapboxgl.NavigationControl;
       circle?: mapboxgl.IControl;
       draw?: MapboxDraw;
-      population?: mapboxgl.IControl;
     } = {};
 
     const addControls = () => {
@@ -69,10 +68,6 @@ export function useMapControls() {
 
         // Add draw control last
         map.addControl(drawRef.current);
-
-        // Add population control
-        controls.population = new PopulationControl({ switchPopulationLayer });
-        map.addControl(controls.population, 'top-left');
 
         controlsAdded.current = true;
       } catch (error) {
