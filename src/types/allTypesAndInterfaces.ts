@@ -429,9 +429,9 @@ export interface AuthFailedResponse {
     }[];
   };
 }
-export interface UserProfile {
-  name: string;
-  email: string;
+
+export interface ProfileSettings{
+  show_price_on_purchase:boolean
 }
 export interface User {
   id: string;
@@ -481,6 +481,7 @@ export interface Layer {
   layer_legend?: string;
   layer_description?: string;
   prdcer_lyr_id?: string;
+  cost:number
 }
 
 export interface LayerGroup {
@@ -653,6 +654,8 @@ export interface UserProfile {
   user_id: string;
   username: string;
   email: string;
+  account_type:string;
+  settings:ProfileSettings
   prdcer?: {
     prdcer_dataset: Record<string, any>;
     prdcer_lyrs: Record<string, any>;

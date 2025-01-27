@@ -14,7 +14,6 @@ import LayerDisplaySubCategories from '../LayerDisplaySubCategories/LayerDisplay
 import CategoriesBrowserSubCategories from '../CategoriesBrowserSubCategories/CategoriesBrowserSubCategories';
 import { useCatalogContext } from '../../context/CatalogContext';
 import { useMapContext } from '../../context/MapContext';
-
 const FetchDatasetForm = () => {
   const nav = useNavigate();
 
@@ -51,12 +50,14 @@ const FetchDatasetForm = () => {
 
   // AUTH CONTEXT
   const { isAuthenticated, authResponse } = useAuth();
-
+  // UI CONTEXT
+  const[isPriceVisible,setIsPriceVisible] =useState<boolean>(false)
   // FETCHED DATA
   const [layers, setLayers] = useState<Layer[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [citiesData, setCitiesData] = useState<{ [country: string]: City[] }>({});
-
+  const [costEstimate, setCostEstimate] = useState<number>(0.0);
+  const [isLoading, setIsLoading] = useState(false);
   // COLBASE CATEGORY
   const [openedCategories, setOpenedCategories] = useState<string[]>([]);
 
@@ -70,15 +71,19 @@ const FetchDatasetForm = () => {
   const { setGeoPoints } = useCatalogContext();
 
   const { backendZoom } = useMapContext();
-
+  const { logout } = useAuth();
   useEffect(() => {
     resetFetchDatasetForm();
     handleGetCountryCityCategory();
+    fetchProfile();
   }, []);
 
   useEffect(() => {
-    console.log(reqFetchDataset);
-  }, [reqFetchDataset]);
+    if(reqFetchDataset.includedTypes&&reqFetchDataset.selectedCity&&reqFetchDataset.selectedCountry){
+      let total_cost=layers.reduce((sum, layer) => sum + layer.cost, 0);
+      setCostEstimate(total_cost)
+    }
+  }, [layers,selectedCity,selectedCity]);
 
   const filteredCategories = Object.entries(categories).reduce((acc, [category, types]) => {
     const filteredTypes = (types as string[]).filter(type =>
@@ -171,7 +176,27 @@ const FetchDatasetForm = () => {
       block: 'start',
     });
   };
-
+  const estimateCost=async(type:string[])=>{
+    if (!authResponse || !("idToken" in authResponse)) {
+      return;
+    }
+    console.log('Estimating Cost')
+    const requestBody = {
+      user_id: authResponse.localId,
+      boolean_query: type.join(" OR "),
+      city_name: selectedCity,
+      country_name: selectedCountry,
+    };
+    let res=await apiRequest(
+      {
+        url:urls.cost_calculator,
+        method:'Post',
+        body:requestBody
+      }
+    )
+    let layerCost=res.data.data.cost
+    return layerCost
+  }
   // Add new handler to remove type from specific layer
   const removeTypeFromLayer = (type: string, layerId: number, isExcluded: boolean) => {
     setLayers(
@@ -196,7 +221,7 @@ const FetchDatasetForm = () => {
     // Update reqFetchDataset based on remaining types
     const remainingIncluded = layers.flatMap(layer => layer.includedTypes);
     const remainingExcluded = layers.flatMap(layer => layer.excludedTypes);
-
+    
     setReqFetchDataset(prevData => ({
       ...prevData,
       includedTypes: remainingIncluded,
@@ -220,7 +245,11 @@ const FetchDatasetForm = () => {
   };
 
   // Add this helper function
-  const addTypeToFirstAvailableLayer = (type: string, setAsExcluded: boolean) => {
+  const addTypeToFirstAvailableLayer = async(type: string, setAsExcluded: boolean) => {
+    let layerCost=0
+    if (!setAsExcluded){
+      layerCost=await estimateCost([type])
+    }
     setLayers(prevLayers => {
       if (prevLayers.length === 0) {
         const newLayer: Layer = {
@@ -230,6 +259,7 @@ const FetchDatasetForm = () => {
           excludedTypes: setAsExcluded ? [type] : [],
           display: true,
           points_color: getDefaultLayerColor(1),
+          cost:layerCost
         };
         return [newLayer];
       }
@@ -250,6 +280,7 @@ const FetchDatasetForm = () => {
           excludedTypes: setAsExcluded ? [type] : [],
           display: true,
           points_color: getDefaultLayerColor(newLayerId),
+          cost:layerCost
         };
         return [...prevLayers, newLayer];
       }
@@ -373,7 +404,108 @@ const FetchDatasetForm = () => {
     }
   };
 
+  const handleIncludePopulation = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIncludePopulation(e.target.checked);
+    
+    if (e.target.checked) {
+      setShowLoaderTopup(true);
+      try {
+        // Create a new layer for population data
+        const newLayer: Layer = {
+          id: layers.length + 1,
+          name: 'Population Layer',
+          includedTypes: ["TotalPopulation"],
+          excludedTypes: [],
+          display: true,
+          points_color: colorOptions[0].hex
+        };
+        setLayers(prev => [...prev, newLayer]);
 
+        if(!authResponse || !authResponse.localId || !authResponse.idToken) return;
+        
+        // Fetch population data
+        const res = await apiRequest({
+          url: urls.fetch_dataset,
+          method: "post",
+          body: {
+            text_search: "",
+            page_token: "",
+            user_id: authResponse.localId,
+            idToken: authResponse.idToken,
+            zoom_level: backendZoom ?? defaultMapConfig.zoomLevel,
+            country_name: selectedCountry,
+            city_name: selectedCity,
+            boolean_query: "TotalPopulation",
+            layerId: newLayer.id,
+            layer_name: 'Population Layer',
+            action: 'sample',
+            search_type: 'category_search',
+          },
+          isAuthRequest: true,
+        });
+
+        if (res?.data?.data) {
+          // Add to geoPoints with grid mode enabled
+          setGeoPoints(prevPoints => {
+            const populationLayer = {
+              type: 'FeatureCollection',
+              features: res.data.data.features,
+              display: true,
+              points_color: newLayer.points_color,
+              layerId: String(newLayer.id),
+              city_name: selectedCity,
+              layer_legend: 'Population Layer',
+              is_grid: true, // Enable grid visualization
+              is_population: true, // Mark as population layer
+              basedon: 'population', // For density calculations
+              visualization_mode: 'grid'
+            };
+            return [...prevPoints, populationLayer];
+          });
+        }
+      } catch (error) {
+        setError(error instanceof Error ? error.message : 'Failed to fetch population data');
+        // Cleanup on error
+        setLayers(prev => prev.filter(layer => 
+          !layer.includedTypes.includes("TotalPopulation")
+        ));
+      } finally {
+        setShowLoaderTopup(false);
+      }
+    } else {
+      // Remove population layer when unchecked
+      setLayers(prev => prev.filter(layer => 
+        !layer.includedTypes.includes("TotalPopulation")
+      ));
+      // Also remove from geoPoints
+      setGeoPoints(prev => prev.filter(point => 
+        !point.is_population
+      ));
+    }
+  };
+  const fetchProfile = async () => {
+    if (!authResponse || !("idToken" in authResponse)) {
+      setIsLoading(false);
+      nav("/auth");
+      return;
+    }
+
+    try {
+      const res = await apiRequest({
+        url: urls.user_profile,
+        method: "POST",
+        isAuthRequest: true,
+        body: { user_id: authResponse.localId },
+      });
+      await setIsPriceVisible(res.data.data.settings.show_price_on_purchase);
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      logout();
+      nav("/auth");
+    } finally {
+      setIsLoading(false);
+    }
+  };
   const handleReset = () => {
     resetFetchDatasetForm();
     setLayers([]);
@@ -652,7 +784,7 @@ const FetchDatasetForm = () => {
               handleButtonClick('full data', e);
             }}
           >
-            Full Data
+              Full Data {isPriceVisible ? `$${costEstimate.toFixed(2)}` : null}
           </button>
         </div>
       </div>

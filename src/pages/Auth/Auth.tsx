@@ -182,7 +182,8 @@ const Auth = () => {
               value={username}
               onChange={e => setName(e.target.value)}
               required
-              className="flex-1 px-3 py-2 text-lg bg-transparent outline-none"
+              className='flex-1 px-3 py-2 text-lg bg-transparent outline-none'
+              disabled={isLoading}
             />
           </div>
         )}
@@ -195,6 +196,7 @@ const Auth = () => {
             onChange={e => setEmail(e.target.value)}
             required
             className={styles.authInput}
+            disabled={isLoading}
           />
         </div>
         <div className={styles.inputGroup}>
@@ -206,6 +208,7 @@ const Auth = () => {
             onChange={e => setPassword(e.target.value)}
             required
             className={styles.authInput}
+            disabled={isLoading}
           />
         </div>
         <button
@@ -234,14 +237,17 @@ const Auth = () => {
           {renderForm()}
           <div className="flex justify-between mt-4">
             <button
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setIsPasswordReset(false);
+              onClick={(e) => {
+                if(e.target.innerText!=='Need to register?'){
+                  setIsLogin(!isLogin)
+                  setIsPasswordReset(false)
+                }
               }}
               className="text-[#006400] text-sm hover:underline"
             >
-              {isLogin ? 'Need to register?' : 'Already have an account?'}
+              {isLogin ? <a href='https://www.s-locator.com/' target='_blank'>Need to register?</a> : 'Already have an account?'}
             </button>
+            
             {isLogin && (
               <button
                 onClick={() => setIsPasswordReset(!isPasswordReset)}
