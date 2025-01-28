@@ -546,10 +546,10 @@ export function LayerProvider(props: { children: ReactNode }) {
 
   async function refetchPopulationLayer() {
     handlePopulationLayer(false);
-    handlePopulationLayer(true);
+    handlePopulationLayer(true, true);
   }
 
-  async function handlePopulationLayer(shouldInclude: boolean) {
+  async function handlePopulationLayer(shouldInclude: boolean, isRefetch: boolean = false) {
     // Add detailed logging
     console.log('#debug: handlePopulationLayer state:', {
       shouldInclude,
@@ -605,6 +605,7 @@ export function LayerProvider(props: { children: ReactNode }) {
               layer_legend: 'Population Layer',
               is_grid: true,
               is_intelligent: true,
+              is_refetch: isRefetch,
               basedon: 'population',
               visualization_mode: 'grid',
             };
