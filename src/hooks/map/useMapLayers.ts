@@ -582,7 +582,7 @@ export function useMapLayers() {
             if (isMobile) {
               map.on('touchstart', layerId, handleMouseOverOrTouchStart);
             } else {
-              map.on('mouseenter', layerId, handleMouseOverOrTouchStart);
+              map.on('click', layerId, handleMouseOverOrTouchStart);
               map.on('mouseleave', layerId, handleMouseLeave);
             }
           } catch (error) {
