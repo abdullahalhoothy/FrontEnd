@@ -4,6 +4,7 @@ import {
   processCityData,
   getDefaultLayerColor,
 } from '../../utils/helperFunctions';
+import { PiX } from 'react-icons/pi';
 import urls from '../../urls.json';
 import { CategoryData, City, Layer } from '../../types/allTypesAndInterfaces';
 import { useLayerContext } from '../../context/LayerContext';
@@ -55,6 +56,7 @@ const FetchDatasetForm = () => {
   // FETCHED DATA
   const [layers, setLayers] = useState<Layer[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [showErrorMessage,setShowErrorMessage]=useState<boolean>(false)
   const [citiesData, setCitiesData] = useState<{ [country: string]: City[] }>({});
   const [costEstimate, setCostEstimate] = useState<number>(0.0);
   // COLBASE CATEGORY
@@ -704,23 +706,69 @@ const FetchDatasetForm = () => {
               });
               if (res.data.data.length===0) nav('/profile/payment-methods');
               if (!isAuthenticated) nav('/auth');
-              await apiRequest(
-                {
-                  url:urls.deduct_wallet,
-                  method:'Post',
-                  body:{
-                    user_id:authResponse?.localId,
-                    amount:costEstimate*100
+              try{
+                await apiRequest(
+                  {
+                    url:urls.deduct_wallet,
+                    method:'Post',
+                    body:{
+                      user_id:authResponse?.localId,
+                      amount:costEstimate*100
+                    }
                   }
+                )
+                handleButtonClick('full data', e);
+              }catch(error:any){
+                if(error.response.data.detail==='Insufficient balance in wallet'){
+                  setShowErrorMessage(true)
                 }
-              )
-              handleButtonClick('full data', e);
+                console.error(error)
+              }
             }}
           >
             Full Data {isPriceVisible ? `($${costEstimate.toFixed(2)})` : null}
           </button>
         </div>
       </div>
+
+      {showErrorMessage && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white shadow-xl w-96 max-w-full">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 bg-gray-100  border-b border-gray-300">
+              <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                <span className="mr-2">⚠️</span> Warning
+              </h3>
+              <button
+                onClick={() => setShowErrorMessage(false)}
+                className="text-gray-800 hover:text-gray-600 focus:outline-none"
+              >
+                <PiX className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 text-center">
+              <p className="text-base text-gray-800 font-medium">
+                Insufficient funds for this transaction.
+              </p>
+              <p className="text-sm text-gray-600 mt-2">
+                Please add more funds to continue.
+              </p>
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-center px-6 py-4">
+              <button
+                onClick={() => nav("/profile/wallet/add")}
+                className="w-full h-10 bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer"
+              >
+                Add Funds
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
