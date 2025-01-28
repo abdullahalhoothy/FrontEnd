@@ -13,9 +13,11 @@ import { useAuth } from '../../context/AuthContext'; // Add this import
 import { useNavigate } from 'react-router-dom';
 import { useUIContext } from '../../context/UIContext';
 import apiRequest from '../../services/apiRequest';
+import { useLayerContext } from '../../context/LayerContext';
 
 function DataContainer() {
   const { selectedContainerType, handleAddClick, setGeoPoints } = useCatalogContext();
+  const {setSelectedCity, setSelectedCountry} = useLayerContext();
   const { isAuthenticated, authResponse, logout } = useAuth();
   const { closeModal } = useUIContext();
   const [activeTab, setActiveTab] = useState('Data Catalogue');
@@ -200,10 +202,12 @@ function DataContainer() {
     if (selectedContainerType !== 'Home') {
       handleAddClick(
         selectedItem.id,
-        selectedItem.name,
         selectedItem.typeOfCard,
-        selectedItem.legend,
-        selectedItem.lyrs
+        (country:string, city:string)=>{
+          console.log('#feat: selectedItem ', selectedItem, 'country ', country, 'city ', city);
+          setSelectedCountry(country);
+          setSelectedCity(city);
+        }
       );
     }
 

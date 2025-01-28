@@ -16,6 +16,7 @@ import apiRequest from '../services/apiRequest';
 import html2canvas from 'html2canvas';
 
 const CatalogContext = createContext<CatalogContextType | undefined>(undefined);
+const fallBackCountry = 'Saudi Arabia';
 
 export function CatalogProvider(props: { children: ReactNode }) {
   const { authResponse } = useAuth();
@@ -90,7 +91,8 @@ export function CatalogProvider(props: { children: ReactNode }) {
   >([]);
   const [basedOnLayerId, setBasedOnLayerId] = useState<string | null>(null);
   const [basedOnProperty, setBasedOnProperty] = useState<string | null>(null);
-  async function fetchGeoPoints(id: string, typeOfCard: string) {
+  
+  async function fetchGeoPoints(id: string, typeOfCard: string,callBack?:(country:string, city:string)=>void) {
     const apiJsonRequest =
       typeOfCard === 'layer'
         ? {
@@ -146,19 +148,19 @@ export function CatalogProvider(props: { children: ReactNode }) {
         return Object.assign({}, layer, { display: true });
       });
       setGeoPoints(function (prevGeoPoints) {
-        return prevGeoPoints.concat(updatedDataArray);
+        return prevGeoPoints.concat(updatedDataArray) as MapFeatures[];
       });
+      
+      if(callBack && updatedDataArray[0].city_name) callBack(updatedDataArray[0].country_name || fallBackCountry, updatedDataArray[0].city_name);
     }
   }
 
   function handleAddClick(
     id: string,
-    name: string,
     typeOfCard: string,
-    legend?: string,
-    layers?: { layer_id: string; points_color: string }[]
+    callBack?:(city:string, country:string)=>void
   ) {
-    fetchGeoPoints(id, typeOfCard);
+    fetchGeoPoints(id, typeOfCard, callBack);
   }
 
   function handleStoreUnsavedGeoPoint(geoPoints: any) {
@@ -364,6 +366,19 @@ export function CatalogProvider(props: { children: ReactNode }) {
     });
   }
 
+  async function setGeoPointsWithCb(geoPoints: MapFeatures[] | ((prev:MapFeatures[])=>MapFeatures[]), cB?:(city:string, country:string)=>void) {
+    let geoPointsToUse;
+
+    setGeoPoints(
+      (prev)=>{
+        geoPointsToUse = typeof geoPoints === 'function' ? geoPoints(prev) : geoPoints;
+        return geoPointsToUse;
+      }
+    );
+
+    if(cB && geoPointsToUse && geoPointsToUse[0].city_name && geoPointsToUse[0].country_name) cB(geoPointsToUse[0].city_name, geoPointsToUse[0].country_name);
+  }
+
   async function handleColorBasedZone(requestData?: ReqGradientColorBasedOnZone) {
     const dataToUse = requestData || reqGradientColorBasedOnZone;
 
@@ -448,6 +463,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
         setSelectedContainerType,
         geoPoints,
         setGeoPoints,
+        setGeoPointsWithCb,
         selectedColor,
         setSelectedColor,
         resetState,
