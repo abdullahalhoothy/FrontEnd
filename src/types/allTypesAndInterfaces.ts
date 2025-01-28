@@ -100,15 +100,14 @@ export interface CatalogContextType {
   setSelectedContainerType: React.Dispatch<React.SetStateAction<'Catalogue' | 'Layer' | 'Home'>>;
   handleAddClick: (
     id: string,
-    name: string,
     typeOfCard: string,
-    legend?: string,
-    layers?: { layer_id: string; points_color: string }[]
+    callBack?: (city:string, country:string)=>void
   ) => void;
   handleSaveCatalog: () => Promise<void>;
   resetFormStage: (resetTo: 'catalog') => void;
   geoPoints: MapFeatures[];
   setGeoPoints: React.Dispatch<React.SetStateAction<MapFeatures[]>>;
+  setGeoPointsWithCb: (geoPoints: MapFeatures[], cB:()=>void) => void;
   selectedColor: { name: string; hex: string } | null;
   setSelectedColor: React.Dispatch<React.SetStateAction<{ name: string; hex: string } | null>>;
   resetState: (keepGeoPointsState?: boolean) => void;
