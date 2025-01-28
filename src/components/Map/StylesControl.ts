@@ -67,15 +67,27 @@ StylesControl.prototype.onAdd = function (map) {
     if (target && target.tagName === 'BUTTON') {
       const selectedStyle = target.getAttribute('data-style');
       if (selectedStyle && selectedStyle !== this.currentStyle) {
+        // Temporarily store the current controls
+        const currentControls = [...this._map._controls];
+  
+        // Update the map style
         this._map.setStyle(selectedStyle);
+  
+        // Re-add controls after the style loads
+        this._map.once('styledata', () => {
+          currentControls.forEach(control => this._map.addControl(control));
+        });
+  
+        // Update the UI
         this._updateButtons(selectedStyle);
-        this.setCurrentStyle(prev => selectedStyle);
+        this.setCurrentStyle(selectedStyle);
         this.currentStyle = selectedStyle;
         stylesContainer.classList.add('hidden');
         toggleButton.classList.remove('text-primary');
       }
     }
   });
+  
 
   return this._container;
 };
