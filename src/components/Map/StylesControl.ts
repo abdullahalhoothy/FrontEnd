@@ -62,6 +62,20 @@ StylesControl.prototype.onAdd = function (map) {
   });
 
   // Style selection
+  // stylesContainer.addEventListener('click', e => {
+  //   const target = e.target;
+  //   if (target && target.tagName === 'BUTTON') {
+  //     const selectedStyle = target.getAttribute('data-style');
+  //     if (selectedStyle && selectedStyle !== this.currentStyle) {
+  //       this._map.setStyle(selectedStyle);
+  //       this._updateButtons(selectedStyle);
+  //       this.setCurrentStyle(prev => selectedStyle);
+  //       this.currentStyle = selectedStyle;
+  //       stylesContainer.classList.add('hidden');
+  //       toggleButton.classList.remove('text-primary');
+  //     }
+  //   }
+  // });
   stylesContainer.addEventListener('click', e => {
     const target = e.target;
     if (target && target.tagName === 'BUTTON') {
