@@ -6,6 +6,8 @@ import { useCatalogContext } from '../../context/CatalogContext';
 import MultipleLayersSetting from '../MultipleLayersSetting/MultipleLayersSetting';
 import { useUIContext } from '../../context/UIContext';
 import { GradientColorBasedOnZone } from '../../types/allTypesAndInterfaces';
+import { useLayerContext } from '../../context/LayerContext';
+import { defaultMapConfig } from '../../hooks/map/useMapInitialization';
 
 function CatalogMenu() {
   const { openModal, setSidebarMode } = useUIContext();
@@ -24,6 +26,8 @@ function CatalogMenu() {
     setIsRadiusMode,
     setChosenPallet,
   } = useCatalogContext();
+
+  const {setSelectedCity, setSelectedCountry} = useLayerContext();
 
   const [showRestorePrompt, setShowRestorePrompt] = useState(false);
 
@@ -49,6 +53,9 @@ function CatalogMenu() {
     const savedGeoPoints = localStorage.getItem('unsavedGeoPoints');
     if (savedGeoPoints) {
       setGeoPoints(prevGeoPoints => [...prevGeoPoints, ...JSON.parse(savedGeoPoints)]);
+      console.log('#feat: city savedGeoPoints', JSON.parse(savedGeoPoints), "city name", JSON.parse(savedGeoPoints)[0].city_name, "country name", JSON.parse(savedGeoPoints)[0].country_name);
+      setSelectedCity(JSON.parse(savedGeoPoints)[0].city_name);
+      setSelectedCountry(JSON.parse(savedGeoPoints)[0].country_name || defaultMapConfig.fallBackCountry);
     }
     localStorage.removeItem('unsavedGeoPoints');
     setShowRestorePrompt(false);

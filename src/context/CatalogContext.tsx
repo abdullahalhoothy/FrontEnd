@@ -14,9 +14,9 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import apiRequest from '../services/apiRequest';
 import html2canvas from 'html2canvas';
+import defaultMapConfig from '../mapConfig.json';
 
 const CatalogContext = createContext<CatalogContextType | undefined>(undefined);
-const fallBackCountry = 'Saudi Arabia';
 
 export function CatalogProvider(props: { children: ReactNode }) {
   const { authResponse } = useAuth();
@@ -151,7 +151,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
         return prevGeoPoints.concat(updatedDataArray) as MapFeatures[];
       });
       
-      if(callBack && updatedDataArray[0].city_name) callBack(updatedDataArray[0].country_name || fallBackCountry, updatedDataArray[0].city_name);
+      if(callBack && updatedDataArray[0].city_name) callBack(updatedDataArray[0].country_name || defaultMapConfig.fallBackCountry, updatedDataArray[0].city_name);
     }
   }
 
