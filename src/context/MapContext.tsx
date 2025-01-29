@@ -11,8 +11,9 @@ import {
 import mapboxgl from 'mapbox-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import { MapContextType } from '../types/allTypesAndInterfaces';
-import { mapToBackendZoom } from '../utils/mapZoomUtils';
+import { zoomToGridSize, getMapScale, getViewportDistance, mapMetersPerPixelToZoom } from '../utils/mapZoomUtils';
 import { defaultMapConfig } from '../hooks/map/useMapInitialization';
+import debounce from 'lodash/debounce';
 
 const MapContext = createContext<MapContextType | undefined>(undefined);
 
@@ -28,26 +29,34 @@ export function MapProvider({ children }: { children: ReactNode }) {
     gridSize: defaultMapConfig.gridSize,
   });
 
-  const handleZoomChange = useCallback(() => {
-    if (!mapRef.current) return;
+  const handleZoomChange = useCallback(
+    debounce(() => {
+      if (!mapRef.current) return;
 
-    const mapboxZoom = mapRef.current.getZoom();
-    const mappedZoom = mapToBackendZoom(mapboxZoom);
-    const hadZoomedIn = mapboxZoom > mapState.currentZoom;
-    const mapGridSize = mapState.gridSize * (hadZoomedIn ? 0.75 : 1.5);
+      const scaleInfo = getMapScale(mapRef.current);
+      const mapboxZoom = mapRef.current.getZoom();
+      const backendZoom = mapMetersPerPixelToZoom(Math.floor(scaleInfo.metersPerPixel));
+      const hadZoomed = Math.floor(mapboxZoom) !== Math.floor(mapState.currentZoom);
+      const newGridSize = zoomToGridSize(backendZoom);
 
-    // Force state update
-    setMapState(prevState => {
-      if (mappedZoom === null) return prevState;
-      const newState = {
-        ...prevState,
-        currentZoom: mapboxZoom,
-        backendZoom: mappedZoom,
-        gridSize: mapGridSize,
-      };
-      return newState;
-    });
-  }, []);
+      setMapState(prevState => {
+        const newState = {
+          ...prevState,
+          currentZoom: Math.floor(hadZoomed ? mapboxZoom : prevState.currentZoom),
+          backendZoom: backendZoom,
+          gridSize: newGridSize,
+        };
+        return newState;
+      });
+    }, 200),
+    [mapState.currentZoom]
+  );
+
+    useEffect(() => {
+    return () => {
+      handleZoomChange.cancel();
+    };
+  }, [handleZoomChange]);
 
   // Ensure zoom handler is properly attached
   useEffect(() => {

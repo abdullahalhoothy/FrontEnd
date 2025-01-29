@@ -107,21 +107,10 @@ export function LayerProvider(props: { children: ReactNode }) {
     [layerId: number]: LayerState;
   }>({});
 
-  const { backendZoom } = useMapContext();
+  const { mapRef, shouldInitializeFeatures, backendZoom } = useMapContext();
 
-  // Memoize the zoom level
   const currentZoomLevel = useMemo(() => backendZoom ?? defaultMapConfig.zoomLevel, [backendZoom]);
 
-  useEffect(() => {
-    console.log('#feat: auto zoom', 'selectedCity', selectedCity);
-  }, [selectedCity]);
-  useEffect(() => {
-    console.log('#feat: auto zoom', 'selectedCountry', selectedCountry);
-  }, [selectedCountry]);
-
-  useEffect(() => {
-    console.log('#feat: auto zoom', 'currentZoomLevel', currentZoomLevel);
-  }, [currentZoomLevel]);
 
   function incrementFormStage() {
     if (createLayerformStage === 'initial') {
@@ -320,14 +309,6 @@ export function LayerProvider(props: { children: ReactNode }) {
   }
 
   async function handleGetCountryCityCategory() {
-    // HttpReq<string[]>(
-    //   urls.country_city,
-    //   (data) => setCountries(processCityData(data, setCitiesData)),
-    //   () => {},
-    //   () => {},
-    //   () => {},
-    //   setIsError
-    // );
     try {
       const res = await apiRequest({
         url: urls.country_city,
@@ -347,14 +328,6 @@ export function LayerProvider(props: { children: ReactNode }) {
     } catch (error) {
       setIsError(error);
     }
-    // HttpReq<CategoryData>(
-    //   urls.nearby_categories,
-    //   setCategories,
-    //   () => {},
-    //   () => {},
-    //   () => {},
-    //   setIsError
-    // );
   }
 
   function handleCountryCitySelection(event: React.ChangeEvent<HTMLSelectElement>) {
@@ -378,26 +351,14 @@ export function LayerProvider(props: { children: ReactNode }) {
         selectedCountry: value,
         selectedCity: '', // Reset city when country changes
       }));
-      document.dispatchEvent(
-        new CustomEvent('cityCountryChanged', {
-          detail: { hasCountry: true, hasCity: false },
-        })
-      );
     } else if (name === 'selectedCity') {
-      // Update city
+      
       setSelectedCity(value);
-
-      // Update reqFetchDataset
+  
       setReqFetchDataset(prev => ({
         ...prev,
         selectedCity: value,
       }));
-
-      document.dispatchEvent(
-        new CustomEvent('cityCountryChanged', {
-          detail: { hasCountry: true, hasCity: true },
-        })
-      );
     }
   }
 
@@ -467,11 +428,6 @@ export function LayerProvider(props: { children: ReactNode }) {
     setPassword('');
     setGeoPoints([]);
 
-    document.dispatchEvent(
-      new CustomEvent('cityCountryChanged', {
-        detail: { hasCountry: false, hasCity: false },
-      })
-    );
   }
 
   useEffect(() => {
@@ -524,7 +480,7 @@ export function LayerProvider(props: { children: ReactNode }) {
     // Only refetch if we have existing population grid layers
     const gridLayers = geoPoints.filter(point => point.is_grid && point.is_intelligent);
     if (gridLayers.length > 0) {
-      console.log('#feat: auto zoom', 'gridLayers', gridLayers);
+      console.log('#feat: auto zoom', 'previous gridLayers', gridLayers);
       refetchPopulationLayer();
     }
   }, [currentZoomLevel]);
@@ -545,71 +501,122 @@ export function LayerProvider(props: { children: ReactNode }) {
   }
 
   async function refetchPopulationLayer() {
-    handlePopulationLayer(false);
-    handlePopulationLayer(true, true);
+    await handlePopulationLayer(false);
+    await handlePopulationLayer(true, true);
   }
 
   async function handlePopulationLayer(shouldInclude: boolean, isRefetch: boolean = false) {
-    // Add detailed logging
-    console.log('#debug: handlePopulationLayer state:', {
-      shouldInclude,
-      selectedCity,
-      selectedCountry,
-      currentState: {
-        city: selectedCity,
-        country: selectedCountry,
-      },
+    const map = mapRef.current;
+    
+    if (!shouldInitializeFeatures || !map) {
+      console.warn('Map not initialized');
+      return;
+    }
+
+    const waitForMapReady = () => new Promise<void>((resolve) => {
+      if (map.isStyleLoaded() && !map.isMoving()) {
+        resolve();
+        return;
+      }
+
+      const checkMapReady = () => {
+        if (map.isStyleLoaded() && !map.isMoving()) {
+          map.off('idle', checkMapReady);
+          map.off('render', checkMapReady);
+          resolve();
+        }
+      };
+
+      map.on('idle', checkMapReady);
+      map.on('render', checkMapReady);
+
+      // Timeout after 5 seconds
+      setTimeout(() => {
+        map.off('idle', checkMapReady);
+        map.off('render', checkMapReady);
+        resolve(); // Proceed anyway after timeout
+      }, 5000);
     });
 
-    setIncludePopulation(shouldInclude);
+    try {
+      await waitForMapReady();
 
-    if (shouldInclude) {
-      setShowLoaderTopup(true);
-      try {
-        if (!authResponse || !authResponse.localId || !authResponse.idToken) return;
+      // Check authentication
+      if (!authResponse?.localId || !authResponse?.idToken) {
+        const message = 'Authentication required. Please log in to use this feature.';
+        console.error(message);
+        setIsError(new Error(message));
+        setShowLoaderTopup(false);
+        return;
+      }
 
-        if (!selectedCity || !selectedCountry) {
-          console.error('Please select a city and country first', selectedCity, selectedCountry);
-          return;
-        }
+      // Check city/country selection
+      if (shouldInclude && (!selectedCity || !selectedCountry)) {
+        const message = 'Please select a city and country first.';
+        console.error(message, { selectedCity, selectedCountry });
+        setIsError(new Error(message));
+        setShowLoaderTopup(false);
+        return;
+      }
 
-        const res = await apiRequest({
-          url: urls.fetch_dataset,
-          method: 'post',
-          body: {
-            text_search: '',
-            page_token: '',
-            user_id: authResponse.localId,
-            idToken: authResponse.idToken,
-            zoom_level: currentZoomLevel,
-            country_name: selectedCountry,
-            city_name: selectedCity,
-            boolean_query: 'TotalPopulation',
-            layer_name: 'Population Layer',
-            action: 'sample',
-            search_type: 'category_search',
-          },
-          isAuthRequest: true,
-          useCache: true,
-        });
+      console.log('#debug: handlePopulationLayer state:', {
+        shouldInclude,
+        selectedCity,
+        selectedCountry,
+        currentState: {
+          city: selectedCity,
+          country: selectedCountry,
+        },
+        currentZoomLevel,
+      });
 
-        if (res?.data?.data) {
+      setIncludePopulation(shouldInclude);
+
+      if (shouldInclude) {
+        setShowLoaderTopup(true);
+        try {
+          const res = await apiRequest({
+            url: urls.fetch_dataset,
+            method: 'post',
+            body: {
+              text_search: '',
+              page_token: '',
+              user_id: authResponse.localId,
+              idToken: authResponse.idToken,
+              zoom_level: currentZoomLevel,
+              country_name: selectedCountry,
+              city_name: selectedCity,
+              boolean_query: 'TotalPopulation',
+              layer_name: 'Population Layer',
+              action: 'sample',
+              search_type: 'category_search',
+            },
+            isAuthRequest: true,
+            useCache: true,
+          });
+
+          if (!res?.data?.data) {
+            throw new Error('Invalid response data');
+          }          
+
           setGeoPoints(prevPoints => {
             const populationLayer = {
               layerId: 1001, // Special ID for population layer
               type: 'FeatureCollection',
-              features: res.data.data.features,
+              features: res.data.data?.features,
               display: true,
               points_color: colorOptions[0].hex,
               city_name: selectedCity,
-              layer_legend: 'Population Layer',
+              layer_legend: `${selectedCity} Population Layer (${res.data.data?.features?.length})`,
               is_grid: true,
               is_intelligent: true,
               is_refetch: isRefetch,
               basedon: 'population',
-              visualization_mode: 'grid',
+              visualization_mode: 'grid'
             };
-            return [...prevPoints, populationLayer];
+            
+            const filteredPoints = prevPoints.filter(point => point.layerId !== populationLayer.layerId);
+            return [...filteredPoints, populationLayer];
           });
 
           // Update layer data map
@@ -617,50 +624,31 @@ export function LayerProvider(props: { children: ReactNode }) {
             ...prev,
             1001: res.data.data,
           }));
+
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Failed to fetch population data';
+          console.error('Population layer error:', error);
+          setIsError(new Error(message));
+        } finally {
+          setShowLoaderTopup(false);
         }
-      } catch (error) {
-        setIsError(error instanceof Error ? error : new Error('Failed to fetch population data'));
-      } finally {
-        setShowLoaderTopup(false);
+      } else {
+        // Remove population layer
+        setGeoPoints(prev => prev.filter(point => !point.is_intelligent));
+
+        // Clean up layer data map
+        setLayerDataMap(prev => {
+          const newMap = { ...prev };
+          delete newMap[1001];
+          return newMap;
+        });
       }
-    } else {
-      // Remove population layer
-      setGeoPoints(prev => prev.filter(point => !point.is_intelligent));
-
-      // Clean up layer data map
-      setLayerDataMap(prev => {
-        const newMap = { ...prev };
-        delete newMap[1001];
-        return newMap;
-      });
+    } catch (error) {
+      console.error('Error updating population layer:', error);
+      setIsError(new Error('Failed to update population layer'));
+      setShowLoaderTopup(false);
     }
-    // Dispatch event for PopulationControl
-    document.dispatchEvent(
-      new CustomEvent('populationStateChanged', {
-        detail: { isActive: shouldInclude },
-      })
-    );
   }
-
-  useEffect(() => {
-    document.dispatchEvent(
-      new CustomEvent('cityCountryChanged', {
-        detail: {
-          hasCountry: !!selectedCountry,
-          hasCity: !!selectedCity,
-        },
-      })
-    );
-  }, []);
-
-  // Add effect to sync initial state
-  useEffect(() => {
-    document.dispatchEvent(
-      new CustomEvent('populationStateChanged', {
-        detail: { isActive: includePopulation },
-      })
-    );
-  }, []);
 
   return (
     <LayerContext.Provider

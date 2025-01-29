@@ -203,38 +203,23 @@ export function useMapLayers() {
 
     const addLayers = () => {
       if (!map.isStyleLoaded()) {
-        console.warn('Style not loaded, waiting...');
+        console.warn('Style not loaded, deferring layer update...');
+        const styleLoadHandler = () => {
+          if (map.isStyleLoaded()) {
+            addLayers();
+          }
+          map.off('style.load', styleLoadHandler);
+        };
+        map.on('style.load', styleLoadHandler);
         return;
       }
 
       try {
-        // Clean up existing layers first
-        geoPoints.forEach((_, index) => {
-          const layerId = `circle-layer-${index}`;
-          const sourceId = `circle-source-${index}`;
-          const gridLayerId = `${layerId}-grid`;
-          const gridSourceId = `${sourceId}-grid`;
-
-          try {
-            if (map.getLayer(gridLayerId)) {
-              map.removeLayer(gridLayerId);
-            }
-            if (map.getSource(gridSourceId)) {
-              map.removeSource(gridSourceId);
-            }
-            if (map.getLayer(layerId)) {
-              map.removeLayer(layerId);
-            }
-            if (map.getSource(sourceId)) {
-              map.removeSource(sourceId);
-            }
-          } catch (err) {
-            console.warn('Non-fatal layer cleanup error:', err);
-          }
-        });
-
-        // Clean up existing popups before adding new layers
+        // Always clean up existing layers first
+        cleanupLayers();
         cleanupGridPopup();
+        
+        // Reset layer state
         layerStateRef.current = {
           sourceId: null,
           layerId: null,
@@ -242,368 +227,387 @@ export function useMapLayers() {
           gridLayerId: null,
         };
 
-        // Add new layers
-        [...geoPoints].reverse()
-        .sort((lyr_a, lyr_b) => {
-          if (isIntelligentLayer(lyr_a) && !isIntelligentLayer(lyr_b)) return -1;
-          if (!isIntelligentLayer(lyr_a) && isIntelligentLayer(lyr_b)) return 1;
-          return 0;
-        }).forEach((featureCollection, index) => {
-          if (!featureCollection.type || !Array.isArray(featureCollection.features)) {
-            console.error('🗺️ [Map] Invalid GeoJSON structure:', featureCollection);
-            return;
-          }
-
-          const sourceId = `circle-source-${index}`;
-          const layerId = `circle-layer-${index}`;
-          const gridSourceId = `${sourceId}-grid`;
-          const gridLayerId = `${layerId}-grid`;
-
-          // Store IDs
-          layerStateRef.current = {
-            sourceId,
-            layerId,
-            gridSourceId,
-            gridLayerId,
-          };
-
-          try {
-            // Add source
-            map.addSource(sourceId, {
-              type: 'geojson',
-              data: featureCollection,
-              generateId: true,
-            });
-
-            if (featureCollection.is_grid) {
-              let bounds;
-              if (
-                featureCollection.city_name &&
-                cityBounds[featureCollection.city_name.toLowerCase()]
-              ) {
-                const cityBound = cityBounds[featureCollection.city_name.toLowerCase()].bounds;
-                bounds = [
-                  cityBound[0] - 0.1,
-                  cityBound[1] - 0.1,
-                  cityBound[2] + 0.1,
-                  cityBound[3] + 0.1,
-                ];
-              } else {
-                // Fallback to calculating bounds from features
-                const bbox = turf.bbox(featureCollection);
-                const bboxPolygon = turf.bboxPolygon(bbox);
-                // Increase buffer for fallback bounds
-                const bufferedBbox = turf.buffer(bboxPolygon, 1, { units: 'kilometers' });
-                bounds = turf.bbox(bufferedBbox);
+        // Add new layers if we have any
+        if (geoPoints.length > 0) {
+          console.log('Adding layers:', geoPoints.length);
+          
+          [...geoPoints]
+            .reverse()
+            .sort((lyr_a, lyr_b) => {
+              if (isIntelligentLayer(lyr_a) && !isIntelligentLayer(lyr_b)) return -1;
+              if (!isIntelligentLayer(lyr_a) && isIntelligentLayer(lyr_b)) return 1;
+              return 0;
+            })
+            .forEach((featureCollection, index) => {
+              if (!featureCollection.type || !Array.isArray(featureCollection.features)) {
+                console.error('🗺️ [Map] Invalid GeoJSON structure:', featureCollection);
+                return;
               }
 
-              // Create grid
-              const cellSide = gridSize / 1000;
-              const options = { units: 'kilometers' as const };
-              const grid = turf.squareGrid(bounds, cellSide, options);
-
-              // Calculate density for each cell
-              grid.features = grid.features.map((cell, index) => {
-                const pointsWithin = turf.pointsWithinPolygon(featureCollection, cell);
-
-                // Update density calculation to use basedon field if available
-                const density =
-                  featureCollection.basedon?.length > 0
-                    ? pointsWithin.features.reduce((sum, point) => {
-                        const value = point.properties[featureCollection.basedon];
-                        return sum + (typeof value === 'number' ? value : 0);
-                      }, 0)
-                    : pointsWithin.features.length;
-
-                // Calculate cell center for button placement
-                const center = turf.center(cell);
-                const centerCoords = center.geometry.coordinates;
-
-                // Ensure coordinates are valid numbers
-                if (
-                  !Array.isArray(centerCoords) ||
-                  centerCoords.length !== 2 ||
-                  typeof centerCoords[0] !== 'number' ||
-                  typeof centerCoords[1] !== 'number'
-                ) {
-                  console.error('Invalid center coordinates for cell:', index);
-                  return cell;
-                }
-
-                // Store coordinates in LngLat format
-                const center_obj = {
-                  lng: Number(centerCoords[0]),
-                  lat: Number(centerCoords[1]),
-                };
-
-                // Generate cell properties object with detailed statistics
-                const cellProperties = pointsWithin.features.reduce(
-                  (acc, point) => {
-                    Object.entries(point.properties).forEach(([key, value]) => {
-                      // Skip if the value is null/undefined
-                      if (value == null) return;
-
-                      // Convert value to number if possible
-                      const numValue = Number(value);
-                      if (isNaN(numValue)) return;
-
-                      // Initialize property stats if not exists
-                      if (!acc[key]) {
-                        acc[key] = {
-                          sum: 0,
-                          values: [],
-                          count: 0,
-                        };
-                      }
-
-                      // Update aggregates
-                      acc[key].sum += numValue;
-                      acc[key].values.push(numValue);
-                      acc[key].count++;
-                    });
-                    return acc;
-                  },
-                  {} as Record<string, PropertyStats>
-                );
-
-                // Calculate statistics for each property
-                Object.entries(cellProperties).forEach(([key, stats]) => {
-                  // Calculate average
-                  stats.average = stats.sum / stats.count;
-
-                  // Calculate median
-                  if (stats.values.length > 0) {
-                    const sorted = [...stats.values].sort((a, b) => a - b);
-                    const mid = Math.floor(sorted.length / 2);
-                    stats.median =
-                      sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
-                  }
-                });
-
-                const cellStats = {
-                  ...Object.entries(cellProperties).reduce(
-                    (acc, [key, stats]) => {
-                      acc[`${key}`] = _.round(stats.sum || 0, 2);
-                      //acc[`${key}_sum`] = _.round(stats.sum || 0, 2);
-                      //acc[`${key}_avg`] = _.round(stats.average || 0, 2);
-                      //acc[`${key}_median`] = _.round(stats.median || 0, 2);
-                      //acc[`${key}_count`] = _.round(stats.count || 0, 2);
-                      return acc;
-                    },
-                    {} as Record<string, number>
-                  ),
-                };
-
-                // Update cell properties with calculated statistics
-                return {
-                  ...cell,
-                  id: index,
-                  properties: {
-                    ...cell.properties,
-                    ...cellStats,
-                    density,
-                    center: center_obj,
-                    pointCount: pointsWithin.features.length,
-                  },
-                };
-              });
-
-              // Add grid source
-              map.addSource(gridSourceId, {
-                type: 'geojson',
-                data: grid,
-                generateId: true,
-              });
-
-              // Calculate density values for styling
-              const allDensityValues = grid.features.map(f => f.properties?.density || 0);
-              const maxDensity = Math.max(...allDensityValues, 1);
-
-              const p25 = maxDensity * 0.25;
-              const p50 = maxDensity * 0.5;
-              const p75 = maxDensity * 0.75;
-
-              // Add grid layer with interactive settings
-              map.addLayer({
-                id: gridLayerId,
-                type: 'fill',
-                source: gridSourceId,
-                layout: {
-                  visibility: featureCollection.display ? 'visible' : 'none',
-                },
-                paint: getGridPaint(
-                  USE_BASEDON && featureCollection.basedon?.length > 0,
-                  featureCollection.points_color || defaultMapConfig.defaultColor,
-                  p25,
-                  p50,
-                  p75
-                ),
-              });
+              const sourceId = `circle-source-${index}`;
+              const layerId = `circle-layer-${index}`;
+              const gridSourceId = `${sourceId}-grid`;
+              const gridLayerId = `${layerId}-grid`;
 
               // Store IDs
-              gridLayerIdRef.current = gridLayerId;
-              layerStateRef.current.gridSourceId = gridSourceId;
+              layerStateRef.current = {
+                sourceId,
+                layerId,
+                gridSourceId,
+                gridLayerId,
+              };
 
-              // Add click handler directly to grid cells
-              map.on('click', gridLayerId, e => {
-                e.preventDefault();
-                handleGridCellClick(e, featureCollection, gridSourceId, featureCollection.basedon);
-              });
+              try {
+                // Add source
+                map.addSource(sourceId, {
+                  type: 'geojson',
+                  data: featureCollection,
+                  generateId: true,
+                });
 
-              // Add hover effects for the grid cells
-              map.on('mouseenter', gridLayerId, () => {
-                map.getCanvas().style.cursor = 'pointer';
-              });
+                if (featureCollection.is_grid) {
+                  let bounds;
+                  if (
+                    featureCollection.city_name &&
+                    cityBounds[featureCollection.city_name.toLowerCase()]
+                  ) {
+                    const cityBound = cityBounds[featureCollection.city_name.toLowerCase()].bounds;
+                    bounds = [
+                      cityBound[0] - 0.1,
+                      cityBound[1] - 0.1,
+                      cityBound[2] + 0.1,
+                      cityBound[3] + 0.1,
+                    ];
+                  } else {
+                    // Fallback to calculating bounds from features
+                    const bbox = turf.bbox(featureCollection);
+                    const bboxPolygon = turf.bboxPolygon(bbox);
+                    // Increase buffer for fallback bounds
+                    const bufferedBbox = turf.buffer(bboxPolygon, 1, { units: 'kilometers' });
+                    bounds = turf.bbox(bufferedBbox);
+                  }
 
-              map.on('mouseleave', gridLayerId, () => {
-                map.getCanvas().style.cursor = '';
-              });
-            } else if (featureCollection.is_heatmap) {
-              map.addLayer({
-                id: layerId,
-                type: 'heatmap',
-                source: sourceId,
-                layout: {
-                  visibility: featureCollection.display ? 'visible' : 'none',
-                },
-                paint: getHeatmapPaint(featureCollection.basedon, featureCollection.points_color),
-              });
-            } else {
-              // Circle layer / points (default)
-              map.addLayer({
-                id: layerId,
-                type: 'circle',
-                source: sourceId,
-                layout: {
-                  visibility: featureCollection.display ? 'visible' : 'none',
-                },
-                paint: featureCollection.is_gradient
-                  ? getGradientCirclePaint(featureCollection.points_color)
-                  : getCirclePaint(featureCollection.points_color, index),
-              });
-            }
+                  // Create grid
+                  const cellSide = gridSize / 1000;
+                  const options = { units: 'kilometers' as const };
+                  const grid = turf.squareGrid(bounds, cellSide, options);
 
-            // Add hover interaction variables
-            let hoveredStateId: number | null = null;
-            let popup: mapboxgl.Popup | null = null;
-            let isOverPopup = false;
-            let isOverPoint = false;
+                  // Calculate density for each cell
+                  grid.features = grid.features.map((cell, index) => {
+                    const pointsWithin = turf.pointsWithinPolygon(featureCollection, cell);
 
-            const handleMouseOverOrTouchStart = async (
-              e:
-                | (mapboxgl.MapMouseEvent & mapboxgl.EventData)
-                | (mapboxgl.MapTouchEvent & mapboxgl.EventData)
-            ) => {
-              if (!map) return;
-              isOverPoint = true;
-              map.getCanvas().style.cursor = '';
+                    // Update density calculation to use basedon field if available
+                    const density =
+                      featureCollection.basedon?.length > 0
+                        ? pointsWithin.features.reduce((sum, point) => {
+                            const value = point.properties[featureCollection.basedon];
+                            return sum + (typeof value === 'number' ? value : 0);
+                          }, 0)
+                        : pointsWithin.features.length;
 
-              if (e.features && e.features.length > 0) {
-                if (hoveredStateId !== null) {
-                  map.setFeatureState({ source: sourceId, id: hoveredStateId }, { hover: false });
-                }
+                    // Calculate cell center for button placement
+                    const center = turf.center(cell);
+                    const centerCoords = center.geometry.coordinates;
 
-                hoveredStateId = e.features[0].id as number;
-                map.setFeatureState({ source: sourceId, id: hoveredStateId }, { hover: true });
+                    // Ensure coordinates are valid numbers
+                    if (
+                      !Array.isArray(centerCoords) ||
+                      centerCoords.length !== 2 ||
+                      typeof centerCoords[0] !== 'number' ||
+                      typeof centerCoords[1] !== 'number'
+                    ) {
+                      console.error('Invalid center coordinates for cell:', index);
+                      return cell;
+                    }
 
-                const coordinates = (e.features[0].geometry as any).coordinates.slice();
-                const properties = e.features[0].properties as CustomProperties;
+                    // Store coordinates in LngLat format
+                    const center_obj = {
+                      lng: Number(centerCoords[0]),
+                      lat: Number(centerCoords[1]),
+                    };
 
-                // Show loading spinner in the popup
-                const loadingContent = generatePopupContent(properties, coordinates, true, false);
+                    // Generate cell properties object with detailed statistics
+                    const cellProperties = pointsWithin.features.reduce(
+                      (acc, point) => {
+                        Object.entries(point.properties).forEach(([key, value]) => {
+                          // Skip if the value is null/undefined
+                          if (value == null) return;
 
-                if (popup) {
-                  popup.remove();
-                }
+                          // Convert value to number if possible
+                          const numValue = Number(value);
+                          if (isNaN(numValue)) return;
 
-                popup = new mapboxgl.Popup({
-                  closeButton: isMobile,
-                })
-                  .setLngLat(coordinates)
-                  .setHTML(loadingContent)
-                  .addTo(map);
+                          // Initialize property stats if not exists
+                          if (!acc[key]) {
+                            acc[key] = {
+                              sum: 0,
+                              values: [],
+                              count: 0,
+                            };
+                          }
 
-                const [lng, lat] = coordinates;
+                          // Update aggregates
+                          acc[key].sum += numValue;
+                          acc[key].values.push(numValue);
+                          acc[key].count++;
+                        });
+                        return acc;
+                      },
+                      {} as Record<string, PropertyStats>
+                    );
 
-                try {
-                  await apiRequest({
-                    url: urls.check_street_view,
-                    method: 'POST',
-                    body: { lat, lng },
+                    // Calculate statistics for each property
+                    Object.entries(cellProperties).forEach(([key, stats]) => {
+                      // Calculate average
+                      stats.average = stats.sum / stats.count;
+
+                      // Calculate median
+                      if (stats.values.length > 0) {
+                        const sorted = [...stats.values].sort((a, b) => a - b);
+                        const mid = Math.floor(sorted.length / 2);
+                        stats.median =
+                          sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+                      }
+                    });
+
+                    const cellStats = {
+                      ...Object.entries(cellProperties).reduce(
+                        (acc, [key, stats]) => {
+                          acc[`${key}`] = _.round(stats.sum || 0, 2);
+                          //acc[`${key}_sum`] = _.round(stats.sum || 0, 2);
+                          //acc[`${key}_avg`] = _.round(stats.average || 0, 2);
+                          //acc[`${key}_median`] = _.round(stats.median || 0, 2);
+                          //acc[`${key}_count`] = _.round(stats.count || 0, 2);
+                          return acc;
+                        },
+                        {} as Record<string, number>
+                      ),
+                    };
+
+                    // Update cell properties with calculated statistics
+                    return {
+                      ...cell,
+                      id: index,
+                      properties: {
+                        ...cell.properties,
+                        ...cellStats,
+                        density,
+                        center: center_obj,
+                        pointCount: pointsWithin.features.length,
+                      },
+                    };
                   });
 
-                  const updatedContent = generatePopupContent(
-                    properties,
-                    coordinates,
-                    false,
-                    false
-                  );
-                  popup?.setHTML(updatedContent);
-                } catch (error) {
-                  console.error('Error fetching street view:', error);
-                  popup?.setHTML(generatePopupContent(properties, coordinates, false, false));
+                  // Add grid source
+                  map.addSource(gridSourceId, {
+                    type: 'geojson',
+                    data: grid,
+                    generateId: true,
+                  });
+
+                  // Calculate density values for styling
+                  const allDensityValues = grid.features.map(f => f.properties?.density || 0);
+                  const maxDensity = Math.max(...allDensityValues, 1);
+
+                  const p25 = maxDensity * 0.25;
+                  const p50 = maxDensity * 0.5;
+                  const p75 = maxDensity * 0.75;
+
+                  // Add grid layer with interactive settings
+                  map.addLayer({
+                    id: gridLayerId,
+                    type: 'fill',
+                    source: gridSourceId,
+                    layout: {
+                      visibility: featureCollection.display ? 'visible' : 'none',
+                    },
+                    paint: getGridPaint(
+                      USE_BASEDON && featureCollection.basedon?.length > 0,
+                      featureCollection.points_color || defaultMapConfig.defaultColor,
+                      p25,
+                      p50,
+                      p75
+                    ),
+                  });
+
+                  // Store IDs
+                  gridLayerIdRef.current = gridLayerId;
+                  layerStateRef.current.gridSourceId = gridSourceId;
+
+                  // Add click handler directly to grid cells
+                  map.on('click', gridLayerId, e => {
+                    e.preventDefault();
+                    handleGridCellClick(e, featureCollection, gridSourceId, featureCollection.basedon);
+                  });
+
+                  // Add hover effects for the grid cells
+                  map.on('mouseenter', gridLayerId, () => {
+                    map.getCanvas().style.cursor = 'pointer';
+                  });
+
+                  map.on('mouseleave', gridLayerId, () => {
+                    map.getCanvas().style.cursor = '';
+                  });
+                } else if (featureCollection.is_heatmap) {
+                  map.addLayer({
+                    id: layerId,
+                    type: 'heatmap',
+                    source: sourceId,
+                    layout: {
+                      visibility: featureCollection.display ? 'visible' : 'none',
+                    },
+                    paint: getHeatmapPaint(featureCollection.basedon, featureCollection.points_color),
+                  });
+                } else {
+                  // Circle layer / points (default)
+                  map.addLayer({
+                    id: layerId,
+                    type: 'circle',
+                    source: sourceId,
+                    layout: {
+                      visibility: featureCollection.display ? 'visible' : 'none',
+                    },
+                    paint: featureCollection.is_gradient
+                      ? getGradientCirclePaint(featureCollection.points_color)
+                      : getCirclePaint(featureCollection.points_color, index),
+                  });
                 }
 
-                // Add popup element events
-                if (popup) {
-                  const popupElement = popup.getElement();
-                  popupElement.addEventListener('mouseenter', () => {
-                    isOverPopup = true;
-                  });
-                  popupElement.addEventListener('mouseleave', () => {
-                    isOverPopup = false;
-                    if (!isOverPoint && popup) {
+                // Add hover interaction variables
+                let hoveredStateId: number | null = null;
+                let popup: mapboxgl.Popup | null = null;
+                let isOverPopup = false;
+                let isOverPoint = false;
+
+                const handleMouseOverOrTouchStart = async (
+                  e:
+                    | (mapboxgl.MapMouseEvent & mapboxgl.EventData)
+                    | (mapboxgl.MapTouchEvent & mapboxgl.EventData)
+                ) => {
+                  if (!map) return;
+                  isOverPoint = true;
+                  map.getCanvas().style.cursor = '';
+
+                  if (e.features && e.features.length > 0) {
+                    if (hoveredStateId !== null) {
+                      map.setFeatureState({ source: sourceId, id: hoveredStateId }, { hover: false });
+                    }
+
+                    hoveredStateId = e.features[0].id as number;
+                    map.setFeatureState({ source: sourceId, id: hoveredStateId }, { hover: true });
+
+                    const coordinates = (e.features[0].geometry as any).coordinates.slice();
+                    const properties = e.features[0].properties as CustomProperties;
+
+                    // Show loading spinner in the popup
+                    const loadingContent = generatePopupContent(properties, coordinates, true, false);
+
+                    if (popup) {
+                      popup.remove();
+                    }
+
+                    popup = new mapboxgl.Popup({
+                      closeButton: isMobile,
+                    })
+                      .setLngLat(coordinates)
+                      .setHTML(loadingContent)
+                      .addTo(map);
+
+                    const [lng, lat] = coordinates;
+
+                    try {
+                      await apiRequest({
+                        url: urls.check_street_view,
+                        method: 'POST',
+                        body: { lat, lng },
+                      });
+
+                      const updatedContent = generatePopupContent(
+                        properties,
+                        coordinates,
+                        false,
+                        false
+                      );
+                      popup?.setHTML(updatedContent);
+                    } catch (error) {
+                      console.error('Error fetching street view:', error);
+                      popup?.setHTML(generatePopupContent(properties, coordinates, false, false));
+                    }
+
+                    // Add popup element events
+                    if (popup) {
+                      const popupElement = popup.getElement();
+                      popupElement.addEventListener('mouseenter', () => {
+                        isOverPopup = true;
+                      });
+                      popupElement.addEventListener('mouseleave', () => {
+                        isOverPopup = false;
+                        if (!isOverPoint && popup) {
+                          popup.remove();
+                          popup = null;
+                        }
+                      });
+                    }
+                  }
+                };
+
+                const handleMouseLeave = () => {
+                  if (!map) return;
+                  isOverPoint = false;
+                  map.getCanvas().style.cursor = '';
+
+                  setTimeout(() => {
+                    if (!isOverPopup && !isOverPoint && popup) {
                       popup.remove();
                       popup = null;
                     }
-                  });
+                  }, 500);
+
+                  if (hoveredStateId !== null) {
+                    map.setFeatureState({ source: sourceId, id: hoveredStateId }, { hover: false });
+                  }
+                  hoveredStateId = null;
+                };
+
+                if (isMobile) {
+                  map.on('touchstart', layerId, handleMouseOverOrTouchStart);
+                } else {
+                  map.on('click', layerId, handleMouseOverOrTouchStart);
+                  map.on('mouseleave', layerId, handleMouseLeave);
                 }
+              } catch (error) {
+                console.error('Error adding layer:', error);
               }
-            };
-
-            const handleMouseLeave = () => {
-              if (!map) return;
-              isOverPoint = false;
-              map.getCanvas().style.cursor = '';
-
-              setTimeout(() => {
-                if (!isOverPopup && !isOverPoint && popup) {
-                  popup.remove();
-                  popup = null;
-                }
-              }, 500);
-
-              if (hoveredStateId !== null) {
-                map.setFeatureState({ source: sourceId, id: hoveredStateId }, { hover: false });
-              }
-              hoveredStateId = null;
-            };
-
-            if (isMobile) {
-              map.on('touchstart', layerId, handleMouseOverOrTouchStart);
-            } else {
-              map.on('click', layerId, handleMouseOverOrTouchStart);
-              map.on('mouseleave', layerId, handleMouseLeave);
-            }
-          } catch (error) {
-            console.error('Error adding layer:', error);
-          }
-        });
+            });
+        }
       } catch (error) {
         console.error('Error managing layers:', error);
       }
     };
 
-    // Initial load
-    if (map.isStyleLoaded()) {
-      addLayers();
-    } else {
-      const styleLoadHandler = () => {
+    // Attempt to add layers with retry
+    const attemptToAddLayers = () => {
+      if (map.isStyleLoaded()) {
         addLayers();
-        map.off('style.load', styleLoadHandler);
-      };
-      map.on('style.load', styleLoadHandler);
-    }
+      } else {
+        console.log('Waiting for style to load before adding layers...');
+        let retryCount = 0;
+        const maxRetries = 50; // 5 seconds total
+
+        const retryInterval = setInterval(() => {
+          if (map.isStyleLoaded()) {
+            clearInterval(retryInterval);
+            addLayers();
+          } else if (retryCount >= maxRetries) {
+            clearInterval(retryInterval);
+            console.error('Timeout waiting for style to load');
+          }
+          retryCount++;
+        }, 100);
+      }
+    };
+
+    attemptToAddLayers();
 
     return () => {
       cleanupLayers();
