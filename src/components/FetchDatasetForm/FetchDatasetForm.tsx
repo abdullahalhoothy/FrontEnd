@@ -161,27 +161,6 @@ const FetchDatasetForm = () => {
     //   setIsError
     // );
   }
-  const estimateCost=async(type:string[])=>{
-    if (!authResponse || !("idToken" in authResponse)) {
-      return;
-    }
-    console.log('Estimating Cost')
-    const requestBody = {
-      user_id: authResponse.localId,
-      boolean_query: type.join(" OR "),
-      city_name: selectedCity,
-      country_name: selectedCountry,
-    };
-    let res=await apiRequest(
-      {
-        url:urls.cost_calculator,
-        method:'Post',
-        body:requestBody
-      }
-    )
-    let layerCost=res.data.data.cost
-    return layerCost
-  }
   function handleButtonClick(action: string, event: React.MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
 
@@ -265,13 +244,17 @@ const FetchDatasetForm = () => {
   };
 
   // Add this helper function
-  const addTypeToFirstAvailableLayer =async (type: string, setAsExcluded: boolean) => {
-    let layerCost=0
-    if (!setAsExcluded){
-      layerCost=await estimateCost([type])
+  const addTypeToFirstAvailableLayer = async (type: string, setAsExcluded: boolean) => {
+    // Calculate the cost if the type is not excluded
+    let layerCost = 0;
+    if (!setAsExcluded) {
+      layerCost = await estimateCost([type]);
     }
-    setLayers(prevLayers => {
+  
+    // Update the layers state
+    setLayers((prevLayers) => {
       if (prevLayers.length === 0) {
+        // If no layers exist, create a new layer
         const newLayer: Layer = {
           id: 1,
           name: 'Layer 1',
@@ -279,17 +262,17 @@ const FetchDatasetForm = () => {
           excludedTypes: setAsExcluded ? [type] : [],
           display: true,
           points_color: getDefaultLayerColor(1),
-          cost:layerCost
+          cost: layerCost,
         };
         return [newLayer];
       }
-
-      // Try to find first layer that doesn't have this type
+  
+      // Try to find the first layer that doesn't have this type
       let targetLayerIndex = prevLayers.findIndex(
-        layer => !layer.includedTypes.includes(type) && !layer.excludedTypes.includes(type)
+        (layer) => !layer.includedTypes.includes(type) && !layer.excludedTypes.includes(type)
       );
-
-      // If all existing layers have this type, create new layer
+  
+      // If all existing layers have this type, create a new layer
       if (targetLayerIndex === -1) {
         const newLayerId = prevLayers.length + 1;
         const newLayer: Layer = {
@@ -300,25 +283,63 @@ const FetchDatasetForm = () => {
           excludedTypes: setAsExcluded ? [type] : [],
           display: true,
           points_color: getDefaultLayerColor(newLayerId),
-          cost:layerCost
+          cost: layerCost,
         };
         return [...prevLayers, newLayer];
       }
-
-      // Add to first available layer
+  
+      // Add the type to the first available layer
       return prevLayers.map((layer, index) => {
         if (index === targetLayerIndex) {
-          return {
+          // Update the layer's included/excluded types
+          const updatedLayer = {
             ...layer,
             includedTypes: setAsExcluded ? layer.includedTypes : [...layer.includedTypes, type],
             excludedTypes: setAsExcluded ? [...layer.excludedTypes, type] : layer.excludedTypes,
           };
+  
+          // If the type is included, update the cost
+          if (!setAsExcluded) {
+            estimateCost(updatedLayer.includedTypes).then((updatedCost) => {
+              // Create a new updated layer with the new cost
+              const finalUpdatedLayer = {
+                ...updatedLayer,
+                cost: updatedCost,
+              };
+  
+              // Update the state with the final updated layer
+              setLayers((currentLayers) =>
+                currentLayers.map((l, i) => (i === targetLayerIndex ? finalUpdatedLayer : l))
+              );
+            });
+          }
+  
+          return updatedLayer;
         }
         return layer;
       });
     });
   };
-
+  
+  const estimateCost = async (type: string[]) => {
+    if (!authResponse || !('idToken' in authResponse)) {
+      return 0; // Return a default cost if auth is not available
+    }
+    console.log('Estimating Cost');
+    const requestBody = {
+      user_id: authResponse.localId,
+      boolean_query: type.join(' OR '),
+      city_name: selectedCity,
+      country_name: selectedCountry,
+    };
+    let res = await apiRequest({
+      url: urls.cost_calculator,
+      method: 'Post',
+      body: requestBody,
+    });
+    let layerCost = res.data.data.cost;
+    return layerCost;
+  };
   // Replace handleAddToIncluded and handleAddToExcluded with:
   const handleAddToIncluded = (type: string) => {
     addTypeToFirstAvailableLayer(type, false);

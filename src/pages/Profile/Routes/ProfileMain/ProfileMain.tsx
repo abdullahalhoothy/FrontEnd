@@ -8,7 +8,7 @@ import {
   FaDatabase,
   FaLayerGroup,
   FaBook,
-  FaIdCard
+  FaTrash 
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router';
 import urls from '../../../../urls.json';
@@ -44,47 +44,36 @@ const ProfileMain: React.FC = () => {
       return;
     }
 
-    const fetchProfile = async () => {
-      if (!authResponse || !('idToken' in authResponse)) {
-        setError(new Error('Authentication information is missing.'));
-        setIsLoading(false);
-        navigate('/auth');
-        return;
-      }
-
-      try {
-        // await HttpReq<UserProfile>(
-        //   urls.user_profile,
-        //   setProfile,
-        //   setResponseMessage,
-        //   setRequestId,
-        //   setIsLoading,
-        //   setError,
-        //   "post",
-        //   { user_id: authResponse.localId },
-        //   authResponse.idToken
-        // );
-        const res = await apiRequest({
-          url: urls.user_profile,
-          method: 'POST',
-          isAuthRequest: true,
-          body: { user_id: authResponse.localId },
-        });
-        setProfile(res.data.data);
-        setShowPrice(res.data.data.settings.show_price_on_purchase)
-      } catch (err) {
-        console.error('Unexpected error:', err);
-        logout();
-        setError(new Error('An unexpected error occurred. Please try again.'));
-        navigate('/auth');
-      } finally {
-        setIsLoading(false);
-      }
-    };
 
     fetchProfile();
   }, [isAuthenticated, authResponse, navigate]);
 
+  const fetchProfile = async () => {
+    if (!authResponse || !('idToken' in authResponse)) {
+      setError(new Error('Authentication information is missing.'));
+      setIsLoading(false);
+      navigate('/auth');
+      return;
+    }
+
+    try {
+      const res = await apiRequest({
+        url: urls.user_profile,
+        method: 'POST',
+        isAuthRequest: true,
+        body: { user_id: authResponse.localId },
+      });
+      setProfile(res.data.data);
+      setShowPrice(res.data.data.settings.show_price_on_purchase)
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      logout();
+      setError(new Error('An unexpected error occurred. Please try again.'));
+      navigate('/auth');
+    } finally {
+      setIsLoading(false);
+    }
+  };
   const renderValue = (key: string, value: any): JSX.Element => {
     if (value === null || value === undefined) {
       return <span>N/A</span>;
@@ -142,6 +131,33 @@ const ProfileMain: React.FC = () => {
     items: Record<string, any>,
     type: 'dataset' | 'layer' | 'catalog'
   ) => {
+    // Function to handle delete icon click
+    const handleDeleteClick = async(
+      type: 'dataset' | 'layer' | 'catalog', // Add type parameter
+      key: string,
+      value: any
+    ) => {
+      if(type==='layer'){
+        await apiRequest({
+          url: urls.delete_layer,
+          method: 'DELETE',
+          isAuthRequest: true,
+          body: { user_id: authResponse.localId ,prdcer_lyr_id:value.prdcer_lyr_id},
+        })
+      }else if(type==='catalog'){
+        await apiRequest({
+          url: urls.delete_producer_catalog,
+          method: 'DELETE',
+          isAuthRequest: true,
+          body: { user_id: authResponse.localId ,prdcer_ctlg_id:value.prdcer_ctlg_id},
+        })
+        
+      }
+      fetchProfile()
+      console.log('Item details:', { type, key, value });
+      // You can add your delete logic here
+    };
+  
     return (
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>
@@ -150,12 +166,20 @@ const ProfileMain: React.FC = () => {
         {Object.entries(items).length > 0 ? (
           <ul className={styles.itemList}>
             {Object.entries(items).map(([key, value]) => (
-              <li
-                key={key}
-                className={styles.itemName}
-                onClick={() => handleItemClick(type, key, value)}
-              >
-                {value.prdcer_layer_name || value.prdcer_ctlg_name || key}
+              <li key={key} className={styles.itemName}>
+                <span onClick={() => handleItemClick(type, key, value)}>
+                  {value.prdcer_layer_name || value.prdcer_ctlg_name || key}
+                </span>
+                {/* Conditionally render the delete icon */}
+                {type !== 'dataset' && (
+                 <div className={styles.iconContainer}>
+                 <div className={styles.verticalDivider} />
+                 <FaTrash
+                   className={styles.deleteIcon}
+                   onClick={() => handleDeleteClick(type, key, value)} // Pass type here
+                 />
+               </div>
+                )}
               </li>
             ))}
           </ul>
