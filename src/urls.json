@@ -36,5 +36,7 @@
   "get_stripe_customer": "/fetch_stripe_customer",
   "top_up_wallet":"/top_up_wallet",
   "fetch_wallet":"/fetch_wallet",
-  "deduct_wallet":"/deduct_wallet"
+  "deduct_wallet":"/deduct_wallet",
+  "delete_producer_catalog":"/delete_producer_catalog",
+  "delete_layer":"/delete_layer"
 }
