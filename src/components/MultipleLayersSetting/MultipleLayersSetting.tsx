@@ -243,8 +243,8 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         change_lyr_id,
         based_on_lyr_id: prdcer_lyr_id,
         coverage_value: newRadius || 1000,
-        coverage_property: basedOnProperty,
-        color_based_on: selectedBasedon,
+        coverage_property: selectedBasedon,
+        color_based_on: basedOnProperty,
       });
     }
   }
@@ -350,9 +350,9 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         change_lyr_name: changeName,
         based_on_lyr_id: baseLayer.prdcer_lyr_id,
         based_on_lyr_name: baseName,
-        coverage_property: basedOnProperty,
+        coverage_property: selectedBasedon,
         coverage_value: validRadius,
-        color_based_on: selectedBasedon,
+        color_based_on: basedOnProperty,
       };
 
       setReqGradientColorBasedOnZone(requestData);
