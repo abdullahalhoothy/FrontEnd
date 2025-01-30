@@ -93,11 +93,6 @@
   margin-bottom: 20px;
 }
 
-.itemList {
-  list-style-type: none;
-  padding: 0;
-}
-
 .itemName {
   cursor: pointer;
   padding: 5px 10px;
@@ -173,4 +168,38 @@
 
 .logoutButton:hover {
   background-color: #d32f2f;
+}
+.itemList {
+  list-style: none;
+  padding: 0;
+}
+
+.itemName {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  border-bottom: 1px solid #ccc;
+  cursor: pointer;
+}
+
+.iconContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Space between the divider and the icon */
+}
+
+.verticalDivider {
+  height: 20px; /* Height of the divider */
+  width: 1px; /* Width of the divider */
+  background-color: #ccc; /* Color of the divider */
+}
+
+.deleteIcon {
+  cursor: pointer;
+  color: #ff4d4f; /* Red color for the delete icon */
+}
+
+.deleteIcon:hover {
+  color: #ff7875; /* Lighter red on hover */
 }
