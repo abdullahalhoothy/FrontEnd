@@ -569,16 +569,17 @@ export function useMapLayers() {
                   hoveredStateId = null;
                 };
 
-            if (isMobile) {
-              map.on('touchstart', layerId, handleMouseOverOrTouchStart);
-            } else {
-              map.on('click', layerId, handleMouseOverOrTouchStart);
-              map.on('mouseleave', layerId, handleMouseLeave);
-            }
-          } catch (error) {
-            console.error('Error adding layer:', error);
-          }
-        });
+                if (isMobile) {
+                  map.on('touchstart', layerId, handleMouseOverOrTouchStart);
+                } else {
+                  map.on('click', layerId, handleMouseOverOrTouchStart);
+                  map.on('mouseleave', layerId, handleMouseLeave);
+                }
+              } catch (error) {
+                console.error('Error adding layer:', error);
+              }
+            });
+        }
       } catch (error) {
         console.error('Error managing layers:', error);
       }
