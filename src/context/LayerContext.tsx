@@ -96,7 +96,6 @@ export function LayerProvider(props: { children: ReactNode }) {
   const [password, setPassword] = useState<string>('');
 
   const pageCountsRef = useRef<{ [layerId: string]: number }>({});
-  const MAX_CALLS = 10;
 
   const [layerDataMap, setLayerDataMap] = useState<LayerDataMap>({});
 
@@ -111,7 +110,6 @@ export function LayerProvider(props: { children: ReactNode }) {
   const { selectedContainerType } = useCatalogContext();
 
   const currentZoomLevel = useMemo(() => backendZoom ?? defaultMapConfig.zoomLevel, [backendZoom]);
-
 
   function incrementFormStage() {
     if (createLayerformStage === 'initial') {
@@ -209,7 +207,7 @@ export function LayerProvider(props: { children: ReactNode }) {
       const filteredPoints = prevPoints.filter(p => String(p.layerId) !== String(layerId));
       const newPoints = [...filteredPoints, newPoint];
 
-      if (response.next_page_token && pageCountsRef.current[layerKey] < MAX_CALLS) {
+      if (response.next_page_token) {
         handleFetchDataset('full data', response.next_page_token, layerId).catch(err => {
           console.error(`Error fetching page for layer ${layerId}:`, err);
         });
