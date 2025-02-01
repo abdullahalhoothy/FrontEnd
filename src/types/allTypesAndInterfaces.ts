@@ -167,7 +167,7 @@ export interface ReqGradientColorBasedOnZone {
   change_lyr_name: string;
   based_on_lyr_id: string;
   based_on_lyr_name: string;
-  coverage_value: number;
+  coverage_value: number | string;
   coverage_property: string;
   color_based_on: string;
 }
