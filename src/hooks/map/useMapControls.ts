@@ -36,11 +36,6 @@ export function useMapControls() {
       }
 
       try {
-        console.log('#debug: Adding controls with context:', {
-          selectedCity,
-          selectedCountry,
-        });
-
         // Add styles control
         controls.styles = new StylesControl(currentStyle, setCurrentStyle);
         map.addControl(controls.styles, 'top-right');

@@ -21,10 +21,9 @@ export function mapToBackendZoom(mapboxZoom: number): number {
  * @returns The corresponding grid size, or null if not found
  */
 export function zoomToGridSize(backendZoom: number): number {
-  console.log("zoomToGridSize: received backendZoom: ",backendZoom);
   const index = backendZoom < 1 ? 1 : Math.min(backendZoom, 9);
-  const matchingGridSize = Object.entries(gridSizeLevels).find(([key, value]) => Number(key) === index);
-  return matchingGridSize ? Number(matchingGridSize[1]) : gridSizeLevels["6"];
+  const matchingGridSize = Object.entries(gridSizeLevels).find(([key]) => Number(key) === index);
+  return matchingGridSize ? Number(matchingGridSize[1]) : gridSizeLevels['6'];
 }
 
 /**

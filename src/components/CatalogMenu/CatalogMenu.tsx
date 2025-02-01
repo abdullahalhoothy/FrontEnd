@@ -53,7 +53,6 @@ function CatalogMenu() {
     const savedGeoPoints = localStorage.getItem('unsavedGeoPoints');
     if (savedGeoPoints) {
       setGeoPoints(prevGeoPoints => [...prevGeoPoints, ...JSON.parse(savedGeoPoints)]);
-      console.log('#feat: city savedGeoPoints', JSON.parse(savedGeoPoints), "city name", JSON.parse(savedGeoPoints)[0].city_name, "country name", JSON.parse(savedGeoPoints)[0].country_name);
       setSelectedCity(JSON.parse(savedGeoPoints)[0].city_name);
       setSelectedCountry(JSON.parse(savedGeoPoints)[0].country_name || defaultMapConfig.fallBackCountry);
     }

@@ -103,7 +103,6 @@ export function useGridInteraction(
     const updateGridLayerId = () => {
       try {
         if (!map.isStyleLoaded()) {
-          console.log('Waiting for style to load...');
           return;
         }
 
