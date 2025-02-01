@@ -13,6 +13,10 @@ export const PopulationControl: React.FC = () => {
     setIsOpen(false);
   }, [selectedContainerType]);
 
+  useEffect(() => {
+    if (!isEnabled) setIsOpen(false);
+  }, [isEnabled]);
+  
   return (
     <div className="relative">
       <button
