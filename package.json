@@ -8,8 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview --port 3000",
-    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css}\""
+    "format": "prettier --config .prettierrc.cjs --write \"src/**/*.{ts,tsx,js,jsx,json,css}\"",
+    "format:check": "prettier --config .prettierrc.cjs --check \"src/**/*.{ts,tsx,js,jsx,json,css}\""
   },
   "dependencies": {
     "@mapbox/mapbox-gl-draw": "^1.4.3",
