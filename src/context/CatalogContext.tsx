@@ -15,6 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import apiRequest from '../services/apiRequest';
 import html2canvas from 'html2canvas';
 import defaultMapConfig from '../mapConfig.json';
+import { isIntelligentLayer } from '../utils/layerUtils';
 
 const CatalogContext = createContext<CatalogContextType | undefined>(undefined);
 
@@ -167,7 +168,9 @@ export function CatalogProvider(props: { children: ReactNode }) {
     // Retrieve existing items from local storage
     const existingGeoPoints = JSON.parse(localStorage.getItem('unsavedGeoPoints') || '[]');
 
-    const updatedGeoPoints = [...existingGeoPoints, ...geoPoints];
+    const updatedGeoPoints = [...existingGeoPoints, ...geoPoints].filter(
+      layer => !isIntelligentLayer(layer)
+    );
 
     localStorage.setItem('unsavedGeoPoints', JSON.stringify(updatedGeoPoints));
   }
