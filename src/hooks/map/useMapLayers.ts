@@ -55,7 +55,7 @@ const getHeatmapPaint = (basedon: string, pointsColor?: string) => ({
   ],
 });
 
-const getCirclePaint = (pointsColor: string, layerId: number) => ({
+const getCirclePaint = (pointsColor: string | undefined, layerId: number) => ({
   'circle-radius': defaultMapConfig.circleRadius,
   'circle-color': pointsColor || getDefaultLayerColor(layerId),
   'circle-opacity': defaultMapConfig.circleOpacity,
@@ -63,7 +63,7 @@ const getCirclePaint = (pointsColor: string, layerId: number) => ({
   'circle-stroke-color': defaultMapConfig.circleStrokeColor,
 });
 
-const getGradientCirclePaint = (defaultColor: string) => ({
+const getGradientCirclePaint = (defaultColor: string | undefined) => ({
   'circle-radius': defaultMapConfig.circleRadius,
   'circle-color': [
     'coalesce',
@@ -85,18 +85,15 @@ export function useMapLayers() {
   // Add this ref
   const gridLayerIdRef = useRef<string | null>(null);
 
-  // Track source and layer IDs for proper cleanup
-  const layerStateRef = useRef<{
-    sourceId: string | null;
-    layerId: string | null;
-    gridSourceId: string | null;
-    gridLayerId: string | null;
-  }>({
-    sourceId: null,
-    layerId: null,
-    gridSourceId: null,
-    gridLayerId: null,
-  });
+  // Replace the single layerStateRef with layerStatesRef
+  const layerStatesRef = useRef<{
+    [key: string]: {
+      sourceId: string;
+      layerId: string;
+      gridSourceId: string | null;
+      gridLayerId: string | null;
+    };
+  }>({});
 
   // Initialize popup handlers first
   const { createGridPopup, cleanupGridPopup } = useGridPopup(map);
@@ -108,7 +105,7 @@ export function useMapLayers() {
     cleanupGridPopup
   );
 
-  // Enhanced cleanup helper with proper order
+  // Update cleanup function to handle multiple layers
   const cleanupLayers = useCallback(() => {
     if (!map || !map.isStyleLoaded()) return;
 
@@ -116,50 +113,45 @@ export function useMapLayers() {
       // Clean up popups first
       cleanupGridPopup();
 
-      const { gridLayerId, gridSourceId } = layerStateRef.current;
+      // Clean up each layer
+      Object.values(layerStatesRef.current).forEach(layerState => {
+        const { gridLayerId, gridSourceId, layerId, sourceId } = layerState;
 
-      // Remove button layer first
-      if (gridLayerId && map.getLayer(`${gridLayerId}-buttons`)) {
-        map.removeLayer(`${gridLayerId}-buttons`);
-      }
+        // Remove button layer first
+        if (gridLayerId && map.getLayer(`${gridLayerId}-buttons`)) {
+          map.removeLayer(`${gridLayerId}-buttons`);
+        }
 
-      // Then remove grid layer
-      if (gridLayerId && map.getLayer(gridLayerId)) {
-        map.removeLayer(gridLayerId);
-      }
+        // Then remove grid layer
+        if (gridLayerId && map.getLayer(gridLayerId)) {
+          map.removeLayer(gridLayerId);
+        }
+
+        // Remove layers first
+        if (layerId && map.getLayer(layerId)) {
+          map.removeLayer(layerId);
+        }
+
+        // Then remove sources
+        if (gridSourceId && map.getSource(gridSourceId)) {
+          map.removeSource(gridSourceId);
+        }
+
+        if (sourceId && map.getSource(sourceId)) {
+          map.removeSource(sourceId);
+        }
+
+        // Clean up grid selection state
+        cleanupGridSelection(gridSourceId || '');
+      });
 
       // Remove image
       if (map.hasImage('info-button')) {
         map.removeImage('info-button');
       }
 
-      // Clean up grid selection state and refs
-      cleanupGridSelection(layerStateRef.current.gridSourceId || '');
-      gridLayerIdRef.current = null;
-
-      const { layerId, sourceId } = layerStateRef.current;
-
-      // Remove layers first
-      if (layerId && map.getLayer(layerId)) {
-        map.removeLayer(layerId);
-      }
-
-      // Then remove sources
-      if (gridSourceId && map.getSource(gridSourceId)) {
-        map.removeSource(gridSourceId);
-      }
-
-      if (sourceId && map.getSource(sourceId)) {
-        map.removeSource(sourceId);
-      }
-
       // Clear refs
-      layerStateRef.current = {
-        sourceId: null,
-        layerId: null,
-        gridSourceId: null,
-        gridLayerId: null,
-      };
+      layerStatesRef.current = {};
     } catch (error) {
       console.error('Error during cleanup:', error);
     }
@@ -220,25 +212,20 @@ export function useMapLayers() {
         cleanupGridPopup();
         
         // Reset layer state
-        layerStateRef.current = {
-          sourceId: null,
-          layerId: null,
-          gridSourceId: null,
-          gridLayerId: null,
-        };
+        layerStatesRef.current = {};
 
-        // Add new layers if we have any
         if (geoPoints.length > 0) {
-          console.log('Adding layers:', geoPoints.length);
+          console.log('#bug: Adding layers:', geoPoints);
           
           [...geoPoints]
-            .reverse()
+            //.reverse()
             .sort((lyr_a, lyr_b) => {
               if (isIntelligentLayer(lyr_a) && !isIntelligentLayer(lyr_b)) return -1;
               if (!isIntelligentLayer(lyr_a) && isIntelligentLayer(lyr_b)) return 1;
               return 0;
             })
             .forEach((featureCollection, index) => {
+              console.log(`#bug: featureCollection ${index}`, featureCollection);
               if (!featureCollection.type || !Array.isArray(featureCollection.features)) {
                 console.error('🗺️ [Map] Invalid GeoJSON structure:', featureCollection);
                 return;
@@ -249,8 +236,8 @@ export function useMapLayers() {
               const gridSourceId = `${sourceId}-grid`;
               const gridLayerId = `${layerId}-grid`;
 
-              // Store IDs
-              layerStateRef.current = {
+              // Store IDs for this specific layer
+              layerStatesRef.current[index] = {
                 sourceId,
                 layerId,
                 gridSourceId,
@@ -432,7 +419,7 @@ export function useMapLayers() {
 
                   // Store IDs
                   gridLayerIdRef.current = gridLayerId;
-                  layerStateRef.current.gridSourceId = gridSourceId;
+                  layerStatesRef.current[index].gridSourceId = gridSourceId;
 
                   // Add click handler directly to grid cells
                   map.on('click', gridLayerId, e => {
@@ -608,7 +595,6 @@ export function useMapLayers() {
     };
 
     attemptToAddLayers();
-
     return () => {
       cleanupLayers();
     };
