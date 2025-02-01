@@ -1,0 +1,49 @@
+ {
+  "rules": [
+    {
+      "description": "Suggest and implement features in steps.",
+      "scope": "codebase",
+      "fileTypes": [".ts", ".tsx", ".json"],
+      "triggers": ["add feature", "implement feature", "enhance feature"],
+      "responseStyle": "detailed",
+      "responseBreakdown": "multi-step",
+      "askClarifyingQuestions": true,
+      "suggestStepsFirst": true,
+      "implementationPreferences": {
+        "codeStandards": "follow ESLint rules and existing project patterns",
+        "useContextInsteadOfProps": true
+      },
+      "outputPreferences": {
+        "descriptions": "plain text",
+        "code": "code block"
+      }
+    },
+    {
+      "description": "Error handling and detailed feedback.",
+      "scope": "all",
+      "fileTypes": [".ts", ".tsx", ".json"],
+      "triggers": ["error", "issue", "bug"],
+      "errorHandling": {
+        "level": "detailed",
+        "responseStyle": "descriptive"
+      }
+    },
+    {
+      "description": "Custom command to check documentation.",
+      "scope": "all",
+      "fileTypes": [".ts", ".tsx", ".json"],
+      "triggers": ["check docs"],
+      "action": "lookupDocumentation",
+      "integrationUrls": ["https://docs.mapbox.com/"]
+    },
+    {
+      "description": "Suggest and make changes depending on mode.",
+      "scope": "all",
+      "fileTypes": [".ts", ".tsx", ".json"],
+      "modes": {
+        "composerMode": "modify directly",
+        "chatMode": "suggest only"
+      }
+    }
+  ]
+} 
