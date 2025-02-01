@@ -210,16 +210,27 @@ export function useMapLayers() {
         // Always clean up existing layers first
         cleanupLayers();
         cleanupGridPopup();
-        
+
         // Reset layer state
         layerStatesRef.current = {};
 
         if (geoPoints.length > 0) {
           [...geoPoints]
-            //.reverse()
-            .sort((lyr_a, lyr_b) => {
-              if (isIntelligentLayer(lyr_a) && !isIntelligentLayer(lyr_b)) return -1;
-              if (!isIntelligentLayer(lyr_a) && isIntelligentLayer(lyr_b)) return 1;
+            .reverse()
+            .sort((a, b) => {
+              // Intelligent layers should be added first (bottom)
+              if (isIntelligentLayer(a) && !isIntelligentLayer(b)) return -1;
+              if (!isIntelligentLayer(a) && isIntelligentLayer(b)) return 1;
+
+              // Then grid layers
+              if (a.is_grid && !b.is_grid) return -1;
+              if (!a.is_grid && b.is_grid) return 1;
+
+              // Then heatmap layers
+              if (a.is_heatmap && !b.is_heatmap) return -1;
+              if (!a.is_heatmap && b.is_heatmap) return 1;
+
+              // Regular point/circle layers last (top)
               return 0;
             })
             .forEach((featureCollection, index) => {
