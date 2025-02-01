@@ -108,6 +108,7 @@ export function LayerProvider(props: { children: ReactNode }) {
   }>({});
 
   const { mapRef, shouldInitializeFeatures, backendZoom } = useMapContext();
+  const { selectedContainerType } = useCatalogContext();
 
   const currentZoomLevel = useMemo(() => backendZoom ?? defaultMapConfig.zoomLevel, [backendZoom]);
 
@@ -483,6 +484,12 @@ export function LayerProvider(props: { children: ReactNode }) {
       refetchPopulationLayer();
     }
   }, [currentZoomLevel]);
+
+
+  useEffect(() => {
+    handlePopulationLayer(false);
+  }, [selectedContainerType]);
+
 
   const [includePopulation, setIncludePopulation] = useState(false);
 
