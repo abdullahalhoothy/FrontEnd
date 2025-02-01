@@ -71,7 +71,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   const { authResponse } = useAuth();
 
   const [isError, setIsError] = useState<Error | null>(null);
-  const [radiusInput, setRadiusInput] = useState(layer.radius_meters || 1000);
+  const [radiusInput, setRadiusInput] = useState<number | string>(layer.radius_meters || 1000);
   const isFirstRender = useRef(true);
 
   const dropdownIndex = layerIndex ?? -1;
@@ -208,7 +208,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     }
   }
 
-  function handleApplyRadius(newRadius: number) {
+  function handleApplyRadius(newRadius: number | string) {
     if (!newRadius) {
       return null;
     } else {
@@ -242,7 +242,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         color_grid_choice: colors[chosenPallet || 0],
         change_lyr_id,
         based_on_lyr_id: prdcer_lyr_id,
-        coverage_value: newRadius || 1000,
+        coverage_value: newRadius,
         coverage_property: selectedBasedon,
         color_based_on: basedOnProperty,
       });
@@ -258,7 +258,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     setIsGrid(!isGrid);
   }
 
-  function handleRadiusInputChange(newRadius: number) {
+  function handleRadiusInputChange(newRadius: number | string) {
     setRadiusInput(newRadius);
 
     /*setGeoPoints(prev => {
@@ -339,7 +339,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     const baseName = baseLayer.prdcer_layer_name || `Layer ${baseLayer.layerId}`;
 
     // Set radius with validation
-    const validRadius = Math.max(1, radiusInput);
+    const validRadius = radiusInput;
 
     try {
       setIsLoading(true);
@@ -483,7 +483,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
           <div className="font-bold text-[#333] w-[105px] overflow-hidden">
             <span className="text-sm text-[#333] block truncate" title={prdcer_layer_name}>
-              {prdcer_layer_name ||  layer_legend}
+              {prdcer_layer_name || layer_legend}
             </span>
           </div>
           <div className="flex">
@@ -522,7 +522,9 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         <div className=" w-full">
           <div className="flex flex-col gap-2 mt-4   py-3 px-4 w-full bg-white border border-gray-300 rounded-lg shadow-lg z-50">
             <div className="flex justify-between items-center">
-              <p className="text-base mb-0 capitalize font-medium">{prdcer_layer_name || layer_legend}</p>
+              <p className="text-base mb-0 capitalize font-medium">
+                {prdcer_layer_name || layer_legend}
+              </p>
               <div className="flex items-center  gap-2">
                 <p className="text-xs mb-0 font-medium">Advanced</p>
                 <div
@@ -631,7 +633,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                 <div className="relative w-full">
                   <input
                     id="distance-input"
-                    type="number"
+                    type="text"
                     min={1}
                     max={100000}
                     step={1}
@@ -639,7 +641,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                     className="block p-2.5 w-full z-20 text-sm text-gray-900 bg-gray-50 rounded-s-lg border 
                               border-e-0 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                     defaultValue={radiusInput}
-                    onChange={e => handleRadiusInputChange(+e.target.value)}
+                    onChange={e => handleRadiusInputChange(e.target.value)}
                     placeholder="Enter distance"
                     required
                   />
