@@ -204,7 +204,6 @@ function DataContainer() {
         selectedItem.id,
         selectedItem.typeOfCard,
         (country:string, city:string)=>{
-          console.log('#feat: selectedItem ', selectedItem, 'country ', country, 'city ', city);
           setSelectedCountry(country);
           setSelectedCity(city);
         }

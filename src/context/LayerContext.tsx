@@ -480,7 +480,6 @@ export function LayerProvider(props: { children: ReactNode }) {
     // Only refetch if we have existing population grid layers
     const gridLayers = geoPoints.filter(point => point.is_grid && point.is_intelligent);
     if (gridLayers.length > 0) {
-      console.log('#feat: auto zoom', 'previous gridLayers', gridLayers);
       refetchPopulationLayer();
     }
   }, [currentZoomLevel]);
@@ -488,14 +487,6 @@ export function LayerProvider(props: { children: ReactNode }) {
   const [includePopulation, setIncludePopulation] = useState(false);
 
   async function switchPopulationLayer() {
-    // Add detailed logging
-    console.log('#debug: switchPopulationLayer state:', {
-      selectedCity,
-      selectedCountry,
-      includePopulation,
-      fromControl: true,
-    });
-
     const shouldInclude = !includePopulation;
     handlePopulationLayer(shouldInclude);
   }
@@ -507,36 +498,37 @@ export function LayerProvider(props: { children: ReactNode }) {
 
   async function handlePopulationLayer(shouldInclude: boolean, isRefetch: boolean = false) {
     const map = mapRef.current;
-    
+
     if (!shouldInitializeFeatures || !map) {
       console.warn('Map not initialized');
       return;
     }
 
-    const waitForMapReady = () => new Promise<void>((resolve) => {
-      if (map.isStyleLoaded() && !map.isMoving()) {
-        resolve();
-        return;
-      }
-
-      const checkMapReady = () => {
+    const waitForMapReady = () =>
+      new Promise<void>(resolve => {
         if (map.isStyleLoaded() && !map.isMoving()) {
+          resolve();
+          return;
+        }
+
+        const checkMapReady = () => {
+          if (map.isStyleLoaded() && !map.isMoving()) {
+            map.off('idle', checkMapReady);
+            map.off('render', checkMapReady);
+            resolve();
+          }
+        };
+
+        map.on('idle', checkMapReady);
+        map.on('render', checkMapReady);
+
+        // Timeout after 5 seconds
+        setTimeout(() => {
           map.off('idle', checkMapReady);
           map.off('render', checkMapReady);
-          resolve();
-        }
-      };
-
-      map.on('idle', checkMapReady);
-      map.on('render', checkMapReady);
-
-      // Timeout after 5 seconds
-      setTimeout(() => {
-        map.off('idle', checkMapReady);
-        map.off('render', checkMapReady);
-        resolve(); // Proceed anyway after timeout
-      }, 5000);
-    });
+          resolve(); // Proceed anyway after timeout
+        }, 5000);
+      });
 
     try {
       await waitForMapReady();
@@ -558,17 +550,6 @@ export function LayerProvider(props: { children: ReactNode }) {
         setShowLoaderTopup(false);
         return;
       }
-
-      console.log('#debug: handlePopulationLayer state:', {
-        shouldInclude,
-        selectedCity,
-        selectedCountry,
-        currentState: {
-          city: selectedCity,
-          country: selectedCountry,
-        },
-        currentZoomLevel,
-      });
 
       setIncludePopulation(shouldInclude);
 
@@ -597,7 +578,7 @@ export function LayerProvider(props: { children: ReactNode }) {
 
           if (!res?.data?.data) {
             throw new Error('Invalid response data');
-          }          
+          }
 
           setGeoPoints(prevPoints => {
             const populationLayer = {
@@ -612,10 +593,12 @@ export function LayerProvider(props: { children: ReactNode }) {
               is_intelligent: true,
               is_refetch: isRefetch,
               basedon: 'population',
-              visualization_mode: 'grid'
+              visualization_mode: 'grid',
             };
-            
-            const filteredPoints = prevPoints.filter(point => point.layerId !== populationLayer.layerId);
+
+            const filteredPoints = prevPoints.filter(
+              point => point.layerId !== populationLayer.layerId
+            );
             return [...filteredPoints, populationLayer];
           });
 
@@ -624,9 +607,9 @@ export function LayerProvider(props: { children: ReactNode }) {
             ...prev,
             1001: res.data.data,
           }));
-
         } catch (error) {
-          const message = error instanceof Error ? error.message : 'Failed to fetch population data';
+          const message =
+            error instanceof Error ? error.message : 'Failed to fetch population data';
           console.error('Population layer error:', error);
           setIsError(new Error(message));
         } finally {

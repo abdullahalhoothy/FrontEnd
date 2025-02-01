@@ -215,8 +215,6 @@ export function useMapLayers() {
         layerStatesRef.current = {};
 
         if (geoPoints.length > 0) {
-          console.log('#bug: Adding layers:', geoPoints);
-          
           [...geoPoints]
             //.reverse()
             .sort((lyr_a, lyr_b) => {
@@ -225,7 +223,6 @@ export function useMapLayers() {
               return 0;
             })
             .forEach((featureCollection, index) => {
-              console.log(`#bug: featureCollection ${index}`, featureCollection);
               if (!featureCollection.type || !Array.isArray(featureCollection.features)) {
                 console.error('🗺️ [Map] Invalid GeoJSON structure:', featureCollection);
                 return;
@@ -353,7 +350,9 @@ export function useMapLayers() {
                         const sorted = [...stats.values].sort((a, b) => a - b);
                         const mid = Math.floor(sorted.length / 2);
                         stats.median =
-                          sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+                          sorted.length % 2 === 0
+                            ? (sorted[mid - 1] + sorted[mid]) / 2
+                            : sorted[mid];
                       }
                     });
 
@@ -424,7 +423,12 @@ export function useMapLayers() {
                   // Add click handler directly to grid cells
                   map.on('click', gridLayerId, e => {
                     e.preventDefault();
-                    handleGridCellClick(e, featureCollection, gridSourceId, featureCollection.basedon);
+                    handleGridCellClick(
+                      e,
+                      featureCollection,
+                      gridSourceId,
+                      featureCollection.basedon
+                    );
                   });
 
                   // Add hover effects for the grid cells
@@ -443,7 +447,10 @@ export function useMapLayers() {
                     layout: {
                       visibility: featureCollection.display ? 'visible' : 'none',
                     },
-                    paint: getHeatmapPaint(featureCollection.basedon, featureCollection.points_color),
+                    paint: getHeatmapPaint(
+                      featureCollection.basedon,
+                      featureCollection.points_color
+                    ),
                   });
                 } else {
                   // Circle layer / points (default)
@@ -477,7 +484,10 @@ export function useMapLayers() {
 
                   if (e.features && e.features.length > 0) {
                     if (hoveredStateId !== null) {
-                      map.setFeatureState({ source: sourceId, id: hoveredStateId }, { hover: false });
+                      map.setFeatureState(
+                        { source: sourceId, id: hoveredStateId },
+                        { hover: false }
+                      );
                     }
 
                     hoveredStateId = e.features[0].id as number;
@@ -487,7 +497,12 @@ export function useMapLayers() {
                     const properties = e.features[0].properties as CustomProperties;
 
                     // Show loading spinner in the popup
-                    const loadingContent = generatePopupContent(properties, coordinates, true, false);
+                    const loadingContent = generatePopupContent(
+                      properties,
+                      coordinates,
+                      true,
+                      false
+                    );
 
                     if (popup) {
                       popup.remove();
@@ -577,7 +592,6 @@ export function useMapLayers() {
       if (map.isStyleLoaded()) {
         addLayers();
       } else {
-        console.log('Waiting for style to load before adding layers...');
         let retryCount = 0;
         const maxRetries = 50; // 5 seconds total
 
@@ -587,7 +601,6 @@ export function useMapLayers() {
             addLayers();
           } else if (retryCount >= maxRetries) {
             clearInterval(retryInterval);
-            console.error('Timeout waiting for style to load');
           }
           retryCount++;
         }, 100);
