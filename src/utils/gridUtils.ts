@@ -2,8 +2,8 @@
  * Generates HTML content for grid popup
  */
 export function generateGridPopupContent(properties: Record<string, number>): string | null {
-  if (!properties) {
-    console.log('Missing properties data');
+  if (!properties || Object.keys(properties).length === 0 || Number(properties.pointCount) === 0) {
+    console.log('No data for this cell');
     return null;
   }
 
