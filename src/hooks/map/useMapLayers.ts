@@ -233,7 +233,7 @@ export function useMapLayers() {
               // Regular point/circle layers last (top)
               return 0;
             })
-            .forEach((featureCollection, index) => {
+            .forEach(async (featureCollection, index) => {
               if (!featureCollection.type || !Array.isArray(featureCollection.features)) {
                 console.error('🗺️ [Map] Invalid GeoJSON structure:', featureCollection);
                 return;
@@ -288,112 +288,24 @@ export function useMapLayers() {
                   const grid = turf.squareGrid(bounds, cellSide, options);
 
                   // Calculate density for each cell
-                  grid.features = grid.features.map((cell, index) => {
-                    const pointsWithin = turf.pointsWithinPolygon(featureCollection, cell);
+                  console.time('Grid generation');
 
-                    // Update density calculation to use basedon field if available
-                    const density =
-                      featureCollection.basedon?.length > 0
-                        ? pointsWithin.features.reduce((sum, point) => {
-                            const value = point.properties[featureCollection.basedon];
-                            return sum + (typeof value === 'number' ? value : 0);
-                          }, 0)
-                        : pointsWithin.features.length;
-
-                    // Calculate cell center for button placement
-                    const center = turf.center(cell);
-                    const centerCoords = center.geometry.coordinates;
-
-                    // Ensure coordinates are valid numbers
-                    if (
-                      !Array.isArray(centerCoords) ||
-                      centerCoords.length !== 2 ||
-                      typeof centerCoords[0] !== 'number' ||
-                      typeof centerCoords[1] !== 'number'
-                    ) {
-                      console.error('Invalid center coordinates for cell:', index);
-                      return cell;
-                    }
-
-                    // Store coordinates in LngLat format
-                    const center_obj = {
-                      lng: Number(centerCoords[0]),
-                      lat: Number(centerCoords[1]),
-                    };
-
-                    // Generate cell properties object with detailed statistics
-                    const cellProperties = pointsWithin.features.reduce(
-                      (acc, point) => {
-                        Object.entries(point.properties).forEach(([key, value]) => {
-                          // Skip if the value is null/undefined
-                          if (value == null) return;
-
-                          // Convert value to number if possible
-                          const numValue = Number(value);
-                          if (isNaN(numValue)) return;
-
-                          // Initialize property stats if not exists
-                          if (!acc[key]) {
-                            acc[key] = {
-                              sum: 0,
-                              values: [],
-                              count: 0,
-                            };
-                          }
-
-                          // Update aggregates
-                          acc[key].sum += numValue;
-                          acc[key].values.push(numValue);
-                          acc[key].count++;
-                        });
-                        return acc;
-                      },
-                      {} as Record<string, PropertyStats>
-                    );
-
-                    // Calculate statistics for each property
-                    Object.entries(cellProperties).forEach(([key, stats]) => {
-                      // Calculate average
-                      stats.average = stats.sum / stats.count;
-
-                      // Calculate median
-                      if (stats.values.length > 0) {
-                        const sorted = [...stats.values].sort((a, b) => a - b);
-                        const mid = Math.floor(sorted.length / 2);
-                        stats.median =
-                          sorted.length % 2 === 0
-                            ? (sorted[mid - 1] + sorted[mid]) / 2
-                            : sorted[mid];
-                      }
-                    });
-
-                    const cellStats = {
-                      ...Object.entries(cellProperties).reduce(
-                        (acc, [key, stats]) => {
-                          acc[`${key}`] = _.round(stats.sum || 0, 2);
-                          //acc[`${key}_sum`] = _.round(stats.sum || 0, 2);
-                          //acc[`${key}_avg`] = _.round(stats.average || 0, 2);
-                          //acc[`${key}_median`] = _.round(stats.median || 0, 2);
-                          //acc[`${key}_count`] = _.round(stats.count || 0, 2);
-                          return acc;
-                        },
-                        {} as Record<string, number>
-                      ),
-                    };
-
-                    // Update cell properties with calculated statistics
-                    return {
-                      ...cell,
-                      id: index,
-                      properties: {
-                        ...cell.properties,
-                        ...cellStats,
-                        density,
-                        center: center_obj,
-                        pointCount: pointsWithin.features.length,
-                      },
-                    };
+                  const worker = new Worker(new URL('./gridGeneration.worker.ts', import.meta.url), {
+                    type: 'module',
                   });
+
+                  worker.postMessage({ grid, featureCollection });
+
+                  grid.features = await new Promise<any[]>((resolve, reject) => {
+                    worker.onmessage = event => {
+                      resolve(event.data.features);
+                    };
+                    worker.onerror = err => reject(err);
+                  });
+
+                  worker.terminate();
+
+                  console.timeEnd('Grid generation');
 
                   // Add grid source
                   map.addSource(gridSourceId, {
