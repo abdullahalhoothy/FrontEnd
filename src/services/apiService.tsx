@@ -1,9 +1,7 @@
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
-import urls from '../urls.json';
-const baseUrl = urls.REACT_APP_API_URL;
+import axios, { AxiosInstance } from 'axios';
 
 export const apiClient: AxiosInstance = axios.create({
-  baseURL: baseUrl,
+  baseURL: import.meta.env.VITE_PUBLIC_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
