@@ -1,8 +1,11 @@
 import axios, { AxiosRequestConfig } from 'axios';
+import urls from '../urls.json';
 import { ApiRequestOptions, AuthResponse, IAuthResponse } from '../types/allTypesAndInterfaces';
 
+const baseUrl = urls.REACT_APP_API_URL;
+
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_PUBLIC_API_URL,
+  baseURL: baseUrl,
 });
 
 export const addAuthTokenToLocalStorage = (token: AuthResponse) => {
