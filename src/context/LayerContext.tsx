@@ -218,6 +218,40 @@ export function LayerProvider(props: { children: ReactNode }) {
       return newPoints;
     });
   }
+  //To be removed after fixed on backend
+  function assignPopularityCategory(json: any): void {  
+    let features = json.features;
+    
+    // Extract popularity scores
+    let scores = features.map(f => f.properties.popularity_score);
+    
+    // Compute percentiles
+    scores.sort((a, b) => b - a);
+    let quartile = Math.ceil(scores.length / 4);
+    
+    let thresholds = {
+        very_high: scores[quartile - 1] || 0,
+        high: scores[2 * quartile - 1] || 0,
+        mid: scores[3 * quartile - 1] || 0
+    };
+    
+    // Assign categories
+    features.forEach(feature => {
+        if (!feature.properties.popularity_score_category) {
+            let score = feature.properties.popularity_score;
+            if (score >= thresholds.very_high) {
+                feature.properties.popularity_score_category = "very high";
+            } else if (score >= thresholds.high) {
+                feature.properties.popularity_score_category = "high";
+            } else if (score >= thresholds.mid) {
+                feature.properties.popularity_score_category = "mid";
+            } else {
+                feature.properties.popularity_score_category = "low";
+            }
+        }
+    });
+}
+
 
   async function handleFetchDataset(action: string, pageToken?: string, layerId?: number) {
     if (!pageToken && !layerId) {
@@ -285,8 +319,8 @@ export function LayerProvider(props: { children: ReactNode }) {
             },
             isAuthRequest: true,
           });
-
           if (res?.data?.data) {
+            await assignPopularityCategory(res?.data?.data)//To be removed after fixed on backend
             setLayerDataMap(prev => ({
               ...prev,
               [layer.id]: res.data.data,
