@@ -33,14 +33,15 @@ export function zoomToGridSize(backendZoom: number): number {
  */
 export function getMapScale(map: mapboxgl.Map) {
   const center = map.getCenter();
-  const point = map.unproject([map.getContainer().offsetWidth / 2 + 100, map.getContainer().offsetHeight / 2]);
-  
+  const point = map.unproject([
+    map.getContainer().offsetWidth / 2 + 100,
+    map.getContainer().offsetHeight / 2,
+  ]);
+
   // Calculate the distance between these points in meters
-  const distanceInMeters = distance(
-    [center.lng, center.lat],
-    [point.lng, point.lat],
-    { units: 'meters' }
-  );
+  const distanceInMeters = distance([center.lng, center.lat], [point.lng, point.lat], {
+    units: 'meters',
+  });
 
   return {
     metersPerPixel: distanceInMeters / 100,
@@ -49,8 +50,8 @@ export function getMapScale(map: mapboxgl.Map) {
     bounds: map.getBounds(),
     distanceScale: {
       meters: distanceInMeters,
-      kilometers: distanceInMeters / 1000
-    }
+      kilometers: distanceInMeters / 1000,
+    },
   };
 }
 
@@ -63,28 +64,26 @@ export function getViewportDistance(map: mapboxgl.Map) {
   const bounds = map.getBounds();
   const northeast = bounds.getNorthEast();
   const southwest = bounds.getSouthWest();
-  
+
   // Calculate diagonal distance across viewport
   const diagonalDistance = distance(
     [southwest.lng, southwest.lat],
     [northeast.lng, northeast.lat],
     { units: 'kilometers' }
   );
-  
+
   // Calculate width of viewport
-  const widthDistance = distance(
-    [southwest.lng, southwest.lat],
-    [northeast.lng, southwest.lat],
-    { units: 'kilometers' }
-  );
-  
+  const widthDistance = distance([southwest.lng, southwest.lat], [northeast.lng, southwest.lat], {
+    units: 'kilometers',
+  });
+
   return {
     diagonal: diagonalDistance,
     width: widthDistance,
     bounds: {
       ne: [northeast.lng, northeast.lat],
-      sw: [southwest.lng, southwest.lat]
-    }
+      sw: [southwest.lng, southwest.lat],
+    },
   };
 }
 
