@@ -41,14 +41,15 @@ export function useMapInitialization() {
       }
     });
 
-    const centerLng = sumLng / pointCount;
-    const centerLat = sumLat / pointCount;
+    const hasPoints = pointCount > 0;
+    const centerLng = hasPoints ? sumLng / pointCount : mapConfig.center[0];
+    const centerLat = hasPoints ? sumLat / pointCount : mapConfig.center[1];
 
     // Initialize map
     mapRef.current = new mapboxgl.Map({
       container: mapContainerRef.current,
       style: currentStyle,
-      center: pointCount > 0 ? [centerLng, centerLat] : (mapConfig.center as [number, number]),
+      center: [centerLng, centerLat],
       attributionControl: true,
       zoom: mapConfig.zoom,
       preserveDrawingBuffer: true,
