@@ -1,7 +1,6 @@
 import pMap from 'p-map';
 import * as turf from '@turf/turf';
 import _ from 'lodash';
-import RBush from 'rbush';
 
 export interface PropertyStats {
   sum: number;
@@ -13,12 +12,8 @@ export interface PropertyStats {
 
 // Build a spatial index for the featureCollection to narrow point-in-polygon checks
 const buildSpatialIndex = (featureCollection: any) => {
-  const tree = new RBush();
-  const items = featureCollection.features.map((feature: any) => {
-    const bbox = turf.bbox(feature);
-    return { minX: bbox[0], minY: bbox[1], maxX: bbox[2], maxY: bbox[3], feature };
-  });
-  tree.load(items);
+  const tree = turf.geojsonRbush();
+  tree.load(featureCollection);
   return tree;
 };
 
@@ -32,23 +27,7 @@ self.onmessage = async event => {
     async (cell: any, index: number) => {
       // Query candidates from spatial index using cell bbox
       const cellBbox = turf.bbox(cell);
-      const candidates = spatialIndex.search({
-        minX: cellBbox[0],
-        minY: cellBbox[1],
-        maxX: cellBbox[2],
-        maxY: cellBbox[3],
-      });
-
-      // Filter candidates with an exact point-in-polygon check
-      const pointsWithin = {
-        type: 'FeatureCollection',
-        features: candidates
-          .filter((item: any) => {
-            // Assume features are points; use turf.booleanPointInPolygon
-            return turf.booleanPointInPolygon(item.feature, cell);
-          })
-          .map((item: any) => item.feature),
-      };
+      const pointsWithin = spatialIndex.search(cellBbox);
 
       const density =
         featureCollection.basedon?.length > 0
