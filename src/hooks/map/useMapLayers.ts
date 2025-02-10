@@ -16,6 +16,12 @@ import _ from 'lodash';
 import { isIntelligentLayer } from '../../utils/layerUtils';
 const USE_BASEDON = true;
 
+import { LRUCache } from 'lru-cache';
+
+const cache = new LRUCache({
+  max: 10_000_000,
+});
+
 const getGridPaint = (
   basedonLength: boolean,
   pointsColor: string,
@@ -289,23 +295,31 @@ export function useMapLayers() {
                   // Calculate density for each cell
                   console.time('Grid generation');
 
-                  const worker = new Worker(
-                    new URL('./gridGeneration.worker.ts', import.meta.url),
-                    {
-                      type: 'module',
-                    }
-                  );
+                  const cacheKey = JSON.stringify([cellSide, bounds]);
 
-                  worker.postMessage({ grid, featureCollection });
+                  if (cache.has(cacheKey)) {
+                    grid.features = cache.get(cacheKey);
+                  } else {
+                    const worker = new Worker(
+                      new URL('./gridGeneration.worker.ts', import.meta.url),
+                      {
+                        type: 'module',
+                      }
+                    );
 
-                  grid.features = await new Promise<any[]>((resolve, reject) => {
-                    worker.onmessage = event => {
-                      resolve(event.data.features);
-                    };
-                    worker.onerror = err => reject(err);
-                  });
+                    worker.postMessage({ grid, featureCollection });
 
-                  worker.terminate();
+                    grid.features = await new Promise<any[]>((resolve, reject) => {
+                      worker.onmessage = event => {
+                        resolve(event.data.features);
+                      };
+                      worker.onerror = err => reject(err);
+                    });
+
+                    worker.terminate();
+
+                    cache.set(cacheKey, grid.features);
+                  }
 
                   console.timeEnd('Grid generation');
 
