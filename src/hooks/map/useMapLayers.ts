@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { useCatalogContext } from '../../context/CatalogContext';
 import { defaultMapConfig } from './useMapInitialization';
@@ -13,7 +13,6 @@ import urls from '../../urls.json';
 import { useGridPopup } from './useGridPopup';
 import { useGridInteraction } from './useGridInteraction';
 import _ from 'lodash';
-import { PropertyStats } from '../../types/allTypesAndInterfaces';
 import { isIntelligentLayer } from '../../utils/layerUtils';
 const USE_BASEDON = true;
 
@@ -290,9 +289,12 @@ export function useMapLayers() {
                   // Calculate density for each cell
                   console.time('Grid generation');
 
-                  const worker = new Worker(new URL('./gridGeneration.worker.ts', import.meta.url), {
-                    type: 'module',
-                  });
+                  const worker = new Worker(
+                    new URL('./gridGeneration.worker.ts', import.meta.url),
+                    {
+                      type: 'module',
+                    }
+                  );
 
                   worker.postMessage({ grid, featureCollection });
 
