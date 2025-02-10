@@ -19,7 +19,7 @@ const USE_BASEDON = true;
 import { LRUCache } from 'lru-cache';
 
 const cache = new LRUCache({
-  max: 10_000_000,
+  max: 100,
 });
 
 const getGridPaint = (
