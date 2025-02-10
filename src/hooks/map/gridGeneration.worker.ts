@@ -25,9 +25,7 @@ self.onmessage = async event => {
   const processedFeatures = await pMap(
     grid.features,
     async (cell: any, index: number) => {
-      // Query candidates from spatial index using cell bbox
-      const cellBbox = turf.bbox(cell);
-      const pointsWithin = spatialIndex.search(cellBbox);
+      const pointsWithin = spatialIndex.search(cell);
 
       const density =
         featureCollection.basedon?.length > 0
