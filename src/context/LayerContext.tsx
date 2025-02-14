@@ -283,54 +283,94 @@ export function LayerProvider(props: { children: ReactNode }) {
         ...prev,
         action: action,
       }));
-
-      for (const layer of layers) {
-        try {
-          if (!layer) continue;
-
-          if (layerDataMap[layer.id]) {
-            console.warn(`Layer ${layer.id} already processed, skipping...`);
-            continue;
+      if(searchType!=='keyword_search'){
+        for (const layer of layers) {
+          try {
+            if (!layer) continue;
+  
+            if (layerDataMap[layer.id]) {
+              console.warn(`Layer ${layer.id} already processed, skipping...`);
+              continue;
+            }
+  
+            const defaultName = `${reqFetchDataset.selectedCountry} ${reqFetchDataset.selectedCity} ${
+              layer.includedTypes?.map(type => type.replace('_', ' ')).join(' + ') || ''
+            }${
+              layer.excludedTypes?.length > 0
+                ? ' + not ' + layer.excludedTypes.map(type => type.replace('_', ' ')).join(' + not ')
+                : ''
+            }`;
+  
+            const res = await apiRequest({
+              url: urls.fetch_dataset,
+              method: 'post',
+              body: {
+                country_name: reqFetchDataset.selectedCountry,
+                city_name: reqFetchDataset.selectedCity,
+                boolean_query: layer.includedTypes?.join(' OR '),
+                layerId: layer.id,
+                layer_name: defaultName,
+                action: action,
+                search_type: searchType,
+                text_search: textSearchInput?.trim() || '',
+                page_token: pageToken || '',
+                user_id: user_id,
+                zoom_level: currentZoomLevel,
+              },
+              isAuthRequest: true,
+            });
+            if (res?.data?.data) {
+              await assignPopularityCategory(res?.data?.data)//To be removed after fixed on backend
+              setLayerDataMap(prev => ({
+                ...prev,
+                [layer.id]: res.data.data,
+              }));
+  
+              updateGeoJSONDataset(res.data.data, layer.id, defaultName);
+            }
+          } catch (error) {
+            console.error(`Error fetching layer ${layer?.id}:`, error);
+            setIsError(error instanceof Error ? error : new Error(String(error)));
           }
+        }
+      }else{
+        const res = await apiRequest({
+          url: urls.fetch_dataset,
+          method: 'post',
+          body: {
+            country_name: reqFetchDataset.selectedCountry,
+            city_name: reqFetchDataset.selectedCity,
+            boolean_query: '',
+            layerId: null,
+            layer_name: textSearchInput?.trim(),
+            action: action,
+            search_type: searchType,
+            text_search: textSearchInput?.trim(),
+            page_token: pageToken || '',
+            user_id: user_id,
+            zoom_level: currentZoomLevel,
+          },
+          isAuthRequest: true,
+        });
+        if (res?.data?.data) {
+          await assignPopularityCategory(res?.data?.data)//To be removed after fixed on backend
+          setLayerDataMap(prev => ({
+            ...prev,
+            [1]: res.data.data,
+          }));
+          let layers=[{
+            id:1,
+            name:textSearchInput?.trim(),
+            points_color:'',
+            excludedTypes:[],
+            includedTypes:[textSearchInput?.trim()]
 
-          const defaultName = `${reqFetchDataset.selectedCountry} ${reqFetchDataset.selectedCity} ${
-            layer.includedTypes?.map(type => type.replace('_', ' ')).join(' + ') || ''
-          }${
-            layer.excludedTypes?.length > 0
-              ? ' + not ' + layer.excludedTypes.map(type => type.replace('_', ' ')).join(' + not ')
-              : ''
-          }`;
-
-          const res = await apiRequest({
-            url: urls.fetch_dataset,
-            method: 'post',
-            body: {
-              country_name: reqFetchDataset.selectedCountry,
-              city_name: reqFetchDataset.selectedCity,
-              boolean_query: layer.includedTypes?.join(' OR '),
-              layerId: layer.id,
-              layer_name: defaultName,
-              action: action,
-              search_type: searchType,
-              text_search: textSearchInput?.trim() || '',
-              page_token: pageToken || '',
-              user_id: user_id,
-              zoom_level: currentZoomLevel,
-            },
-            isAuthRequest: true,
-          });
-          if (res?.data?.data) {
-            await assignPopularityCategory(res?.data?.data)//To be removed after fixed on backend
-            setLayerDataMap(prev => ({
-              ...prev,
-              [layer.id]: res.data.data,
-            }));
-
-            updateGeoJSONDataset(res.data.data, layer.id, defaultName);
-          }
-        } catch (error) {
-          console.error(`Error fetching layer ${layer?.id}:`, error);
-          setIsError(error instanceof Error ? error : new Error(String(error)));
+          }]
+          updateGeoJSONDataset(res.data.data, 1, textSearchInput?.trim());
+          setReqFetchDataset(prev=>({
+            ...prev,
+            layers:layers
+          }))
         }
       }
     } catch (error) {
