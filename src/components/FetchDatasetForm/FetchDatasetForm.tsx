@@ -732,17 +732,17 @@ const FetchDatasetForm = () => {
               if (!isAuthenticated) nav('/auth');
               try {
                 handleButtonClick('full data', e);
-                if (!error) {
-                  console.log('----money');
-                  await apiRequest({
-                    url: urls.deduct_wallet,
-                    method: 'Post',
-                    body: {
-                      user_id: authResponse?.localId,
-                      amount: costEstimate * 100,
-                    },
-                  });
-                }
+                // if (!error) {
+                //   console.log('----money');
+                //   await apiRequest({
+                //     url: urls.deduct_wallet,
+                //     method: 'Post',
+                //     body: {
+                //       user_id: authResponse?.localId,
+                //       amount: costEstimate * 100,
+                //     },
+                //   });
+                // }
               } catch (error: any) {
                 if (error.response.data.detail === 'Insufficient balance in wallet') {
                   setShowErrorMessage(true);
