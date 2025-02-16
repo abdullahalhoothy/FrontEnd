@@ -40,7 +40,7 @@ const getGridPaint = (
 });
 
 const getHeatmapPaint = (basedon: string, pointsColor?: string) => ({
-  'heatmap-weight': ['interpolate', ['linear'], ['get', basedon || 'heatmap_weight'], 0, 0, 5, 1],
+  'heatmap-weight': ['interpolate', ['linear'], ['get', 'density'], 0, 0, 5, 1],
   'heatmap-color': [
     'interpolate',
     ['linear'],
@@ -301,7 +301,7 @@ export function useMapLayers() {
                     grid.features = cache.get(cacheKey);
                   } else {
                     const worker = new Worker(
-                      new URL('./gridGeneration.worker.ts', import.meta.url),
+                      new URL('../../workers/gridGeneration.worker.ts', import.meta.url),
                       {
                         type: 'module',
                       }
@@ -379,18 +379,52 @@ export function useMapLayers() {
                     map.getCanvas().style.cursor = '';
                   });
                 } else if (featureCollection.is_heatmap) {
-                  map.addLayer({
-                    id: layerId,
-                    type: 'heatmap',
-                    source: sourceId,
-                    layout: {
-                      visibility: featureCollection.display ? 'visible' : 'none',
-                    },
-                    paint: getHeatmapPaint(
-                      featureCollection.basedon,
-                      featureCollection.points_color
-                    ),
-                  });
+                  const worker = new Worker(
+                    new URL('../../workers/heatmapGeneration.worker.ts', import.meta.url),
+                    {
+                      type: 'module',
+                    }
+                  );
+
+                  try {
+                    worker.postMessage({
+                      featureCollection,
+                      basedon: featureCollection.basedon,
+                    });
+
+                    const processedData = await new Promise<any>((resolve, reject) => {
+                      worker.onmessage = event => {
+                        if (event.data.error) {
+                          reject(new Error(event.data.error));
+                        } else {
+                          resolve(event.data);
+                        }
+                      };
+                      worker.onerror = err => reject(err);
+                    });
+
+                    worker.terminate();
+
+                    map.getSource(sourceId).setData({
+                      type: 'FeatureCollection',
+                      features: processedData.features,
+                    });
+
+                    map.addLayer({
+                      id: layerId,
+                      type: 'heatmap',
+                      source: sourceId,
+                      layout: {
+                        visibility: featureCollection.display ? 'visible' : 'none',
+                      },
+                      paint: getHeatmapPaint(
+                        featureCollection.basedon,
+                        featureCollection.points_color
+                      ),
+                    });
+                  } catch (error) {
+                    console.error('Error processing heatmap:', error);
+                  }
                 } else {
                   // Circle layer / points (default)
                   map.addLayer({
