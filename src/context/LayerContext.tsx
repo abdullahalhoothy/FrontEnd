@@ -334,6 +334,7 @@ export function LayerProvider(props: { children: ReactNode }) {
           }
         }
       }else{
+        let defaultName = `${reqFetchDataset.selectedCountry} ${reqFetchDataset.selectedCity} ${textSearchInput?.trim()}`
         const res = await apiRequest({
           url: urls.fetch_dataset,
           method: 'post',
@@ -341,8 +342,8 @@ export function LayerProvider(props: { children: ReactNode }) {
             country_name: reqFetchDataset.selectedCountry,
             city_name: reqFetchDataset.selectedCity,
             boolean_query: '',
-            layerId: null,
-            layer_name: textSearchInput?.trim(),
+            layerId: 1,
+            layer_name: defaultName,
             action: action,
             search_type: searchType,
             text_search: textSearchInput?.trim(),
@@ -366,7 +367,7 @@ export function LayerProvider(props: { children: ReactNode }) {
             includedTypes:[textSearchInput?.trim()]
 
           }]
-          updateGeoJSONDataset(res.data.data, 1, textSearchInput?.trim());
+          updateGeoJSONDataset(res.data.data, 1,defaultName);
           setReqFetchDataset(prev=>({
             ...prev,
             layers:layers
