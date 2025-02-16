@@ -1,7 +1,7 @@
 import pMap from 'p-map';
 import * as turf from '@turf/turf';
 import _ from 'lodash';
-import { PropertyStats } from '../../types/allTypesAndInterfaces';
+import { PropertyStats } from '../types/allTypesAndInterfaces';
 
 // Build a spatial index for the featureCollection to narrow point-in-polygon checks
 const buildSpatialIndex = (featureCollection: any) => {
