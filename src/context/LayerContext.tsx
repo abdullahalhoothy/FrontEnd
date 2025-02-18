@@ -9,7 +9,7 @@ import React, {
   useEffect,
   useMemo,
 } from 'react';
-import { HttpReq } from '../services/apiService';
+import axios from 'axios';
 import {
   FetchDatasetResponse,
   LayerContextType,
@@ -24,7 +24,6 @@ import {
 } from '../types/allTypesAndInterfaces';
 import urls from '../urls.json';
 import { useCatalogContext } from './CatalogContext';
-import userIdData from '../currentUserId.json';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { processCityData, getDefaultLayerColor, colorOptions } from '../utils/helperFunctions';
@@ -218,6 +217,14 @@ export function LayerProvider(props: { children: ReactNode }) {
       return newPoints;
     });
   }
+  const cancelSources = useRef([]);
+  useEffect(() => {
+    if (selectedContainerType === 'Catalogue') {
+      // Cancel all ongoing requests
+      cancelSources.current.forEach(source => source.cancel('Request cancelled due to tab change to Catalogue'));
+      cancelSources.current = [];
+    }
+  }, [selectedContainerType]);
 
   async function handleFetchDataset(action: string, pageToken?: string, layerId?: number) {
     if (!pageToken && !layerId) {
@@ -251,6 +258,8 @@ export function LayerProvider(props: { children: ReactNode }) {
       }));
 
       for (const layer of layers) {
+        const source = axios.CancelToken.source();
+        cancelSources.current.push(source);
         try {
           if (!layer) continue;
 
@@ -284,6 +293,9 @@ export function LayerProvider(props: { children: ReactNode }) {
               zoom_level: currentZoomLevel,
             },
             isAuthRequest: true,
+            options: {
+              cancelToken: source.token
+            }
           });
 
           if (res?.data?.data) {
@@ -295,8 +307,15 @@ export function LayerProvider(props: { children: ReactNode }) {
             updateGeoJSONDataset(res.data.data, layer.id, defaultName);
           }
         } catch (error) {
-          console.error(`Error fetching layer ${layer?.id}:`, error);
-          setIsError(error instanceof Error ? error : new Error(String(error)));
+          if (axios.isCancel(error)) {
+            console.log('Request cancelled:', error.message);
+          } else {
+
+            console.error(`Error fetching layer ${layer?.id}:`, error);
+            setIsError(error instanceof Error ? error : new Error(String(error)));
+          }
+        } finally {
+          cancelSources.current = cancelSources.current.filter(s => s !== source);
         }
       }
     } catch (error) {
