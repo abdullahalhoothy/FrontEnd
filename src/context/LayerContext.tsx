@@ -25,7 +25,7 @@ import {
 import urls from '../urls.json';
 import { useCatalogContext } from './CatalogContext';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { processCityData, getDefaultLayerColor, colorOptions } from '../utils/helperFunctions';
 import apiRequest from '../services/apiRequest';
 import { defaultMapConfig } from '../hooks/map/useMapInitialization';
@@ -36,6 +36,7 @@ const LayerContext = createContext<LayerContextType | undefined>(undefined);
 
 export function LayerProvider(props: { children: ReactNode }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { authResponse } = useAuth();
   const { children } = props;
   const { geoPoints, setGeoPoints } = useCatalogContext();
@@ -219,13 +220,20 @@ export function LayerProvider(props: { children: ReactNode }) {
   }
   const cancelSources = useRef([]);
   useEffect(() => {
-    if (selectedContainerType === 'Catalogue') {
+    const isHomeRoute = location.pathname === '/';
+    const isLayerTab = selectedContainerType === 'Layer';
+    if (!isHomeRoute || !isLayerTab) {
       // Cancel all ongoing requests
-      cancelSources.current.forEach(source => source.cancel('Request cancelled due to tab change to Catalogue'));
+      cancelSources.current.forEach(source => source.cancel('Request cancelled due to tab change from Layer tab'));
       cancelSources.current = [];
     }
-  }, [selectedContainerType]);
-
+  }, [location.pathname, selectedContainerType]);
+  useEffect(() => {
+    return () => {
+      cancelSources.current.forEach(source => source.cancel('Component unmounted'));
+      cancelSources.current = [];
+    };
+  }, []);
   async function handleFetchDataset(action: string, pageToken?: string, layerId?: number) {
     if (!pageToken && !layerId) {
       setGeoPoints(prev => prev.filter(p => isIntelligentLayer(p)));
