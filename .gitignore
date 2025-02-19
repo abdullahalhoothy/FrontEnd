@@ -70,3 +70,5 @@ testem.log
 /typings
 
 **/.DS_Store
+
+src/fakeData

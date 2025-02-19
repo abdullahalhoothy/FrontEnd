@@ -9,7 +9,6 @@ import React, {
   useEffect,
   useMemo,
 } from 'react';
-import { HttpReq } from '../services/apiService';
 import {
   FetchDatasetResponse,
   LayerContextType,
@@ -24,7 +23,6 @@ import {
 } from '../types/allTypesAndInterfaces';
 import urls from '../urls.json';
 import { useCatalogContext } from './CatalogContext';
-import userIdData from '../currentUserId.json';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { processCityData, getDefaultLayerColor, colorOptions } from '../utils/helperFunctions';
@@ -32,6 +30,17 @@ import apiRequest from '../services/apiRequest';
 import { defaultMapConfig } from '../hooks/map/useMapInitialization';
 import { useMapContext } from './MapContext';
 import { isIntelligentLayer } from '../utils/layerUtils';
+import { mapZoomToFakeDataZoom } from '../utils/mapZoomUtils';
+
+const FAKE_IS_ENABLED = true;
+
+const getFakeData = async (zoomLevel: number) => {
+  const response = await import(
+    `../fakeData/population_json_files/v${zoomLevel}/all_features.json`
+  );
+  const fakeData = await response.default;
+  return fakeData;
+};
 
 const LayerContext = createContext<LayerContextType | undefined>(undefined);
 
@@ -219,39 +228,38 @@ export function LayerProvider(props: { children: ReactNode }) {
     });
   }
   //To be removed after fixed on backend
-  function assignPopularityCategory(json: any): void {  
+  function assignPopularityCategory(json: any): void {
     let features = json.features;
-    
+
     // Extract popularity scores
     let scores = features.map(f => f.properties.popularity_score);
-    
+
     // Compute percentiles
     scores.sort((a, b) => b - a);
     let quartile = Math.ceil(scores.length / 4);
-    
+
     let thresholds = {
-        very_high: scores[quartile - 1] || 0,
-        high: scores[2 * quartile - 1] || 0,
-        mid: scores[3 * quartile - 1] || 0
+      very_high: scores[quartile - 1] || 0,
+      high: scores[2 * quartile - 1] || 0,
+      mid: scores[3 * quartile - 1] || 0,
     };
-    
+
     // Assign categories
     features.forEach(feature => {
-        if (!feature.properties.popularity_score_category) {
-            let score = feature.properties.popularity_score;
-            if (score >= thresholds.very_high) {
-                feature.properties.popularity_score_category = "very high";
-            } else if (score >= thresholds.high) {
-                feature.properties.popularity_score_category = "high";
-            } else if (score >= thresholds.mid) {
-                feature.properties.popularity_score_category = "mid";
-            } else {
-                feature.properties.popularity_score_category = "low";
-            }
+      if (!feature.properties.popularity_score_category) {
+        let score = feature.properties.popularity_score;
+        if (score >= thresholds.very_high) {
+          feature.properties.popularity_score_category = 'very high';
+        } else if (score >= thresholds.high) {
+          feature.properties.popularity_score_category = 'high';
+        } else if (score >= thresholds.mid) {
+          feature.properties.popularity_score_category = 'mid';
+        } else {
+          feature.properties.popularity_score_category = 'low';
         }
+      }
     });
-}
-
+  }
 
   async function handleFetchDataset(action: string, pageToken?: string, layerId?: number) {
     if (!pageToken && !layerId) {
@@ -283,24 +291,25 @@ export function LayerProvider(props: { children: ReactNode }) {
         ...prev,
         action: action,
       }));
-      if(searchType!=='keyword_search'){
+      if (searchType !== 'keyword_search') {
         for (const layer of layers) {
           try {
             if (!layer) continue;
-  
+
             if (layerDataMap[layer.id]) {
               console.warn(`Layer ${layer.id} already processed, skipping...`);
               continue;
             }
-  
+
             const defaultName = `${reqFetchDataset.selectedCountry} ${reqFetchDataset.selectedCity} ${
               layer.includedTypes?.map(type => type.replace('_', ' ')).join(' + ') || ''
             }${
               layer.excludedTypes?.length > 0
-                ? ' + not ' + layer.excludedTypes.map(type => type.replace('_', ' ')).join(' + not ')
+                ? ' + not ' +
+                  layer.excludedTypes.map(type => type.replace('_', ' ')).join(' + not ')
                 : ''
             }`;
-  
+
             const res = await apiRequest({
               url: urls.fetch_dataset,
               method: 'post',
@@ -320,12 +329,12 @@ export function LayerProvider(props: { children: ReactNode }) {
               isAuthRequest: true,
             });
             if (res?.data?.data) {
-              await assignPopularityCategory(res?.data?.data)//To be removed after fixed on backend
+              await assignPopularityCategory(res?.data?.data); //To be removed after fixed on backend
               setLayerDataMap(prev => ({
                 ...prev,
                 [layer.id]: res.data.data,
               }));
-  
+
               updateGeoJSONDataset(res.data.data, layer.id, defaultName);
             }
           } catch (error) {
@@ -333,8 +342,8 @@ export function LayerProvider(props: { children: ReactNode }) {
             setIsError(error instanceof Error ? error : new Error(String(error)));
           }
         }
-      }else{
-        let defaultName = `${reqFetchDataset.selectedCountry} ${reqFetchDataset.selectedCity} ${textSearchInput?.trim()}`
+      } else {
+        let defaultName = `${reqFetchDataset.selectedCountry} ${reqFetchDataset.selectedCity} ${textSearchInput?.trim()}`;
         const res = await apiRequest({
           url: urls.fetch_dataset,
           method: 'post',
@@ -354,24 +363,25 @@ export function LayerProvider(props: { children: ReactNode }) {
           isAuthRequest: true,
         });
         if (res?.data?.data) {
-          await assignPopularityCategory(res?.data?.data)//To be removed after fixed on backend
+          await assignPopularityCategory(res?.data?.data); //To be removed after fixed on backend
           setLayerDataMap(prev => ({
             ...prev,
             [1]: res.data.data,
           }));
-          let layers=[{
-            id:1,
-            name:textSearchInput?.trim(),
-            points_color:'',
-            excludedTypes:[],
-            includedTypes:[textSearchInput?.trim()]
-
-          }]
-          updateGeoJSONDataset(res.data.data, 1,defaultName);
-          setReqFetchDataset(prev=>({
+          let layers = [
+            {
+              id: 1,
+              name: textSearchInput?.trim(),
+              points_color: '',
+              excludedTypes: [],
+              includedTypes: [textSearchInput?.trim()],
+            },
+          ];
+          updateGeoJSONDataset(res.data.data, 1, defaultName);
+          setReqFetchDataset(prev => ({
             ...prev,
-            layers:layers
-          }))
+            layers: layers,
+          }));
         }
       }
     } catch (error) {
@@ -426,9 +436,8 @@ export function LayerProvider(props: { children: ReactNode }) {
         selectedCity: '', // Reset city when country changes
       }));
     } else if (name === 'selectedCity') {
-      
       setSelectedCity(value);
-  
+
       setReqFetchDataset(prev => ({
         ...prev,
         selectedCity: value,
@@ -501,7 +510,6 @@ export function LayerProvider(props: { children: ReactNode }) {
     setSearchType('category_search');
     setPassword('');
     setGeoPoints([]);
-
   }
 
   useEffect(() => {
@@ -558,11 +566,9 @@ export function LayerProvider(props: { children: ReactNode }) {
     }
   }, [currentZoomLevel]);
 
-
   useEffect(() => {
     handlePopulationLayer(false);
   }, [selectedContainerType]);
-
 
   const [includePopulation, setIncludePopulation] = useState(false);
 
@@ -636,30 +642,39 @@ export function LayerProvider(props: { children: ReactNode }) {
       if (shouldInclude) {
         setShowLoaderTopup(true);
         try {
-          const res = await apiRequest({
-            url: urls.fetch_dataset,
-            method: 'post',
-            body: {
-              text_search: '',
-              page_token: '',
-              user_id: authResponse.localId,
-              idToken: authResponse.idToken,
-              zoom_level: currentZoomLevel,
-              country_name: selectedCountry,
-              city_name: selectedCity,
-              boolean_query: 'TotalPopulation',
-              layer_name: 'Population Layer',
-              action: 'sample',
-              search_type: 'category_search',
-            },
-            isAuthRequest: true,
-            useCache: true,
-          });
+          let res: any;
+          const shouldFake = FAKE_IS_ENABLED && selectedCountry.toLowerCase() == 'saudi arabia';
 
-          if (!res?.data?.data) {
-            throw new Error('Invalid response data');
+          if (shouldFake) {
+            const fakeZoomLevel = mapZoomToFakeDataZoom(currentZoomLevel);
+            const fakeData = await getFakeData(fakeZoomLevel);
+            res = { data: { data: fakeData } };
+          } else {
+            res = await apiRequest({
+              url: urls.fetch_dataset,
+              method: 'post',
+              body: {
+                text_search: '',
+                page_token: '',
+                user_id: authResponse.localId,
+                idToken: authResponse.idToken,
+                zoom_level: currentZoomLevel,
+                country_name: selectedCountry,
+                city_name: selectedCity,
+                boolean_query: 'TotalPopulation',
+                layer_name: 'Population Layer',
+                action: 'sample',
+                search_type: 'category_search',
+              },
+              isAuthRequest: true,
+              useCache: true,
+            });
+
+            if (!res?.data?.data) {
+              throw new Error('Invalid response data');
+            }
           }
-
+          console.log('res', res);
           setGeoPoints(prevPoints => {
             const populationLayer = {
               layerId: 1001, // Special ID for population layer
@@ -671,6 +686,7 @@ export function LayerProvider(props: { children: ReactNode }) {
               layer_legend: `${selectedCity} Population Layer (${res.data.data?.features?.length})`,
               is_grid: true,
               is_intelligent: true,
+              is_fake: shouldFake,
               is_refetch: isRefetch,
               basedon: 'population',
               visualization_mode: 'grid',

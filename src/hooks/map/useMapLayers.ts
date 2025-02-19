@@ -127,12 +127,17 @@ export function useMapLayers() {
           map.removeLayer(`${gridLayerId}-buttons`);
         }
 
-        // Then remove grid layer
+        // Remove outline layer for polygons first
+        if (gridLayerId && map.getLayer(`${gridLayerId}-outline`)) {
+          map.removeLayer(`${gridLayerId}-outline`);
+        }
+
+        // Then remove grid/polygon layer
         if (gridLayerId && map.getLayer(gridLayerId)) {
           map.removeLayer(gridLayerId);
         }
 
-        // Remove layers first
+        // Remove regular layers
         if (layerId && map.getLayer(layerId)) {
           map.removeLayer(layerId);
         }
@@ -265,7 +270,115 @@ export function useMapLayers() {
                   generateId: true,
                 });
 
-                if (featureCollection.is_grid) {
+                if (featureCollection.is_fake) {
+                  console.time('Polygon processing');
+
+                  try {
+                    const worker = new Worker(
+                      new URL('../../workers/polygonGridGeneration.worker.ts', import.meta.url),
+                      {
+                        type: 'module',
+                      }
+                    );
+
+                    worker.postMessage({ featureCollection });
+
+                    const processedData = await new Promise<any>((resolve, reject) => {
+                      worker.onmessage = event => {
+                        if (event.data.error) {
+                          reject(new Error(event.data.error));
+                        } else {
+                          resolve(event.data);
+                        }
+                      };
+                      worker.onerror = err => reject(err);
+                    });
+
+                    worker.terminate();
+
+                    // Add source with processed polygons
+                    map.addSource(gridSourceId, {
+                      type: 'geojson',
+                      data: {
+                        type: 'FeatureCollection',
+                        features: processedData.features,
+                      },
+                      generateId: true,
+                    });
+
+                    // Calculate density values for styling
+                    const allDensityValues = processedData.features.map(
+                      f => f.properties?.density || 0
+                    );
+                    const maxDensity = Math.max(...allDensityValues, 1);
+
+                    // Add fill layer for polygons
+                    map.addLayer({
+                      id: gridLayerId,
+                      type: 'fill',
+                      source: gridSourceId,
+                      layout: {
+                        visibility: featureCollection.display ? 'visible' : 'none',
+                      },
+                      paint: {
+                        'fill-color':
+                          featureCollection.points_color || defaultMapConfig.defaultColor,
+                        'fill-opacity': [
+                          'interpolate',
+                          ['linear'],
+                          ['get', 'density'],
+                          0,
+                          0.1,
+                          maxDensity,
+                          0.8,
+                        ],
+                        'fill-outline-color': '#000',
+                      },
+                    });
+
+                    // Add outline layer for polygons
+                    map.addLayer({
+                      id: `${gridLayerId}-outline`,
+                      type: 'line',
+                      source: gridSourceId,
+                      layout: {
+                        visibility: featureCollection.display ? 'visible' : 'none',
+                      },
+                      paint: {
+                        'line-color': '#000',
+                        'line-width': 1,
+                      },
+                    });
+
+                    console.timeEnd('Polygon processing');
+
+                    // Store IDs
+                    gridLayerIdRef.current = gridLayerId;
+                    layerStatesRef.current[index].gridSourceId = gridSourceId;
+
+                    // Add click handler directly to grid cells
+                    map.on('click', gridLayerId, e => {
+                      e.preventDefault();
+                      handleGridCellClick(
+                        e,
+                        featureCollection,
+                        gridSourceId,
+                        featureCollection.basedon
+                      );
+                    });
+
+                    // Add hover effects for the grid cells
+                    map.on('mouseenter', gridLayerId, () => {
+                      map.getCanvas().style.cursor = 'pointer';
+                    });
+
+                    map.on('mouseleave', gridLayerId, () => {
+                      map.getCanvas().style.cursor = '';
+                    });
+                  } catch (error) {
+                    console.error('Error processing polygons:', error);
+                  }
+                } else if (featureCollection.is_grid) {
                   let bounds;
                   if (
                     featureCollection.city_name &&
