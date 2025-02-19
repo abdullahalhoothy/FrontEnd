@@ -218,16 +218,19 @@ export function LayerProvider(props: { children: ReactNode }) {
       return newPoints;
     });
   }
+  // Cancel all ongoing layer data requests when user switches from 'Layer' tab to another tab
   const cancelSources = useRef([]);
   const { createCancelToken, isCancellationError } = useRequestCancellation({
     cancelSourcesRef: cancelSources,
     conditions: {
       dependencies: [location.pathname, selectedContainerType],
-      shouldCancel: (pathname, containerType) => 
+      shouldCancel: (pathname, containerType) =>
         pathname !== '/' || containerType !== 'Layer',
       message: 'Request cancelled due to tab change from Layer tab'
     }
-  });  async function handleFetchDataset(action: string, pageToken?: string, layerId?: number) {
+  });
+
+  async function handleFetchDataset(action: string, pageToken?: string, layerId?: number) {
     if (!pageToken && !layerId) {
       setGeoPoints(prev => prev.filter(p => isIntelligentLayer(p)));
       setLayerDataMap({});
