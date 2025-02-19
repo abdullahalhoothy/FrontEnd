@@ -223,6 +223,7 @@ export function LayerProvider(props: { children: ReactNode }) {
     const isHomeRoute = location.pathname === '/';
     const isLayerTab = selectedContainerType === 'Layer';
     if (!isHomeRoute || !isLayerTab) {
+      //TODO comment , this should be a separate service.
       // Cancel all ongoing requests
       cancelSources.current.forEach(source => source.cancel('Request cancelled due to tab change from Layer tab'));
       cancelSources.current = [];
