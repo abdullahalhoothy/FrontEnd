@@ -9,7 +9,6 @@ import React, {
   useEffect,
   useMemo,
 } from 'react';
-import axios from 'axios';
 import {
   FetchDatasetResponse,
   LayerContextType,
@@ -31,6 +30,7 @@ import apiRequest from '../services/apiRequest';
 import { defaultMapConfig } from '../hooks/map/useMapInitialization';
 import { useMapContext } from './MapContext';
 import { isIntelligentLayer } from '../utils/layerUtils';
+import { useRequestCancellation } from '../hooks/useRequestCancellation';
 
 const LayerContext = createContext<LayerContextType | undefined>(undefined);
 
@@ -219,23 +219,15 @@ export function LayerProvider(props: { children: ReactNode }) {
     });
   }
   const cancelSources = useRef([]);
-  useEffect(() => {
-    const isHomeRoute = location.pathname === '/';
-    const isLayerTab = selectedContainerType === 'Layer';
-    if (!isHomeRoute || !isLayerTab) {
-      //TODO comment , this should be a separate service.
-      // Cancel all ongoing requests
-      cancelSources.current.forEach(source => source.cancel('Request cancelled due to tab change from Layer tab'));
-      cancelSources.current = [];
+  const { createCancelToken, isCancellationError } = useRequestCancellation({
+    cancelSourcesRef: cancelSources,
+    conditions: {
+      dependencies: [location.pathname, selectedContainerType],
+      shouldCancel: (pathname, containerType) => 
+        pathname !== '/' || containerType !== 'Layer',
+      message: 'Request cancelled due to tab change from Layer tab'
     }
-  }, [location.pathname, selectedContainerType]);
-  useEffect(() => {
-    return () => {
-      cancelSources.current.forEach(source => source.cancel('Component unmounted'));
-      cancelSources.current = [];
-    };
-  }, []);
-  async function handleFetchDataset(action: string, pageToken?: string, layerId?: number) {
+  });  async function handleFetchDataset(action: string, pageToken?: string, layerId?: number) {
     if (!pageToken && !layerId) {
       setGeoPoints(prev => prev.filter(p => isIntelligentLayer(p)));
       setLayerDataMap({});
@@ -267,8 +259,7 @@ export function LayerProvider(props: { children: ReactNode }) {
       }));
 
       for (const layer of layers) {
-        const source = axios.CancelToken.source();
-        cancelSources.current.push(source);
+        const source = createCancelToken();
         try {
           if (!layer) continue;
 
@@ -284,7 +275,6 @@ export function LayerProvider(props: { children: ReactNode }) {
               ? ' + not ' + layer.excludedTypes.map(type => type.replace('_', ' ')).join(' + not ')
               : ''
           }`;
-
           const res = await apiRequest({
             url: urls.fetch_dataset,
             method: 'post',
@@ -316,15 +306,13 @@ export function LayerProvider(props: { children: ReactNode }) {
             updateGeoJSONDataset(res.data.data, layer.id, defaultName);
           }
         } catch (error) {
-          if (axios.isCancel(error)) {
+          if (isCancellationError(error)) {
             console.log('Request cancelled:', error.message);
           } else {
 
             console.error(`Error fetching layer ${layer?.id}:`, error);
             setIsError(error instanceof Error ? error : new Error(String(error)));
           }
-        } finally {
-          cancelSources.current = cancelSources.current.filter(s => s !== source);
         }
       }
     } catch (error) {
