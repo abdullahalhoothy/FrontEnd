@@ -72,3 +72,5 @@ testem.log
 **/.DS_Store
 
 src/fakeData
+
+public/data

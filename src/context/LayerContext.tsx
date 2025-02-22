@@ -35,10 +35,16 @@ import { mapZoomToFakeDataZoom } from '../utils/mapZoomUtils';
 const FAKE_IS_ENABLED = true;
 
 const getFakeData = async (zoomLevel: number) => {
-  const response = await import(
-    `../fakeData/population_json_files/v${zoomLevel}/all_features.json`
-  );
-  const fakeData = await response.default;
+  const url = `/data/population_json_files/v${zoomLevel}/all_features.json`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    console.error('Response status:', response.status);
+    console.error('Response text:', await response.text());
+    throw new Error(`Failed to fetch data: ${response.status}`);
+  }
+
+  const fakeData = await response.json();
   return fakeData;
 };
 
