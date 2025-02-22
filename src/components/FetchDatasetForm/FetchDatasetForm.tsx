@@ -58,6 +58,7 @@ const FetchDatasetForm = () => {
   const [error, setError] = useState<string | null>(null);
   const [showErrorMessage, setShowErrorMessage] = useState<boolean>(false);
   const [citiesData, setCitiesData] = useState<{ [country: string]: City[] }>({});
+  const [errorMessage, setErrorMessage] = useState('');
   const [costEstimate, setCostEstimate] = useState<number>(0.0);
   // COLBASE CATEGORY
   const [openedCategories, setOpenedCategories] = useState<string[]>([]);
@@ -473,6 +474,27 @@ const FetchDatasetForm = () => {
     }
   }, [backendZoom, setReqFetchDataset]);
 
+  const typingDelay = 500;
+
+  useEffect(() => {
+    if (!textSearchInput.trim()) return;
+
+    if (!selectedCountry || !selectedCity) {
+      setErrorMessage('Please select Country and city first.');
+      return;
+    } else {
+      setErrorMessage('');
+    }
+
+    const delayDebounceFn = setTimeout(async () => {
+      const typesArray = textSearchInput.split(',').map(t => t.trim());
+      const estimatedCost = await estimateCost(typesArray);
+      setCostEstimate(estimatedCost);
+    }, typingDelay);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [textSearchInput, selectedCountry, selectedCity]);
+
   return (
     <>
       <div className="flex-1 flex flex-col justify-between overflow-y-auto ">
@@ -560,6 +582,8 @@ const FetchDatasetForm = () => {
               />
             </div>
           )}
+          {errorMessage && <p className="text-red-500 text-sm mt-2">{errorMessage}</p>}
+          
           <div className="pt-4">
             <label className="block mb-2 text-md font-medium text-black" htmlFor="country">
               Country
@@ -731,18 +755,15 @@ const FetchDatasetForm = () => {
               if (res.data.data.length === 0) nav('/profile/payment-methods');
               if (!isAuthenticated) nav('/auth');
               try {
+                await apiRequest({
+                  url: urls.deduct_wallet,
+                  method: 'Post',
+                  body: {
+                    user_id: authResponse?.localId,
+                    amount: costEstimate * 100,
+                  },
+                });
                 handleButtonClick('full data', e);
-                // if (!error) {
-                //   console.log('----money');
-                //   await apiRequest({
-                //     url: urls.deduct_wallet,
-                //     method: 'Post',
-                //     body: {
-                //       user_id: authResponse?.localId,
-                //       amount: costEstimate * 100,
-                //     },
-                //   });
-                // }
               } catch (error: any) {
                 if (error.response.data.detail === 'Insufficient balance in wallet') {
                   setShowErrorMessage(true);
