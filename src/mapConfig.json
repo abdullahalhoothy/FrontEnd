@@ -6,7 +6,7 @@
   "circleOpacity": 0.8,
   "circleStrokeWidth": 0.4,
   "circleStrokeColor": "#898989",
-  "zoom": 12,
+  "zoom": 10,
   "speed": 10,
   "center": [39.6074258, 24.4738121],
   "radiusInMeters": 1250,

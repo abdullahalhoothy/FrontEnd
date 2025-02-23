@@ -52,11 +52,11 @@ const FetchDatasetForm = () => {
 
   // AUTH CONTEXT
   const { isAuthenticated, authResponse, logout } = useAuth();
-  const[isPriceVisible,setIsPriceVisible] =useState<boolean>(false)
+  const [isPriceVisible, setIsPriceVisible] = useState<boolean>(false);
   // FETCHED DATA
   const [layers, setLayers] = useState<Layer[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [showErrorMessage,setShowErrorMessage]=useState<boolean>(false)
+  const [showErrorMessage, setShowErrorMessage] = useState<boolean>(false);
   const [citiesData, setCitiesData] = useState<{ [country: string]: City[] }>({});
   const [costEstimate, setCostEstimate] = useState<number>(0.0);
   // COLBASE CATEGORY
@@ -79,31 +79,35 @@ const FetchDatasetForm = () => {
     fetchProfile();
   }, []);
   const fetchProfile = async () => {
-    if (!authResponse || !("idToken" in authResponse)) {
-      nav("/auth");
+    if (!authResponse || !('idToken' in authResponse)) {
+      nav('/auth');
       return;
     }
 
     try {
       const res = await apiRequest({
         url: urls.user_profile,
-        method: "POST",
+        method: 'POST',
         isAuthRequest: true,
         body: { user_id: authResponse.localId },
       });
       await setIsPriceVisible(res.data.data.settings.show_price_on_purchase);
     } catch (err) {
-      console.error("Unexpected error:", err);
+      console.error('Unexpected error:', err);
       logout();
-      nav("/auth");
+      nav('/auth');
     }
   };
   useEffect(() => {
-    if(reqFetchDataset.includedTypes&&reqFetchDataset.selectedCity&&reqFetchDataset.selectedCountry){
-      let total_cost=layers.reduce((sum, layer) => sum + layer.cost, 0);
-      setCostEstimate(total_cost)
+    if (
+      reqFetchDataset.includedTypes &&
+      reqFetchDataset.selectedCity &&
+      reqFetchDataset.selectedCountry
+    ) {
+      let total_cost = layers.reduce((sum, layer) => sum + layer.cost, 0);
+      setCostEstimate(total_cost);
     }
-  }, [layers,selectedCity,selectedCity]);
+  }, [layers, selectedCity, selectedCity]);
 
   const filteredCategories = Object.entries(categories).reduce((acc, [category, types]) => {
     const filteredTypes = (types as string[]).filter(type =>
@@ -250,9 +254,9 @@ const FetchDatasetForm = () => {
     if (!setAsExcluded) {
       layerCost = await estimateCost([type]);
     }
-  
+
     // Update the layers state
-    setLayers((prevLayers) => {
+    setLayers(prevLayers => {
       if (prevLayers.length === 0) {
         // If no layers exist, create a new layer
         const newLayer: Layer = {
@@ -266,12 +270,12 @@ const FetchDatasetForm = () => {
         };
         return [newLayer];
       }
-  
+
       // Try to find the first layer that doesn't have this type
       let targetLayerIndex = prevLayers.findIndex(
-        (layer) => !layer.includedTypes.includes(type) && !layer.excludedTypes.includes(type)
+        layer => !layer.includedTypes.includes(type) && !layer.excludedTypes.includes(type)
       );
-  
+
       // If all existing layers have this type, create a new layer
       if (targetLayerIndex === -1) {
         const newLayerId = prevLayers.length + 1;
@@ -287,7 +291,7 @@ const FetchDatasetForm = () => {
         };
         return [...prevLayers, newLayer];
       }
-  
+
       // Add the type to the first available layer
       return prevLayers.map((layer, index) => {
         if (index === targetLayerIndex) {
@@ -297,30 +301,30 @@ const FetchDatasetForm = () => {
             includedTypes: setAsExcluded ? layer.includedTypes : [...layer.includedTypes, type],
             excludedTypes: setAsExcluded ? [...layer.excludedTypes, type] : layer.excludedTypes,
           };
-  
+
           // If the type is included, update the cost
           if (!setAsExcluded) {
-            estimateCost(updatedLayer.includedTypes).then((updatedCost) => {
+            estimateCost(updatedLayer.includedTypes).then(updatedCost => {
               // Create a new updated layer with the new cost
               const finalUpdatedLayer = {
                 ...updatedLayer,
                 cost: updatedCost,
               };
-  
+
               // Update the state with the final updated layer
-              setLayers((currentLayers) =>
+              setLayers(currentLayers =>
                 currentLayers.map((l, i) => (i === targetLayerIndex ? finalUpdatedLayer : l))
               );
             });
           }
-  
+
           return updatedLayer;
         }
         return layer;
       });
     });
   };
-  
+
   const estimateCost = async (type: string[]) => {
     if (!authResponse || !('idToken' in authResponse)) {
       return 0; // Return a default cost if auth is not available
@@ -444,7 +448,6 @@ const FetchDatasetForm = () => {
       setError(err instanceof Error ? err.message : 'An error occurred');
     }
   };
-
 
   const handleReset = () => {
     resetFetchDatasetForm();
@@ -719,31 +722,32 @@ const FetchDatasetForm = () => {
 
           <button
             className="w-full h-10 bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer"
-            onClick={async(e) => {
+            onClick={async e => {
               const res = await apiRequest({
                 url: `${urls.list_stripe_payment_methods}?user_id=${authResponse?.localId}`,
                 method: 'get',
                 isAuthRequest: true,
               });
-              if (res.data.data.length===0) nav('/profile/payment-methods');
+              if (res.data.data.length === 0) nav('/profile/payment-methods');
               if (!isAuthenticated) nav('/auth');
-              try{
-                await apiRequest(
-                  {
-                    url:urls.deduct_wallet,
-                    method:'Post',
-                    body:{
-                      user_id:authResponse?.localId,
-                      amount:costEstimate*100
-                    }
-                  }
-                )
+              try {
                 handleButtonClick('full data', e);
-              }catch(error:any){
-                if(error.response.data.detail==='Insufficient balance in wallet'){
-                  setShowErrorMessage(true)
+                // if (!error) {
+                //   console.log('----money');
+                //   await apiRequest({
+                //     url: urls.deduct_wallet,
+                //     method: 'Post',
+                //     body: {
+                //       user_id: authResponse?.localId,
+                //       amount: costEstimate * 100,
+                //     },
+                //   });
+                // }
+              } catch (error: any) {
+                if (error.response.data.detail === 'Insufficient balance in wallet') {
+                  setShowErrorMessage(true);
                 }
-                console.error(error)
+                console.error(error);
               }
             }}
           >
@@ -773,15 +777,13 @@ const FetchDatasetForm = () => {
               <p className="text-base text-gray-800 font-medium">
                 Insufficient funds for this transaction.
               </p>
-              <p className="text-sm text-gray-600 mt-2">
-                Please add more funds to continue.
-              </p>
+              <p className="text-sm text-gray-600 mt-2">Please add more funds to continue.</p>
             </div>
 
             {/* Footer */}
             <div className="flex justify-center px-6 py-4">
               <button
-                onClick={() => nav("/profile/wallet/add")}
+                onClick={() => nav('/profile/wallet/add')}
                 className="w-full h-10 bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer"
               >
                 Add Funds
