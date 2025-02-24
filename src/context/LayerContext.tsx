@@ -223,7 +223,12 @@ export function LayerProvider(props: { children: ReactNode }) {
       const newPoints = [...filteredPoints, newPoint];
 
       if (response.next_page_token) {
-        handleFetchDataset('full data', response.next_page_token, layerId).catch(err => {
+        fetchAllPagesForLayer(
+          layerId,
+          defaultName,
+          response.next_page_token,
+          response.prdcer_lyr_id
+        ).catch(err => {
           console.error(`Error fetching page for layer ${layerId}:`, err);
         });
       } else {
@@ -267,7 +272,12 @@ export function LayerProvider(props: { children: ReactNode }) {
     });
   }
 
-  async function handleFetchDataset(action: string, pageToken?: string, layerId?: number) {
+  const layerDataMapRef = useRef<LayerDataMap>({});
+  useEffect(() => {
+    layerDataMapRef.current = layerDataMap;
+  }, [layerDataMap]);
+
+  async function handleFetchDataset(action: string, pageToken?: string, layerId?: number, prevPrdcerLyrId?: string) {
     if (!pageToken && !layerId) {
       setGeoPoints(prev => prev.filter(p => isIntelligentLayer(p)));
       setLayerDataMap({});
@@ -316,6 +326,12 @@ export function LayerProvider(props: { children: ReactNode }) {
                 : ''
             }`;
 
+            const prdcerLayerId = layerDataMapRef.current[layer.id]?.prdcer_lyr_id;
+            const payloadLayerId = pageToken 
+            ? (prevPrdcerLyrId || layerDataMapRef.current[layer.id]?.prdcer_lyr_id || '')
+            : '';
+          
+
             const res = await apiRequest({
               url: urls.fetch_dataset,
               method: 'post',
@@ -323,7 +339,7 @@ export function LayerProvider(props: { children: ReactNode }) {
                 country_name: reqFetchDataset.selectedCountry,
                 city_name: reqFetchDataset.selectedCity,
                 boolean_query: layer.includedTypes?.join(' OR '),
-                layerId: layer.id,
+                layerId: payloadLayerId,
                 layer_name: defaultName,
                 action: action,
                 search_type: searchType,
@@ -357,7 +373,7 @@ export function LayerProvider(props: { children: ReactNode }) {
             country_name: reqFetchDataset.selectedCountry,
             city_name: reqFetchDataset.selectedCity,
             boolean_query: '',
-            layerId: 1,
+            layerId: payloadLayerId,
             layer_name: defaultName,
             action: action,
             search_type: searchType,
@@ -395,6 +411,25 @@ export function LayerProvider(props: { children: ReactNode }) {
     } finally {
       // Reset loader
       setShowLoaderTopup(false);
+    }
+  }
+
+  async function fetchAllPagesForLayer(
+    layerId: number,
+    defaultName: string,
+    initialPageToken: string,
+    initialPrdcerLyrId: string
+  ) {
+    let pageToken = initialPageToken;
+    let prevPrdcerLyrId = initialPrdcerLyrId;
+    // Loop until there is no pageToken
+    while (pageToken) {
+      // Await each API call and get its response data
+      const resData = await handleFetchDataset('full data', pageToken, layerId, prevPrdcerLyrId);
+      if (!resData) break;
+      // Use the prdcer_lyr_id from the current response for the next call
+      prevPrdcerLyrId = resData.prdcer_lyr_id;
+      pageToken = resData.next_page_token || '';
     }
   }
 
