@@ -477,7 +477,10 @@ const FetchDatasetForm = () => {
   const typingDelay = 500;
 
   useEffect(() => {
-    if (!textSearchInput.trim()) return;
+    if (!textSearchInput.trim()) {
+      setCostEstimate(0.0);
+      return;
+    }
 
     if (!selectedCountry || !selectedCity) {
       setErrorMessage('Please select Country and city first.');
