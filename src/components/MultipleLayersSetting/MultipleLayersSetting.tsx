@@ -18,6 +18,7 @@ import urls from '../../urls.json';
 import { useAuth } from '../../context/AuthContext';
 import apiRequest from '../../services/apiRequest';
 import BasedOnLayerDropdown from './BasedOnLayerDropdown';
+import { useMapContext } from '../../context/MapContext';
 
 const initialBasedon = 'radius';
 const initialRadius = 1000;
@@ -58,10 +59,13 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     isLoading,
     handleColorBasedZone,
     gradientColorBasedOnZone,
+    handleFilteredZone,
+    handleNameBasedColorZone,
   } = useCatalogContext();
   const layer = geoPoints[layerIndex];
 
-  const { prdcer_layer_name, layer_legend, is_zone_lyr, display, is_heatmap, is_grid, city_name } = layer;
+  const { prdcer_layer_name, layer_legend, is_zone_lyr, display, is_heatmap, is_grid, city_name } =
+    layer;
   const [isZoneLayer, setIsZoneLayer] = useState(is_zone_lyr);
   const [isDisplay, setIsDisplay] = useState(display);
   const [isHeatmap, setIsHeatmap] = useState(is_heatmap);
@@ -69,10 +73,12 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
   const { authResponse } = useAuth();
-
+  const [selectedOption, setSelectedOption] = useState('recolor');
   const [isError, setIsError] = useState<Error | null>(null);
   const [radiusInput, setRadiusInput] = useState<number | string>(layer.radius_meters || 1000);
   const isFirstRender = useRef(true);
+  const [nameInputs, setNameInputs] = useState<string[]>([]);
+  const [propertThrehold, setPropertyThreshold] = useState('');
 
   const dropdownIndex = layerIndex ?? -1;
   const isOpen = openDropdownIndices[1] === dropdownIndex;
@@ -299,116 +305,443 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       updateLayerColor(layerIndex, color);
     }
   };
+  const { updateNameColorMap, nameColorMap } = useMapContext();
+  const [selectedColor, setSelectedColor] = useState<string>('#000000');
 
-  const handleApplyDynamicColor = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleNameColorChange = (color: string) => {
+    setSelectedColor(color);
+    console.log('Color selected:', color); // You can send this to the backend here
+  };
+
+  // const handleApplyFilter = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  //   e.preventDefault();
+  //   setIsLoading(true);
+
+  //   try {
+  //     const currentLayer = geoPoints[layerIndex];
+  //     const baseLayer = geoPoints.find(layer => layer.prdcer_lyr_id === basedOnLayerId);
+  //     const selectedColors = colors[chosenPallet || 0];
+
+  //     if (!currentLayer || !baseLayer || !basedOnProperty || !selectedColors || !selectedBasedon) {
+  //       console.error('Missing required fields');
+  //       return;
+  //     }
+
+  //     const filterRequest = {
+  //       color_grid_choice: selectedColors,
+  //       change_lyr_id: currentLayer.prdcer_lyr_id,
+  //       change_lyr_name: currentLayer.prdcer_layer_name || `Layer ${currentLayer.layerId}`,
+  //       based_on_lyr_id: baseLayer.prdcer_lyr_id,
+  //       based_on_lyr_name: baseLayer.prdcer_layer_name || `Layer ${baseLayer.layerId}`,
+  //       coverage_property: selectedBasedon,
+  //       coverage_value: radiusInput,
+  //       color_based_on: basedOnProperty,
+  //       list_names: nameInputs.filter(name => name.trim() !== ''),
+  //       threshold: ' ',
+  //       points_color: selectedColor,
+  //     };
+
+  //     const filterResponse = await handleFilteredZone(filterRequest);
+
+  //     if (!filterResponse) {
+  //       throw new Error('Filter_data API failed.');
+  //     }
+  //     setGeoPoints(filterResponse);
+  //   } catch (error) {
+  //     console.error('Error applying filter:', error);
+  //     setIsError(error instanceof Error ? error : new Error('Failed to apply filter'));
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  const [thresholdValue, setThresholdValue] = useState('');
+
+  const handleThresholdChange = (value: string) => {
+    setThresholdValue(value);
+    console.log('📌 Threshold Updated:', value); // ✅ Check in console
+  };
+  const handleApplyFilter = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-
-    // Get all required data
-    const currentLayer = geoPoints[layerIndex];
-    const baseLayer = geoPoints.find(layer => layer.prdcer_lyr_id === basedOnLayerId);
-    const selectedColors = colors[chosenPallet || 0];
-
-    // Validate all required fields with specific error messages
-    if (!currentLayer) {
-      console.error('Current layer not found');
-      return;
-    }
-
-    if (!baseLayer) {
-      console.error('Please select a layer to compare with');
-      return;
-    }
-
-    if (!basedOnProperty) {
-      console.error('Please select a metric to compare based on');
-      return;
-    }
-
-    if (!selectedColors || selectedColors.length === 0) {
-      console.error('Please select a color palette');
-      return;
-    }
-
-    if (!selectedBasedon) {
-      console.error('Please select a metric to base colors on');
-      return;
-    }
-
-    // Ensure we have valid names
-    const changeName = currentLayer.prdcer_layer_name || `Layer ${currentLayer.layerId}`;
-    const baseName = baseLayer.prdcer_layer_name || `Layer ${baseLayer.layerId}`;
-
-    // Set radius with validation
-    const validRadius = radiusInput;
+    setIsLoading(true);
 
     try {
-      setIsLoading(true);
+      const currentLayer = geoPoints[layerIndex];
+      const baseLayer = geoPoints.find(layer => layer.prdcer_lyr_id === basedOnLayerId);
+      const selectedColors = colors[chosenPallet || 0];
 
-      const requestData = {
+      if (!currentLayer || !baseLayer || !basedOnProperty || !selectedColors || !selectedBasedon) {
+        console.error('Missing required fields');
+        return;
+      }
+      const getFormattedThreshold = () => {
+        if (
+          basedOnProperty === 'id' ||
+          basedOnProperty === 'address' ||
+          basedOnProperty === 'phone' ||
+          basedOnProperty === 'priceLevel' ||
+          basedOnProperty === 'primaryType' ||
+          basedOnProperty === '' ||
+          basedOnProperty === 'popularity_score_category'
+        ) {
+          return thresholdValue; // Keep as string
+        }
+
+        if (
+          basedOnProperty === 'rating' ||
+          basedOnProperty === 'heatmap_weight' ||
+          basedOnProperty === 'user_ratings_total' ||
+          basedOnProperty === 'popularity_score'
+        ) {
+          return parseFloat(thresholdValue) || 0; // Convert to float
+        }
+
+        return thresholdValue; // Default case
+      };
+      const filterRequest = {
         color_grid_choice: selectedColors,
         change_lyr_id: currentLayer.prdcer_lyr_id,
-        change_lyr_name: changeName,
+        change_lyr_name: currentLayer.prdcer_layer_name || `Layer ${currentLayer.layerId}`,
         based_on_lyr_id: baseLayer.prdcer_lyr_id,
-        based_on_lyr_name: baseName,
+        based_on_lyr_name: baseLayer.prdcer_layer_name || `Layer ${baseLayer.layerId}`,
         coverage_property: selectedBasedon,
-        coverage_value: validRadius,
+        coverage_value: radiusInput,
         color_based_on: basedOnProperty,
+        list_names: nameInputs.filter(name => name.trim() !== ''),
+        threshold: getFormattedThreshold(),
+        points_color: selectedColor,
       };
 
-      setReqGradientColorBasedOnZone(requestData);
+      const filterResponse = await handleFilteredZone(filterRequest);
 
-      // Get data directly from the function return value
-      const gradientData = await handleColorBasedZone(requestData);
-
-      if (!gradientData || gradientData.length === 0) {
-        console.error('#fix: gradient-color, No gradient data available after request');
-        throw new Error('No gradient data received');
+      if (!filterResponse) {
+        throw new Error('Filter_data API failed.');
       }
 
-      // Create a combined layer with all gradient groups
-      const combinedFeatures = gradientData.flatMap(group => {
-        return group.features.map(feature => ({
+      setGeoPoints(prevGeoPoints =>
+        prevGeoPoints.map(layer => {
+          // Get all matching filtered data for the current layer
+          const matchedFilterData = filterResponse.filter(
+            filter => filter.bknd_dataset_id === layer.prdcer_lyr_id
+          );
+
+          if (matchedFilterData.length > 0) {
+            console.log('🔍 Updating Layer:', layer.prdcer_lyr_id);
+            console.log('📌 Matched Filter Data:', matchedFilterData);
+
+            // Merge features from all matching filtered data
+            const mergedFeatures = matchedFilterData.flatMap(filter => filter.features || []);
+
+            console.log('📍 Merged Features:', mergedFeatures);
+
+            return {
+              ...layer,
+              features: mergedFeatures, // ✅ Replace old features with merged ones
+              points_color: matchedFilterData[0].points_color || layer.points_color, // ✅ Keep color from the first match
+            };
+          }
+
+          return layer; // Keep other layers unchanged
+        })
+      );
+    } catch (error) {
+      console.error('Error applying filter:', error);
+      setIsError(error instanceof Error ? error : new Error('Failed to apply filter'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleApplyRecolor = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const currentLayer = geoPoints[layerIndex];
+      const baseLayer = geoPoints.find(layer => layer.prdcer_lyr_id === basedOnLayerId);
+      const selectedColors = colors[chosenPallet || 0];
+
+      if (!currentLayer || !baseLayer || !basedOnProperty || !selectedColors || !selectedBasedon) {
+        console.error('Missing required fields');
+        return;
+      }
+
+      const gradientRequest = {
+        is_zone_lyre: true,
+        color_grid_choice: selectedColors,
+        change_lyr_id: currentLayer.prdcer_lyr_id,
+        change_lyr_name: currentLayer.prdcer_layer_name || `Layer ${currentLayer.layerId}`,
+        based_on_lyr_id: baseLayer.prdcer_lyr_id,
+        based_on_lyr_name: baseLayer.prdcer_layer_name || `Layer ${baseLayer.layerId}`,
+        coverage_property: selectedBasedon,
+        coverage_value: radiusInput,
+        color_based_on: basedOnProperty,
+        list_names: nameInputs,
+        threshold: 5,
+      };
+
+      setReqGradientColorBasedOnZone(gradientRequest);
+
+      console.log('Calling gradient_zone_color_change API...');
+      const gradientData = await handleNameBasedColorZone(gradientRequest);
+
+      if (!gradientData || gradientData.length === 0) {
+        throw new Error('No gradient data received.');
+      }
+      setGeoPoints(gradientData);
+
+      // Process gradient data for UI update
+      const combinedFeatures = gradientData.flatMap(group =>
+        group.features.map(feature => ({
           ...feature,
           properties: {
             ...feature.properties,
             gradient_color: group.points_color,
             gradient_legend: group.layer_legend,
           },
-        }));
-      });
+        }))
+      );
 
-      // Update the layer with combined gradient data
-      setGeoPoints(prev => {
-        return prev.map(point => {
-          if (point.prdcer_lyr_id === currentLayer.prdcer_lyr_id) {
-            const baseGradientData = gradientData[0]; // Use first group for base properties
+      setGeoPoints(prev =>
+        prev.map(point =>
+          point.prdcer_lyr_id === currentLayer.prdcer_lyr_id
+            ? {
+                ...point,
+                prdcer_layer_name: gradientData[0]?.prdcer_layer_name,
+                layer_legend: gradientData.map(g => g.layer_legend).join(' | '),
+                records_count: gradientData.reduce((sum, g) => sum + g.records_count, 0),
+                features: combinedFeatures,
+                gradient_groups: gradientData.map(group => ({
+                  color: group.points_color,
+                  legend: group.layer_legend,
+                  count: group.records_count,
+                })),
+                is_gradient: true,
+                gradient_based_on: baseLayer.prdcer_lyr_id,
+              }
+            : point
+        )
+      );
 
-            return {
-              ...point,
-              prdcer_layer_name: baseGradientData.prdcer_layer_name,
-              layer_legend: gradientData.map(g => g.layer_legend).join(' | '),
-              layer_description: baseGradientData.layer_description,
-              records_count: gradientData.reduce((sum, g) => sum + g.records_count, 0),
-              features: combinedFeatures,
-              gradient_groups: gradientData.map(group => ({
-                color: group.points_color,
-                legend: group.layer_legend,
-                count: group.records_count,
-              })),
-              is_gradient: true,
-              gradient_based_on: baseLayer.prdcer_lyr_id,
-            };
-          }
-          return point;
-        });
-      });
+      console.log('Recolor applied successfully!');
     } catch (error) {
-      console.error('Error applying gradient colors:', error);
-      setIsError(error instanceof Error ? error : new Error('Failed to apply gradient colors'));
+      console.error('Error applying recolor:', error);
+      setIsError(error instanceof Error ? error : new Error('Failed to apply recolor'));
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleApplyDynamicColor = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      // Validate required data
+      const currentLayer = geoPoints[layerIndex];
+      const baseLayer = geoPoints.find(layer => layer.prdcer_lyr_id === basedOnLayerId);
+      const selectedColors = colors[chosenPallet || 0];
+
+      console.log(nameInputs, 'name inputs');
+      if (!currentLayer || !baseLayer || !basedOnProperty || !selectedColors || !selectedBasedon) {
+        console.error('Missing required fields');
+        return;
+      }
+      const filterRequest = {
+        color_grid_choice: selectedColors,
+        change_lyr_id: currentLayer.prdcer_lyr_id,
+        change_lyr_name: currentLayer.prdcer_layer_name || `Layer ${currentLayer.layerId}`,
+        based_on_lyr_id: baseLayer.prdcer_lyr_id,
+        based_on_lyr_name: baseLayer.prdcer_layer_name || `Layer ${baseLayer.layerId}`,
+        coverage_property: selectedBasedon,
+        coverage_value: radiusInput,
+        color_based_on: basedOnProperty,
+        list_names: nameInputs,
+      };
+
+      // ✅ Step 1: Call Filter_data API
+      console.log('Calling Filter_data...');
+      const filterResponse = await handleFilteredZone(filterRequest);
+
+      if (!filterResponse) {
+        throw new Error('Filter_data API failed.');
+      }
+
+      console.log('Filter_data applied successfully!');
+
+      // ✅ Step 2: Prepare Gradient API request
+      const gradientRequest = {
+        color_grid_choice: selectedColors,
+        change_lyr_id: currentLayer.prdcer_lyr_id,
+        change_lyr_name: currentLayer.prdcer_layer_name || `Layer ${currentLayer.layerId}`,
+        based_on_lyr_id: baseLayer.prdcer_lyr_id,
+        based_on_lyr_name: baseLayer.prdcer_layer_name || `Layer ${baseLayer.layerId}`,
+        coverage_property: selectedBasedon,
+        coverage_value: radiusInput,
+        color_based_on: basedOnProperty,
+        list_names: nameInputs,
+      };
+
+      setReqGradientColorBasedOnZone(gradientRequest);
+
+      // ✅ Step 3: Call Gradient API
+      console.log('Calling gradient_zone_color_change...');
+      const gradientData = await handleNameBasedColorZone(gradientRequest);
+
+      if (!gradientData || gradientData.length === 0) {
+        throw new Error('No gradient data received.');
+      }
+
+      // Process gradient data for UI update
+      const combinedFeatures = gradientData.flatMap(group =>
+        group.features.map(feature => ({
+          ...feature,
+          properties: {
+            ...feature.properties,
+            gradient_color: group.points_color,
+            gradient_legend: group.layer_legend,
+          },
+        }))
+      );
+
+      setGeoPoints(prev =>
+        prev.map(point =>
+          point.prdcer_lyr_id === currentLayer.prdcer_lyr_id
+            ? {
+                ...point,
+                prdcer_layer_name: gradientData[0]?.prdcer_layer_name,
+                layer_legend: gradientData.map(g => g.layer_legend).join(' | '),
+                records_count: gradientData.reduce((sum, g) => sum + g.records_count, 0),
+                features: combinedFeatures,
+                gradient_groups: gradientData.map(group => ({
+                  color: group.points_color,
+                  legend: group.layer_legend,
+                  count: group.records_count,
+                })),
+                is_gradient: true,
+                gradient_based_on: baseLayer.prdcer_lyr_id,
+              }
+            : point
+        )
+      );
+    } catch (error) {
+      console.error('Error applying dynamic color:', error);
+      setIsError(error instanceof Error ? error : new Error('Failed to apply dynamic color'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // const handleApplyDynamicColor = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  //   e.preventDefault();
+
+  //   // Get all required data
+  //   const currentLayer = geoPoints[layerIndex];
+  //   const baseLayer = geoPoints.find(layer => layer.prdcer_lyr_id === basedOnLayerId);
+  //   const selectedColors = colors[chosenPallet || 0];
+
+  //   // Validate all required fields with specific error messages
+  //   if (!currentLayer) {
+  //     console.error('Current layer not found');
+  //     return;
+  //   }
+
+  //   if (!baseLayer) {
+  //     console.error('Please select a layer to compare with');
+  //     return;
+  //   }
+
+  //   if (!basedOnProperty) {
+  //     console.error('Please select a metric to compare based on');
+  //     return;
+  //   }
+
+  //   if (!selectedColors || selectedColors.length === 0) {
+  //     console.error('Please select a color palette');
+  //     return;
+  //   }
+
+  //   if (!selectedBasedon) {
+  //     console.error('Please select a metric to base colors on');
+  //     return;
+  //   }
+
+  //   // Ensure we have valid names
+  //   const changeName = currentLayer.prdcer_layer_name || `Layer ${currentLayer.layerId}`;
+  //   const baseName = baseLayer.prdcer_layer_name || `Layer ${baseLayer.layerId}`;
+
+  //   // Set radius with validation
+  //   const validRadius = radiusInput;
+  //   updateNameColorMap(nameInputs);
+  //   try {
+  //     setIsLoading(true);
+
+  //     const requestData = {
+  //       color_grid_choice: selectedColors,
+  //       change_lyr_id: currentLayer.prdcer_lyr_id,
+  //       change_lyr_name: changeName,
+  //       based_on_lyr_id: baseLayer.prdcer_lyr_id,
+  //       based_on_lyr_name: baseName,
+  //       coverage_property: selectedBasedon,
+  //       coverage_value: validRadius,
+  //       color_based_on: basedOnProperty,
+  //       list_names: nameInputs,
+  //     };
+
+  //     setReqGradientColorBasedOnZone(requestData);
+
+  //     // Get data directly from the function return value
+  //     const gradientData = await handleColorBasedZone(requestData);
+
+  //     if (!gradientData || gradientData.length === 0) {
+  //       console.error('#fix: gradient-color, No gradient data available after request');
+  //       throw new Error('No gradient data received');
+  //     }
+
+  //     // Create a combined layer with all gradient groups
+  //     const combinedFeatures = gradientData.flatMap(group => {
+  //       return group.features.map(feature => ({
+  //         ...feature,
+  //         properties: {
+  //           ...feature.properties,
+  //           gradient_color: group.points_color,
+  //           gradient_legend: group.layer_legend,
+  //         },
+  //       }));
+  //     });
+
+  //     // Update the layer with combined gradient data
+  //     setGeoPoints(prev => {
+  //       return prev.map(point => {
+  //         if (point.prdcer_lyr_id === currentLayer.prdcer_lyr_id) {
+  //           const baseGradientData = gradientData[0]; // Use first group for base properties
+
+  //           return {
+  //             ...point,
+  //             prdcer_layer_name: baseGradientData.prdcer_layer_name,
+  //             layer_legend: gradientData.map(g => g.layer_legend).join(' | '),
+  //             layer_description: baseGradientData.layer_description,
+  //             records_count: gradientData.reduce((sum, g) => sum + g.records_count, 0),
+  //             features: combinedFeatures,
+  //             gradient_groups: gradientData.map(group => ({
+  //               color: group.points_color,
+  //               legend: group.layer_legend,
+  //               count: group.records_count,
+  //             })),
+  //             is_gradient: true,
+  //             gradient_based_on: baseLayer.prdcer_lyr_id,
+  //           };
+  //         }
+  //         return point;
+  //       });
+  //     });
+  //   } catch (error) {
+  //     console.error('Error applying gradient colors:', error);
+  //     setIsError(error instanceof Error ? error : new Error('Failed to apply gradient colors'));
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   const handleMetricChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const value = event.target.value;
@@ -464,6 +797,16 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
     updateLayerHeatmap(layerIndex, isHeatmapNew);
     updateLayerGrid(layerIndex, isGridNew);
+  };
+
+  const [selectedMetricData, setSelectedMetricData] = useState<{ metric: string; value: string }>({
+    metric: '',
+    value: '',
+  });
+
+  const handleMetricSelection = (metric: string, value: string) => {
+    setSelectedMetricData({ metric, value });
+    console.log('📌 Selected Metric:', metric, 'Value:', value); // ✅ Check in console
   };
 
   return (
@@ -621,78 +964,160 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                 </label>
               </div>
             </div>
-            <p className="text-sm mt-2 mb-0 font-medium">Recolor based on metric</p>
-
-            <BasedOnLayerDropdown layerIndex={layerIndex} />
-            {/* <BasedOnDropdown layerIndex={layerIndex} /> */}
-            <div className="ms-2.5 space-y-2">
-              <label className="block text-xs font-medium text-gray-600" htmlFor="distance-input">
-                Distance
-              </label>
-              <div className="flex">
-                <div className="relative w-full">
-                  <input
-                    id="distance-input"
-                    type="text"
-                    min={1}
-                    max={100000}
-                    step={1}
-                    name="radius"
-                    className="block p-2.5 w-full z-20 text-sm text-gray-900 bg-gray-50 rounded-s-lg border 
-                              border-e-0 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-                    defaultValue={radiusInput}
-                    onChange={e => handleRadiusInputChange(e.target.value)}
-                    placeholder="Enter distance"
-                    required
-                  />
-                </div>
-                <select
-                  className="flex-shrink-0 z-10 inline-flex items-center py-2 px-1 text-sm font-medium text-center 
-                            text-gray-900 bg-gray-100 border border-s-0 border-gray-300 rounded-e-lg hover:bg-gray-200 
-                            focus:ring-4 focus:outline-none focus:ring-gray-300"
-                  value={selectedBasedon}
-                  onChange={handleMetricChange}
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-lg font-semibold">Conditional</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setSelectedOption('recolor')}
+                  className={`px-4 py-2 text-xs rounded-md border ${
+                    selectedOption === 'recolor'
+                      ? 'bg-green-500 text-white border-green-700'
+                      : 'border-gray-300'
+                  }`}
                 >
-                  <option value="radius">Radius (m)</option>
-                  <option value="drive_time">Drive Time (min)</option>
-                </select>
+                  Recolor
+                </button>
+                <button
+                  onClick={() => setSelectedOption('filter')}
+                  className={`px-4 py-2 text-xs rounded-md border ${
+                    selectedOption === 'filter'
+                      ? 'bg-green-500 text-white border-green-700'
+                      : 'border-gray-300'
+                  }`}
+                >
+                  Filter
+                </button>
               </div>
             </div>
-            <DropdownColorSelect layerIndex={layerIndex} />
-            <div>
-              <button
-                onClick={e => handleApplyDynamicColor(e)}
-                disabled={isLoading}
-                className="w-full h-7 text-sm bg-[#115740] text-white font-semibold rounded-md hover:bg-[#123f30] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {isLoading ? (
-                  <span className="flex items-center gap-2">
-                    <svg
-                      className="animate-spin h-4 w-4 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
+            <p className="text-sm mt-2 mb-0 font-medium">based on metric</p>
+
+            <BasedOnLayerDropdown
+              layerIndex={layerIndex}
+              nameInputs={nameInputs}
+              setNameInputs={setNameInputs}
+              selectedOption={selectedOption}
+              setPropertyThreshold={handleThresholdChange}
+              onColorChange={handleNameColorChange}
+            />
+
+            {/* <BasedOnDropdown layerIndex={layerIndex} /> */}
+
+            {selectedOption === 'recolor' && (
+              <>
+                <div className="ms-2.5 space-y-2">
+                  <label
+                    className="block text-xs font-medium text-gray-600"
+                    htmlFor="distance-input"
+                  >
+                    Distance
+                  </label>
+                  <div className="flex">
+                    <div className="relative w-full">
+                      <input
+                        id="distance-input"
+                        type="text"
+                        min={1}
+                        max={100000}
+                        step={1}
+                        name="radius"
+                        className="block p-2.5 w-full z-20 text-sm text-gray-900 bg-gray-50 rounded-s-lg border 
+                              border-e-0 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                        defaultValue={radiusInput}
+                        onChange={e => handleRadiusInputChange(e.target.value)}
+                        placeholder="Enter distance"
+                        required
+                      />
+                    </div>
+                    <select
+                      className="flex-shrink-0 z-10 inline-flex items-center py-2 px-1 text-sm font-medium text-center 
+                            text-gray-900 bg-gray-100 border border-s-0 border-gray-300 rounded-e-lg hover:bg-gray-200 
+                            focus:ring-4 focus:outline-none focus:ring-gray-300"
+                      value={selectedBasedon}
+                      onChange={handleMetricChange}
                     >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
-                    Applying...
-                  </span>
-                ) : (
-                  'Recolor'
-                )}
-              </button>
+                      <option value="radius">Radius (m)</option>
+                      <option value="drive_time">Drive Time (min)</option>
+                    </select>
+                  </div>
+                </div>
+                <DropdownColorSelect layerIndex={layerIndex} />
+              </>
+            )}
+            <div>
+              {selectedOption === 'recolor' ? (
+                <button
+                  // onClick={e => handleApplyDynamicColor(e)}
+                  onClick={e => handleApplyRecolor(e)}
+                  disabled={isLoading}
+                  className="w-full h-7 text-sm bg-[#115740] text-white font-semibold rounded-md hover:bg-[#123f30] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? (
+                    <span className="flex items-center gap-2">
+                      <svg
+                        className="animate-spin h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                      Applying...
+                    </span>
+                  ) : (
+                    'Recolor'
+                  )}
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={e => handleApplyFilter(e)}
+                    disabled={isLoading}
+                    className="w-full h-7 text-sm bg-[#115740] text-white font-semibold rounded-md hover:bg-[#123f30] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? (
+                      <span className="flex items-center gap-2">
+                        <svg
+                          className="animate-spin h-4 w-4 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        Applying...
+                      </span>
+                    ) : (
+                      'Filter'
+                    )}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

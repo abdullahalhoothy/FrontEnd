@@ -11,7 +11,12 @@ import {
 import mapboxgl from 'mapbox-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import { MapContextType } from '../types/allTypesAndInterfaces';
-import { zoomToGridSize, getMapScale, getViewportDistance, mapMetersPerPixelToZoom } from '../utils/mapZoomUtils';
+import {
+  zoomToGridSize,
+  getMapScale,
+  getViewportDistance,
+  mapMetersPerPixelToZoom,
+} from '../utils/mapZoomUtils';
 import { defaultMapConfig } from '../hooks/map/useMapInitialization';
 import debounce from 'lodash/debounce';
 
@@ -52,7 +57,7 @@ export function MapProvider({ children }: { children: ReactNode }) {
     [mapState.currentZoom]
   );
 
-    useEffect(() => {
+  useEffect(() => {
     return () => {
       handleZoomChange.cancel();
     };
@@ -73,6 +78,24 @@ export function MapProvider({ children }: { children: ReactNode }) {
     };
   }, [mapState.isStyleLoaded, handleZoomChange]);
 
+  const [nameColorMap, setNameColorMap] = useState<Record<string, string>>({});
+  const getRandomColor = () => {
+    return `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+  };
+
+  // Function to update name-color mapping
+  const updateNameColorMap = (names: string[]) => {
+    setNameColorMap(prevMap => {
+      const newMap = { ...prevMap };
+      names.forEach(name => {
+        if (!newMap[name]) {
+          newMap[name] = getRandomColor(); // Assign a random color if not already assigned
+        }
+      });
+      return newMap;
+    });
+  };
+
   const contextValue = useMemo(
     () => ({
       mapRef,
@@ -85,8 +108,10 @@ export function MapProvider({ children }: { children: ReactNode }) {
       backendZoom: mapState.backendZoom,
       gridSize: mapState.gridSize,
       shouldInitializeFeatures: mapState.isStyleLoaded && mapRef.current !== null,
+      nameColorMap,
+      updateNameColorMap,
     }),
-    [mapState]
+    [mapState, nameColorMap]
   );
 
   return <MapContext.Provider value={contextValue}>{children}</MapContext.Provider>;

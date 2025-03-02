@@ -1,5 +1,5 @@
 {
-  "REACT_APP_API_URL": "http://localhost:8000/fastapi",
+  "REACT_APP_API_URL": "http://37.27.195.216:8000/fastapi",
   "catlog_collection": "/catlog_collection",
   "layer_collection": "/layer_collection",
   "fetch_acknowlg_id": "/fetch_acknowlg_id",
@@ -20,11 +20,13 @@
   "reset_password": "reset_password",
   "create_user_profile": "create_user_profile",
   "user_profile": "user_profile",
-  "update_user_profile":"update_user_profile",
+  "update_user_profile": "update_user_profile",
   "cost_calculator": "cost_calculator",
   "street_view_link": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=",
   "fetch_gradient_colors": "fetch_gradient_colors",
   "gradient_color_based_on_zone": "gradient_color_based_on_zone",
+  "filter_based_zone": "filter_based_on",
+
   "change_password": "change-password",
   "change_email": "change_email",
   "get_payment_methods": "get_payment_methods",
@@ -34,9 +36,9 @@
   "list_stripe_payment_methods": "/list_stripe_payment_methods",
   "detach_stripe_payment_method": "/detach_stripe_payment_method",
   "get_stripe_customer": "/fetch_stripe_customer",
-  "top_up_wallet":"/top_up_wallet",
-  "fetch_wallet":"/fetch_wallet",
-  "deduct_wallet":"/deduct_wallet",
-  "delete_producer_catalog":"/delete_producer_catalog",
-  "delete_layer":"/delete_layer"
+  "top_up_wallet": "/top_up_wallet",
+  "fetch_wallet": "/fetch_wallet",
+  "deduct_wallet": "/deduct_wallet",
+  "delete_producer_catalog": "/delete_producer_catalog",
+  "delete_layer": "/delete_layer"
 }

@@ -101,13 +101,13 @@ export interface CatalogContextType {
   handleAddClick: (
     id: string,
     typeOfCard: string,
-    callBack?: (city:string, country:string)=>void
+    callBack?: (city: string, country: string) => void
   ) => void;
   handleSaveCatalog: () => Promise<void>;
   resetFormStage: (resetTo: 'catalog') => void;
   geoPoints: MapFeatures[];
   setGeoPoints: React.Dispatch<React.SetStateAction<MapFeatures[]>>;
-  setGeoPointsWithCb: (geoPoints: MapFeatures[], cB:()=>void) => void;
+  setGeoPointsWithCb: (geoPoints: MapFeatures[], cB: () => void) => void;
   selectedColor: { name: string; hex: string } | null;
   setSelectedColor: React.Dispatch<React.SetStateAction<{ name: string; hex: string } | null>>;
   resetState: (keepGeoPointsState?: boolean) => void;
@@ -152,6 +152,8 @@ export interface CatalogContextType {
   setBasedOnLayerId: (id: string) => void;
   setBasedOnProperty: (id: string) => void;
   updateLayerLegend: (layerId: number, legend: string) => void;
+  handleFilteredZone: (filterData: any) => Promise<any>;
+  handleNameBasedColorZone: (nameColorData: any) => Promise<any>;
 }
 
 export interface GradientColorBasedOnZone extends MapFeatures {
@@ -477,7 +479,7 @@ export interface Layer {
   layer_legend?: string;
   layer_description?: string;
   prdcer_lyr_id?: string;
-  cost:number
+  cost: number;
 }
 
 export interface LayerGroup {
@@ -646,15 +648,15 @@ export interface LayerCustomizationItemProps {
   isSaved?: boolean;
 }
 
-export interface ProfileSettings{
-  show_price_on_purchase:boolean
+export interface ProfileSettings {
+  show_price_on_purchase: boolean;
 }
 export interface UserProfile {
   user_id: string;
   username: string;
   email: string;
-  account_type:string;
-  settings:ProfileSettings
+  account_type: string;
+  settings: ProfileSettings;
   prdcer?: {
     prdcer_dataset: Record<string, any>;
     prdcer_lyrs: Record<string, any>;
@@ -717,6 +719,8 @@ export type MapContextType = {
   gridSize: number;
   currentZoom: number | null;
   backendZoom: number | null;
+  nameColorMap: Record<string, string>; // Stores name-color mapping
+  updateNameColorMap: (names: string[]) => void;
 };
 
 export interface PropertyStats {

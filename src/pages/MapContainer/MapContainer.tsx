@@ -12,12 +12,15 @@ import { useLegendManager } from '../../hooks/map/useLegendManager';
 import { useMapStyle } from '../../hooks/map/useMapStyle';
 import StatisticsPopups from '../../components/Map/StatisticsPopups';
 import BenchmarkControl from '../../components/Map/BenchmarkControl';
-import {PopulationControl} from '../../components/Map/PopulationControl';
+import { PopulationControl } from '../../components/Map/PopulationControl';
 import { useMapContext } from '../../context/MapContext';
 
 // Main container component that handles map initialization and state
 function Container() {
   const { shouldInitializeFeatures, mapContainerRef } = useMapContext();
+  const { nameColorMap } = useMapContext();
+
+  // console.log('Stored name-color mapping:', nameColorMap); // 🔹 Check in Console
 
   useMapInitialization();
   useMapBounds();

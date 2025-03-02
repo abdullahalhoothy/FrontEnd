@@ -92,8 +92,12 @@ export function CatalogProvider(props: { children: ReactNode }) {
   >([]);
   const [basedOnLayerId, setBasedOnLayerId] = useState<string | null>(null);
   const [basedOnProperty, setBasedOnProperty] = useState<string | null>(null);
-  
-  async function fetchGeoPoints(id: string, typeOfCard: string,callBack?:(country:string, city:string)=>void) {
+
+  async function fetchGeoPoints(
+    id: string,
+    typeOfCard: string,
+    callBack?: (country: string, city: string) => void
+  ) {
     const apiJsonRequest =
       typeOfCard === 'layer'
         ? {
@@ -151,15 +155,19 @@ export function CatalogProvider(props: { children: ReactNode }) {
       setGeoPoints(function (prevGeoPoints) {
         return prevGeoPoints.concat(updatedDataArray) as MapFeatures[];
       });
-      
-      if(callBack && updatedDataArray[0].city_name) callBack(updatedDataArray[0].country_name || defaultMapConfig.fallBackCountry, updatedDataArray[0].city_name);
+
+      if (callBack && updatedDataArray[0].city_name)
+        callBack(
+          updatedDataArray[0].country_name || defaultMapConfig.fallBackCountry,
+          updatedDataArray[0].city_name
+        );
     }
   }
 
   function handleAddClick(
     id: string,
     typeOfCard: string,
-    callBack?:(city:string, country:string)=>void
+    callBack?: (city: string, country: string) => void
   ) {
     fetchGeoPoints(id, typeOfCard, callBack);
   }
@@ -369,17 +377,19 @@ export function CatalogProvider(props: { children: ReactNode }) {
     });
   }
 
-  async function setGeoPointsWithCb(geoPoints: MapFeatures[] | ((prev:MapFeatures[])=>MapFeatures[]), cB?:(city:string, country:string)=>void) {
+  async function setGeoPointsWithCb(
+    geoPoints: MapFeatures[] | ((prev: MapFeatures[]) => MapFeatures[]),
+    cB?: (city: string, country: string) => void
+  ) {
     let geoPointsToUse;
 
-    setGeoPoints(
-      (prev)=>{
-        geoPointsToUse = typeof geoPoints === 'function' ? geoPoints(prev) : geoPoints;
-        return geoPointsToUse;
-      }
-    );
+    setGeoPoints(prev => {
+      geoPointsToUse = typeof geoPoints === 'function' ? geoPoints(prev) : geoPoints;
+      return geoPointsToUse;
+    });
 
-    if(cB && geoPointsToUse && geoPointsToUse[0].city_name && geoPointsToUse[0].country_name) cB(geoPointsToUse[0].city_name, geoPointsToUse[0].country_name);
+    if (cB && geoPointsToUse && geoPointsToUse[0].city_name && geoPointsToUse[0].country_name)
+      cB(geoPointsToUse[0].city_name, geoPointsToUse[0].country_name);
   }
 
   async function handleColorBasedZone(requestData?: ReqGradientColorBasedOnZone) {
@@ -388,6 +398,50 @@ export function CatalogProvider(props: { children: ReactNode }) {
     try {
       const res = await apiRequest({
         url: urls.gradient_color_based_on_zone,
+        method: 'post',
+        body: dataToUse,
+        isAuthRequest: true,
+      });
+      if (res.data?.data && Array.isArray(res.data.data)) {
+        setGradientColorBasedOnZone(res.data.data);
+        return res.data.data;
+      }
+      return [];
+    } catch (error) {
+      console.error('Request failed:', error);
+      setIsError(error instanceof Error ? error : new Error(String(error)));
+      return [];
+    }
+  }
+
+  async function handleNameBasedColorZone(requestData?: ReqGradientColorBasedOnZone) {
+    const dataToUse = requestData || reqGradientColorBasedOnZone;
+
+    try {
+      const res = await apiRequest({
+        url: urls.gradient_color_based_on_zone,
+        method: 'post',
+        body: dataToUse,
+        isAuthRequest: true,
+      });
+      if (res.data?.data && Array.isArray(res.data.data)) {
+        setGradientColorBasedOnZone(res.data.data);
+        return res.data.data;
+      }
+      return [];
+    } catch (error) {
+      console.error('Request failed:', error);
+      setIsError(error instanceof Error ? error : new Error(String(error)));
+      return [];
+    }
+  }
+
+  async function handleFilteredZone(requestData?: ReqGradientColorBasedOnZone) {
+    const dataToUse = requestData || reqGradientColorBasedOnZone;
+
+    try {
+      const res = await apiRequest({
+        url: urls.filter_based_zone,
         method: 'post',
         body: dataToUse,
         isAuthRequest: true,
@@ -513,6 +567,8 @@ export function CatalogProvider(props: { children: ReactNode }) {
         setBasedOnProperty,
         updateLayerLegend,
         handleStoreUnsavedGeoPoint,
+        handleNameBasedColorZone,
+        handleFilteredZone,
       }}
     >
       {children}

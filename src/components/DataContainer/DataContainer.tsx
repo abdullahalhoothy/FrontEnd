@@ -17,7 +17,7 @@ import { useLayerContext } from '../../context/LayerContext';
 
 function DataContainer() {
   const { selectedContainerType, handleAddClick, setGeoPoints } = useCatalogContext();
-  const {setSelectedCity, setSelectedCountry} = useLayerContext();
+  const { setSelectedCity, setSelectedCountry } = useLayerContext();
   const { isAuthenticated, authResponse, logout } = useAuth();
   const { closeModal } = useUIContext();
   const [activeTab, setActiveTab] = useState('Data Catalogue');
@@ -200,14 +200,10 @@ function DataContainer() {
     }
 
     if (selectedContainerType !== 'Home') {
-      handleAddClick(
-        selectedItem.id,
-        selectedItem.typeOfCard,
-        (country:string, city:string)=>{
-          setSelectedCountry(country);
-          setSelectedCity(city);
-        }
-      );
+      handleAddClick(selectedItem.id, selectedItem.typeOfCard, (country: string, city: string) => {
+        setSelectedCountry(country);
+        setSelectedCity(city);
+      });
     }
 
     closeModal();
