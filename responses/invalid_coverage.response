@@ -1,0 +1,1 @@
+{"message":"Request received.","request_id":"req-704b2114-9574-44b0-84c1-11af6d93aff9","data":{"is_valid":false,"reason":"The request is ambiguous; it does not specify the coverage distance/time or the type of color gradient.","suggestions":["Please specify a coverage value (distance or time).","Specify the color gradient."],"endpoint":null,"body":null}}

@@ -1,0 +1,1 @@
+{"message":"Request received.","request_id":"req-abca5a51-b73d-448d-ba3e-3340c4d20442","data":{"is_valid":false,"reason":"The field 'totalCats' is not valid to perform the color gradient operation. Request is missing color grid choice.","suggestions":["Specify which property of SA-JED-gas station to use for recoloring","Specify the color gradient."],"endpoint":null,"body":null}}

@@ -21,7 +21,7 @@ import PaymentMethod from '../../pages/PaymentMethod/PaymentMethod';
 import MobileNavbar from '../MobileNavbar/MobileNavbar';
 import Wallet from "../../pages/Wallet/Wallet";
 import AddFunds from "../../pages/AddFunds/AddFunds";
-import SignUp from '../../pages/Auth/SignUp';
+import SignUp from '../Auth/SignUp';
 
 const Layout = () => {
   return (
