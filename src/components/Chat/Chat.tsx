@@ -17,7 +17,17 @@ const defaultProps = {
 };
 
 function Chat(props: ChatProps = defaultProps) {
-  const { messages, isLoading, isOpen, sendMessage, closeChat, topic, setTopic } = useChatContext();
+  const {
+    messages,
+    isLoading,
+    isOpen,
+    sendMessage,
+    closeChat,
+    clearChat,
+    applyGradientColor,
+    topic,
+    setTopic,
+  } = useChatContext();
   const { authResponse } = useAuth();
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -44,26 +54,57 @@ function Chat(props: ChatProps = defaultProps) {
   };
 
   const renderMessage = (message: Message, index: number) => {
-    const isGreeting = index === 0 && !message.isUser;
+    const isBot = !message.isUser;
+
+    const hasResponseData = isBot && message.responseData;
+
+    const isValidResponse = hasResponseData && message.responseData.is_valid === true;
+    const isInvalidResponse = hasResponseData && message.responseData.is_valid === false;
 
     return (
-      <div
-        key={index}
-        className={`flex ${message.isUser ? 'justify-end' : 'justify-start'} ${
-          isGreeting ? 'animate-fade-in-up' : ''
-        }`}
-      >
+      <div key={index} className={`flex ${isBot ? 'justify-start' : 'justify-end'} mb-4`}>
         <div
-          className={`break-words whitespace-pre-wrap rounded-2xl p-4 shadow-sm max-w-[85%]
-            ${
-              message.isUser
-                ? 'bg-[#28A745]/90 text-white rounded-tr-none'
-                : 'bg-gray-100 text-gray-800 rounded-tl-none border border-gray-200'
-            }`}
+          className={`${
+            isBot
+              ? 'bg-gray-100 rounded-2xl p-4 rounded-tl-none border border-gray-200'
+              : 'bg-gem-gradient text-white rounded-2xl p-4 rounded-tr-none'
+          } ${isInvalidResponse ? 'bg-amber-50 border-amber-200' : ''} max-w-[85%]`}
         >
-          {message.content}
-          {isGreeting && (!authResponse || !authResponse.displayName) && (
-            <span className="block mt-2 text-xs text-gray-500">(Sign in to personalize)</span>
+          <div className="whitespace-pre-wrap">{message.content}</div>
+
+          {isInvalidResponse && message.responseData.suggestions && (
+            <div className="mt-2 text-sm">
+              <p className="font-semibold">Suggestions:</p>
+              <ul className="list-disc pl-5 mt-1">
+                {message.responseData.suggestions.map((suggestion, i) => (
+                  <li key={i}>{suggestion}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {isValidResponse && (
+            <div className="mt-3 flex gap-2">
+              <button
+                onClick={() => {
+                  if (message.responseData?.endpoint && message.responseData?.body) {
+                    applyGradientColor(message.responseData.endpoint, message.responseData.body);
+                  }
+                }}
+                className="bg-gem-green text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gem-green/80 transition-colors"
+              >
+                Apply
+              </button>
+              <button
+                onClick={() => {
+                  clearChat();
+                  closeChat();
+                }}
+                className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
           )}
         </div>
       </div>

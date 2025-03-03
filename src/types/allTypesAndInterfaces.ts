@@ -101,13 +101,13 @@ export interface CatalogContextType {
   handleAddClick: (
     id: string,
     typeOfCard: string,
-    callBack?: (city:string, country:string)=>void
+    callBack?: (city: string, country: string) => void
   ) => void;
   handleSaveCatalog: () => Promise<void>;
   resetFormStage: (resetTo: 'catalog') => void;
   geoPoints: MapFeatures[];
   setGeoPoints: React.Dispatch<React.SetStateAction<MapFeatures[]>>;
-  setGeoPointsWithCb: (geoPoints: MapFeatures[], cB:()=>void) => void;
+  setGeoPointsWithCb: (geoPoints: MapFeatures[], cB: () => void) => void;
   selectedColor: { name: string; hex: string } | null;
   setSelectedColor: React.Dispatch<React.SetStateAction<{ name: string; hex: string } | null>>;
   resetState: (keepGeoPointsState?: boolean) => void;
@@ -494,7 +494,7 @@ export interface Layer {
   layer_legend?: string;
   layer_description?: string;
   prdcer_lyr_id?: string;
-  cost:number
+  cost: number;
 }
 
 export interface LayerGroup {
@@ -663,15 +663,15 @@ export interface LayerCustomizationItemProps {
   isSaved?: boolean;
 }
 
-export interface ProfileSettings{
-  show_price_on_purchase:boolean
+export interface ProfileSettings {
+  show_price_on_purchase: boolean;
 }
 export interface UserProfile {
   user_id: string;
   username: string;
   email: string;
-  account_type:string;
-  settings:ProfileSettings
+  account_type: string;
+  settings: ProfileSettings;
   prdcer?: {
     prdcer_dataset: Record<string, any>;
     prdcer_lyrs: Record<string, any>;
@@ -742,4 +742,20 @@ export interface PropertyStats {
   count: number;
   average?: number;
   median?: number;
+}
+
+// Add these new types for the chat feature
+export interface ChatMessage {
+  content: string;
+  isUser: boolean;
+  timestamp: string;
+  responseData?: GradientColorResponse; // Optional field for bot responses
+}
+
+export interface GradientColorResponse {
+  is_valid: boolean;
+  reason?: string | null;
+  suggestions?: string[] | null;
+  endpoint?: string | null;
+  body?: any | null;
 }
