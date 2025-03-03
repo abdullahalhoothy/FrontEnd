@@ -1,13 +1,16 @@
-import React, { useState, MouseEvent, useEffect } from 'react';
-import styles from './CatalogSideMenu.module.css';
-import { MdLayers, MdArrowBackIos } from 'react-icons/md';
-import DataContainer from '../DataContainer/DataContainer';
+import { MouseEvent, useEffect, useState } from 'react';
+import { FaWandMagicSparkles } from 'react-icons/fa6';
 import { useCatalogContext } from '../../context/CatalogContext';
-import MultipleLayersSetting from '../MultipleLayersSetting/MultipleLayersSetting';
-import { useUIContext } from '../../context/UIContext';
-import { GradientColorBasedOnZone } from '../../types/allTypesAndInterfaces';
 import { useLayerContext } from '../../context/LayerContext';
+import { useUIContext } from '../../context/UIContext';
 import { defaultMapConfig } from '../../hooks/map/useMapInitialization';
+import { GradientColorBasedOnZone, topics } from '../../types';
+import Chat from '../Chat/Chat';
+import ChatTrigger from '../Chat/ChatTrigger';
+import DataContainer from '../DataContainer/DataContainer';
+import MultipleLayersSetting from '../MultipleLayersSetting/MultipleLayersSetting';
+
+const enableAI = true;
 
 function CatalogMenu() {
   const { openModal, setSidebarMode } = useUIContext();
@@ -27,7 +30,7 @@ function CatalogMenu() {
     setChosenPallet,
   } = useCatalogContext();
 
-  const {setSelectedCity, setSelectedCountry} = useLayerContext();
+  const { setSelectedCity, setSelectedCountry } = useLayerContext();
 
   const [showRestorePrompt, setShowRestorePrompt] = useState(false);
 
@@ -54,7 +57,9 @@ function CatalogMenu() {
     if (savedGeoPoints) {
       setGeoPoints(prevGeoPoints => [...prevGeoPoints, ...JSON.parse(savedGeoPoints)]);
       setSelectedCity(JSON.parse(savedGeoPoints)[0].city_name);
-      setSelectedCountry(JSON.parse(savedGeoPoints)[0].country_name || defaultMapConfig.fallBackCountry);
+      setSelectedCountry(
+        JSON.parse(savedGeoPoints)[0].country_name || defaultMapConfig.fallBackCountry
+      );
     }
     localStorage.removeItem('unsavedGeoPoints');
     setShowRestorePrompt(false);
@@ -128,6 +133,21 @@ function CatalogMenu() {
             + Add Layer
           </button>
         </div>
+
+        {enableAI && (
+          <div className="flex relative w-full">
+            <ChatTrigger
+              title="AI Recolor"
+              position="auto"
+              cN="flex-grow "
+              size="h-12 mx-8"
+              colors="bg-gem-gradient border text-gray-200"
+              beforeIcon={<FaWandMagicSparkles />}
+              afterIcon={<></>}
+            />
+            <Chat topic={topics.RECOLOR} position="fixed left-[27.5rem] mx-2 inset-y-auto " />
+          </div>
+        )}
 
         {showRestorePrompt && (
           <div className="ms-8 me-8 m-auto border-solid rounded border-2 border-[#115740] p-2 mt-5 ">
