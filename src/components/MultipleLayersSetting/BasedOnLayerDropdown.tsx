@@ -1,97 +1,3 @@
-// import React, { useMemo } from 'react';
-// import { useCatalogContext } from '../../context/CatalogContext';
-// import { BasedOnLayerDropdownProps } from '../../types/allTypesAndInterfaces';
-// import { formatSubcategoryName } from '../../utils/helperFunctions';
-
-// export default function BasedOnLayerDropdown({ layerIndex }: BasedOnLayerDropdownProps) {
-//   const { basedOnLayerId, setBasedOnLayerId, geoPoints, basedOnProperty, setBasedOnProperty } =
-//     useCatalogContext();
-
-//   const availableLayers = geoPoints.map(layer => ({
-//     id: layer.prdcer_lyr_id,
-//     name: layer.prdcer_layer_name || `Layer ${layer.layerId}`,
-//   }));
-
-//   const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-//     event.stopPropagation();
-//     setBasedOnLayerId(event.target.value);
-//   };
-
-//   const handleMetricChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-//     event.stopPropagation();
-//     setBasedOnProperty(event.target.value);
-//   };
-
-//   const metrics = useMemo(() => {
-//     const filteredMetrics = geoPoints
-//       .filter(layer => layer.prdcer_lyr_id === basedOnLayerId)
-//       .map(layer => layer.properties)
-//       .flat()
-//       .filter(metric => metric !== null);
-
-//     return Array.from(new Set(filteredMetrics));
-//   }, [geoPoints, basedOnLayerId]);
-//   return (
-//     <>
-//       <div className="ms-2.5 flex flex-col">
-//         <label
-//           htmlFor="basedOnLayerDropdown"
-//           className="text-[11px] my-[2px] text-[#555] whitespace-nowrap text-sm"
-//         >
-//           Compare with Layer
-//         </label>
-//         <select
-//           id="basedOnLayerDropdown"
-//           value={basedOnLayerId || ''}
-//           onChange={handleSelectChange}
-//           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-2 transition duration-150 ease-in-out"
-//         >
-//           <option value="" disabled>
-//             Select a layer
-//           </option>
-//           {availableLayers.map(layer => {
-//             const isSelf = layer.id === geoPoints[layerIndex]?.prdcer_lyr_id;
-//             return (
-//               <option key={layer.id} value={layer.id}>
-//                 {(layer.name.length > 20
-//                   ? `${layer.name.substring(0, 12)}...${layer.name.substring(layer.name.length - 12)}`
-//                   : layer.name
-//                 ).concat(isSelf ? ' (Self)' : '')}
-//               </option>
-//             );
-//           })}
-//         </select>
-//       </div>
-//       <div className="ms-2.5 flex flex-col">
-//         <label
-//           htmlFor="basedOnPropertyDropdown"
-//           className="text-[11px] my-[2px] text-[#555] whitespace-nowrap text-sm"
-//         >
-//           Based on
-//         </label>
-//         <select
-//           id="basedOnPropertyDropdown"
-//           value={basedOnProperty || ''}
-//           disabled={!basedOnLayerId}
-//           onChange={handleMetricChange}
-//           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-2 transition duration-150 ease-in-out disabled:bg-gray-200 disabled:text-gray-500"
-//         >
-//           <option value="" disabled>
-//             Select a metric
-//           </option>
-//           {metrics.map(metric => {
-//             return (
-//               <option key={metric} value={metric}>
-//                 {formatSubcategoryName(metric)}
-//               </option>
-//             );
-//           })}
-//         </select>
-//       </div>
-//     </>
-//   );
-// }
-
 import React, { useMemo, useState } from 'react';
 import { useCatalogContext } from '../../context/CatalogContext';
 import { BasedOnLayerDropdownProps } from '../../types/allTypesAndInterfaces';
@@ -120,7 +26,18 @@ export default function BasedOnLayerDropdown({
   }));
   const [selectedColor, setSelectedColor] = useState('#000000');
   const [showColorPicker, setShowColorPicker] = useState(false);
-
+  const filterableProperties = [
+    'id',
+    'phone',
+    'address',
+    'priceLevel',
+    'primaryType',
+    'rating',
+    'heatmap_weight',
+    'user_ratings_total',
+    'popularity_score_category',
+    'popularity_score',
+  ];
   const availableTypes = [
     ...new Set(
       geoPoints.flatMap(layer => layer.features.flatMap(feature => feature.properties.types))
@@ -130,7 +47,7 @@ export default function BasedOnLayerDropdown({
   const handleColorChange = (color: string) => {
     setSelectedColor(color);
     if (onColorChange) {
-      onColorChange(color); // Call only if it's defined
+      onColorChange(color);
     }
   };
 
@@ -175,25 +92,22 @@ export default function BasedOnLayerDropdown({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
   };
-  // const handleInputThresholdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   setThreshold(e.target.value);
-  // };
 
   const handleInputThresholdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newThreshold = e.target.value;
     setThreshold(newThreshold);
 
     if (setPropertyThreshold) {
-      setPropertyThreshold(newThreshold); // ✅ Pass threshold to parent
+      setPropertyThreshold(newThreshold);
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === ',' || e.key === 'Enter') {
-      e.preventDefault(); // Prevents adding commas in the input field
+      e.preventDefault();
       if (inputValue.trim() !== '') {
-        setNameInputs([...nameInputs, inputValue.trim()]); // Save as tag
-        setInputValue(''); // Clear input field
+        setNameInputs([...nameInputs, inputValue.trim()]);
+        setInputValue('');
       }
     }
   };
@@ -257,7 +171,7 @@ export default function BasedOnLayerDropdown({
               <option
                 key={metric}
                 value={metric}
-                disabled={selectedOption === 'recolor' && metric.toLowerCase() === 'name'} // Disable "name" when recolor is selected
+                disabled={selectedOption === 'recolor' && metric.toLowerCase() === 'name'}
               >
                 {formatSubcategoryName(metric)}
               </option>
@@ -321,17 +235,8 @@ export default function BasedOnLayerDropdown({
             </div>
           </>
         )}
-
-        {(basedOnProperty === 'id' ||
-          basedOnProperty === 'phone' ||
-          basedOnProperty === 'address' ||
-          basedOnProperty === 'priceLevel' ||
-          basedOnProperty === 'primaryType' ||
-          basedOnProperty === 'rating' ||
-          basedOnProperty === 'heatmap_weight' ||
-          basedOnProperty === 'user_ratings_total' ||
-          basedOnProperty === 'popularity_score_category' ||
-          basedOnProperty === 'popularity_score') &&
+        {basedOnProperty &&
+          filterableProperties.includes(basedOnProperty) &&
           selectedOption === 'filter' && (
             <>
               <div className="flex flex-col mt-2">
