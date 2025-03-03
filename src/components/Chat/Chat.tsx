@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { HiArrowRight, HiX } from 'react-icons/hi';
+import { HiArrowRight, HiX, HiArrowUp } from 'react-icons/hi';
 import { useAuth } from '../../context/AuthContext';
 import { useChatContext } from '../../context/ChatContext';
-import { Message, topics } from '../../types';
+import { ChatMessage, topics } from '../../types';
 import Loader from '../Loader/Loader';
 import _ from 'lodash';
 
@@ -32,10 +32,20 @@ function Chat(props: ChatProps = defaultProps) {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // For message history navigation
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const userMessages = messages.filter(m => m.isUser).map(m => m.content);
 
   useEffect(() => {
     if (props.topic) setTopic(props.topic);
   }, [props.topic]);
+
+  // Reset history index when messages change
+  useEffect(() => {
+    setHistoryIndex(-1);
+  }, [messages]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -47,22 +57,49 @@ function Chat(props: ChatProps = defaultProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (input.length < 10 || isLoading) return;
+    if (input.trim().length < 10 || isLoading) return;
 
     await sendMessage(input);
     setInput('');
+    setHistoryIndex(-1); // Reset history index after sending
   };
 
-  const renderMessage = (message: Message, index: number) => {
+  // Navigate through message history
+  const handleHistoryNavigation = () => {
+    if (userMessages.length === 0) return;
+
+    // Calculate the next index (cycling through history)
+    const nextIndex =
+      historyIndex === -1
+        ? userMessages.length - 1
+        : (historyIndex - 1 + userMessages.length) % userMessages.length;
+
+    setHistoryIndex(nextIndex);
+    setInput(userMessages[nextIndex]);
+
+    // Focus and move cursor to end of input
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+        inputRef.current.selectionStart = inputRef.current.value.length;
+        inputRef.current.selectionEnd = inputRef.current.value.length;
+      }
+    }, 0);
+  };
+
+  const renderMessage = (message: ChatMessage, index: number) => {
     const isBot = !message.isUser;
+    const isLastMessage = index === messages.length - 1;
 
     const hasResponseData = isBot && message.responseData;
-
     const isValidResponse = hasResponseData && message.responseData.is_valid === true;
     const isInvalidResponse = hasResponseData && message.responseData.is_valid === false;
 
     return (
-      <div key={index} className={`flex ${isBot ? 'justify-start' : 'justify-end'} mb-4`}>
+      <div
+        key={index}
+        className={`flex ${isBot ? 'justify-start' : 'justify-end'} mb-4 ${isLastMessage ? 'animate-fade-in-up' : ''}`}
+      >
         <div
           className={`${
             isBot
@@ -131,12 +168,12 @@ function Chat(props: ChatProps = defaultProps) {
 
       <div
         ref={containerRef}
-        className="p-4 space-y-4 min-h-[200px] overflow-y-auto"
+        className="p-4 space-y-4 min-h-[200px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
         style={{ maxHeight: 'calc(70vh - 140px)' }}
       >
         {messages.map(renderMessage)}
         {isLoading && (
-          <div className="flex justify-start">
+          <div className="flex justify-start animate-fade-in-up">
             <div className="bg-gray-100 rounded-2xl p-4 rounded-tl-none border border-gray-200">
               <Loader />
             </div>
@@ -147,8 +184,18 @@ function Chat(props: ChatProps = defaultProps) {
 
       <form onSubmit={handleSubmit} className="p-4 border-t">
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleHistoryNavigation}
+            disabled={userMessages.length === 0}
+            className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Show previous message"
+          >
+            <HiArrowUp className="w-5 h-5 text-gray-500" />
+          </button>
           <div className="flex-1 relative">
             <input
+              ref={inputRef}
               type="text"
               value={input}
               onChange={e => setInput(e.target.value)}
@@ -162,7 +209,7 @@ function Chat(props: ChatProps = defaultProps) {
           </div>
           <button
             type="submit"
-            disabled={input.length < 10 || isLoading}
+            disabled={input.trim().length < 10 || isLoading}
             className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <HiArrowRight className="w-6 h-6 text-[#28A745]" />

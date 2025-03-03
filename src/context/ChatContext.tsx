@@ -50,6 +50,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
   const clearChat = () => {
     setMessages([]);
+    hasGreeted.current = false;
   };
 
   const closeChat = () => {
