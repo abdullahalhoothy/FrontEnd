@@ -440,6 +440,50 @@ export function CatalogProvider(props: { children: ReactNode }) {
     );
   };
 
+  async function handleFilteredZone(requestData?: ReqGradientColorBasedOnZone) {
+    const dataToUse = requestData || reqGradientColorBasedOnZone;
+
+    try {
+      const res = await apiRequest({
+        url: urls.filter_based_zone,
+        method: 'post',
+        body: dataToUse,
+        isAuthRequest: true,
+      });
+      if (res.data?.data && Array.isArray(res.data.data)) {
+        setGradientColorBasedOnZone(res.data.data);
+        return res.data.data;
+      }
+      return [];
+    } catch (error) {
+      console.error('Request failed:', error);
+      setIsError(error instanceof Error ? error : new Error(String(error)));
+      return [];
+    }
+  }
+
+  async function handleNameBasedColorZone(requestData?: ReqGradientColorBasedOnZone) {
+    const dataToUse = requestData || reqGradientColorBasedOnZone;
+
+    try {
+      const res = await apiRequest({
+        url: urls.gradient_color_based_on_zone,
+        method: 'post',
+        body: dataToUse,
+        isAuthRequest: true,
+      });
+      if (res.data?.data && Array.isArray(res.data.data)) {
+        setGradientColorBasedOnZone(res.data.data);
+        return res.data.data;
+      }
+      return [];
+    } catch (error) {
+      console.error('Request failed:', error);
+      setIsError(error instanceof Error ? error : new Error(String(error)));
+      return [];
+    }
+  }
+
   return (
     <CatalogContext.Provider
       value={{
@@ -513,6 +557,8 @@ export function CatalogProvider(props: { children: ReactNode }) {
         setBasedOnProperty,
         updateLayerLegend,
         handleStoreUnsavedGeoPoint,
+        handleNameBasedColorZone,
+        handleFilteredZone,
       }}
     >
       {children}

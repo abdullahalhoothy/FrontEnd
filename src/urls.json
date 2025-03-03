@@ -1,5 +1,5 @@
 {
-  "REACT_APP_API_URL": "http://localhost:8000/fastapi",
+  "REACT_APP_API_URL": "http://37.27.195.216:8000/fastapi",
   "catlog_collection": "/catlog_collection",
   "layer_collection": "/layer_collection",
   "fetch_acknowlg_id": "/fetch_acknowlg_id",
@@ -38,5 +38,6 @@
   "fetch_wallet":"/fetch_wallet",
   "deduct_wallet":"/deduct_wallet",
   "delete_producer_catalog":"/delete_producer_catalog",
-  "delete_layer":"/delete_layer"
+  "delete_layer":"/delete_layer",
+  "filter_based_zone": "filter_based_on"
 }
