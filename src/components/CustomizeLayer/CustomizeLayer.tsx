@@ -11,24 +11,32 @@ import { useCatalogContext } from '../../context/CatalogContext';
 import { HiCheck, HiExclamation } from 'react-icons/hi';
 import { getDefaultLayerColor } from '../../utils/helperFunctions';
 
-function autoFillLegendFormat(data) {
+interface LegendFormatData {
+  selectedCountry: string;
+  selectedCity: string;
+  action?: string;
+  includedTypes: string[];
+  excludedTypes: string[];
+}
+
+function autoFillLegendFormat(data: LegendFormatData): string {
   if (!data.selectedCountry || !data.selectedCity) return '';
 
-  const actionAbbreviation = data.action.split(' ')[0];
+  const actionAbbreviation = data.action ? data.action.split(' ')[0] : '';
 
   const cityAbbreviartion = data.selectedCity.slice(0, 3).toUpperCase();
 
   const countryAbbreviation = data.selectedCountry
     .split(' ')
-    .map(word => word[0])
+    .map((word: string) => word[0])
     .join('')
     .toUpperCase();
 
-  const included = data.includedTypes.map(type => type.replace('_', ' ')).join(' + ');
+  const included = data.includedTypes.map((type: string) => type.replace('_', ' ')).join(' + ');
 
   const excluded =
     data.excludedTypes.length > 0
-      ? ' + not ' + data.excludedTypes.map(type => type.replace('_', ' ')).join(' + not ')
+      ? ' + not ' + data.excludedTypes.map((type: string) => type.replace('_', ' ')).join(' + not ')
       : '';
   // Handle special cases for action
   if (actionAbbreviation === 'full') {
@@ -200,18 +208,36 @@ function CustomizeLayer() {
       </div>
       <div className="flex flex-col h-auto overflow-y-scroll space-y-6 p-2">
         {layerCustomizations.map(layer => (
-          <LayerCustomizationItem
-            key={layer.layerId}
-            layer={layer}
-            isCollapsed={collapsedLayers.has(layer.layerId)}
-            error={errors[layer.layerId]}
-            isSaving={savingLayers.has(layer.layerId)}
-            isSaved={savedLayers.has(layer.layerId)}
-            onToggleCollapse={toggleCollapse}
-            onLayerChange={handleLayerChange}
-            onDiscard={handleDiscardLayer}
-            onSave={saveLayer}
-          />
+          <div key={layer.layerId}>
+            <LayerCustomizationItem
+              layer={layer}
+              isCollapsed={collapsedLayers.has(layer.layerId)}
+              error={errors[layer.layerId]}
+              isSaving={savingLayers.has(layer.layerId)}
+              isSaved={savedLayers.has(layer.layerId)}
+              onToggleCollapse={toggleCollapse}
+              onLayerChange={handleLayerChange}
+              onDiscard={handleDiscardLayer}
+              onSave={saveLayer}
+            />
+            {/* Progress bar */}
+            {!collapsedLayers.has(layer.layerId) && (
+              <div className="mt-2 mb-3 px-4">
+                <div className="flex justify-between text-xs text-gray-500 mb-1">
+                  <span>Layer Progress</span>
+                  <span>{useLayerContext().propsFetchingProgress[layer.layerId] || 89}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-green-600 h-2 rounded-full transition-all duration-300 ease-in-out"
+                    style={{
+                      width: `${useLayerContext().propsFetchingProgress[layer.layerId] || 89}%`,
+                    }}
+                  ></div>
+                </div>
+              </div>
+            )}
+          </div>
         ))}
       </div>
       {/* Global Controls with Enhanced Feedback */}

@@ -36,6 +36,8 @@ import { isIntelligentLayer } from '../utils/layerUtils';
 const LayerContext = createContext<LayerContextType | undefined>(undefined);
 
 export function LayerProvider(props: { children: ReactNode }) {
+  const [fetchingProgress, setFetchingProgress] = useState<{ [layerId: number]: number }>({});
+  console.log(fetchingProgress, 'bdsdhksdk');
   const navigate = useNavigate();
   const { authResponse } = useAuth();
   const { children } = props;
@@ -287,6 +289,24 @@ export function LayerProvider(props: { children: ReactNode }) {
           });
 
           if (res?.data?.data) {
+            // Update progress bar for the current layer
+            if (res.data.data.progress) {
+              setFetchingProgress(prev => ({
+                ...prev,
+                [layer.id]: res.data.data.progress || 0,
+              }));
+            }
+
+            // Handle delay before next call
+            if (res.data.delay_before_next_call) {
+              console.log(
+                `Waiting for ${res.data.delay_before_next_call} seconds before next call...`
+              );
+              await new Promise(resolve =>
+                setTimeout(resolve, res.data.delay_before_next_call * 1000)
+              );
+            }
+
             setLayerDataMap(prev => ({
               ...prev,
               [layer.id]: res.data.data,
@@ -351,9 +371,8 @@ export function LayerProvider(props: { children: ReactNode }) {
         selectedCity: '', // Reset city when country changes
       }));
     } else if (name === 'selectedCity') {
-      
       setSelectedCity(value);
-  
+
       setReqFetchDataset(prev => ({
         ...prev,
         selectedCity: value,
@@ -426,7 +445,6 @@ export function LayerProvider(props: { children: ReactNode }) {
     setSearchType('category_search');
     setPassword('');
     setGeoPoints([]);
-
   }
 
   useEffect(() => {
@@ -483,11 +501,9 @@ export function LayerProvider(props: { children: ReactNode }) {
     }
   }, [currentZoomLevel]);
 
-
   useEffect(() => {
     handlePopulationLayer(false);
   }, [selectedContainerType]);
-
 
   const [includePopulation, setIncludePopulation] = useState(false);
 
@@ -707,6 +723,8 @@ export function LayerProvider(props: { children: ReactNode }) {
         handlePopulationLayer,
         switchPopulationLayer,
         refetchPopulationLayer,
+        propsFetchingProgress: fetchingProgress,
+        propsSetFetchingProgress: setFetchingProgress,
       }}
     >
       {children}
