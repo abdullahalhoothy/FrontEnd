@@ -6,12 +6,10 @@ import {
   SaveResponse,
   VisualizationMode,
 } from '../types/allTypesAndInterfaces';
-import { HttpReq } from '../services/apiService';
 import urls from '../urls.json';
 import userIdData from '../currentUserId.json';
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import apiRequest from '../services/apiRequest';
 import html2canvas from 'html2canvas';
 import defaultMapConfig from '../mapConfig.json';

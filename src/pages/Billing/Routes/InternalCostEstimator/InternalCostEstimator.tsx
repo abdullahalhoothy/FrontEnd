@@ -1,13 +1,13 @@
-// src/components/CostEstimatorForm/CostEstimatorForm.tsx
 import React, { useState, useEffect } from 'react';
 import { useLayerContext } from '../../../../context/LayerContext';
-import { HttpReq } from '../../../../services/apiService';
 import { CostEstimate } from '../../../../types/allTypesAndInterfaces';
 import { formatSubcategoryName } from '../../../../utils/helperFunctions';
 import styles from './InternalCostEstimator.module.css';
 import urls from '../../../../urls.json';
 import { FaCaretDown, FaCaretRight } from 'react-icons/fa';
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from '../../../../context/AuthContext';
+import apiRequest from '../../../../services/apiRequest';
+
 function InternalCostEstimator() {
   const {
     countries,
@@ -24,7 +24,7 @@ function InternalCostEstimator() {
 
   // COLBASE CATEGORY
   const [openedCategories, setOpenedCategories] = useState<string[]>([]);
-  const{authResponse}=useAuth();
+  const { authResponse } = useAuth();
   // when form first loads, reset previous form data setReqFetchDataset()to its initial state
   // The empty dependency array [] at the end of the useEffect hook means this effect will
   // only run once, after the initial render, and when the component unmounts.
@@ -50,22 +50,26 @@ function InternalCostEstimator() {
         user_id: authResponse.localId,
       };
 
-      HttpReq<CostEstimate>(
-        urls.cost_calculator,
-        data => {
+      apiRequest({
+        url: urls.cost_calculator,
+        method: 'POST',
+        body: requestBody,
+        isAuthRequest: true,
+      })
+        .then(response => {
+          const data = response.data.data;
           if (data && typeof data.cost === 'number' && typeof data.api_calls === 'number') {
             setCostEstimate(data);
           } else {
             setIsError(new Error('Invalid response from server'));
           }
-        },
-        () => {},
-        () => {},
-        () => setIsLoading(false),
-        setIsError,
-        'post',
-        requestBody
-      );
+        })
+        .catch(error => {
+          setIsError(error instanceof Error ? error : new Error(String(error)));
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
     }
   }
 

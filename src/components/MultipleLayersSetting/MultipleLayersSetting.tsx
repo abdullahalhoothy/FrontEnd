@@ -13,7 +13,6 @@ import { MdArrowDropDown } from 'react-icons/md';
 import { BiExit } from 'react-icons/bi';
 import { IoIosArrowDropdown, IoMdClose } from 'react-icons/io';
 import { RiCloseCircleLine } from 'react-icons/ri';
-import { HttpReq } from '../../services/apiService';
 import urls from '../../urls.json';
 import { useAuth } from '../../context/AuthContext';
 import apiRequest from '../../services/apiRequest';
@@ -61,7 +60,8 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   } = useCatalogContext();
   const layer = geoPoints[layerIndex];
 
-  const { prdcer_layer_name, layer_legend, is_zone_lyr, display, is_heatmap, is_grid, city_name } = layer;
+  const { prdcer_layer_name, layer_legend, is_zone_lyr, display, is_heatmap, is_grid, city_name } =
+    layer;
   const [isZoneLayer, setIsZoneLayer] = useState(is_zone_lyr);
   const [isDisplay, setIsDisplay] = useState(display);
   const [isHeatmap, setIsHeatmap] = useState(is_heatmap);
@@ -188,14 +188,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   }
 
   async function handleGetGradientColors() {
-    // HttpReq<string[]>(
-    //   urls.fetch_gradient_colors,
-    //   setColors,
-    //   () => {},
-    //   () => {},
-    //   () => {},
-    //   setIsError
-    // );
     try {
       const res = await apiRequest({
         url: urls.fetch_gradient_colors,
