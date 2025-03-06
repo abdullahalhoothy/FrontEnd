@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useCatalogContext } from '../../context/CatalogContext';
 import { BasedOnLayerDropdownProps } from '../../types/allTypesAndInterfaces';
 import { formatSubcategoryName } from '../../utils/helperFunctions';
@@ -43,6 +43,9 @@ export default function BasedOnLayerDropdown({
       geoPoints.flatMap(layer => layer.features.flatMap(feature => feature.properties.types))
     ),
   ];
+
+  const [isOpen, setIsOpen] = useState(false);
+  const pickerRef = useRef<HTMLDivElement>(null); 
 
   const handleColorChange = (color: string) => {
     setSelectedColor(color);
@@ -115,6 +118,29 @@ export default function BasedOnLayerDropdown({
   const handleRemoveName = (index: number) => {
     setNameInputs(nameInputs.filter((_, i) => i !== index));
   };
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (!pickerRef.current) {
+        console.log('pickerRef is null');
+        return;
+      }
+
+      console.log('Clicked element:', event.target);
+      console.log('Picker element:', pickerRef.current);
+      console.log('Is inside picker:', pickerRef.current.contains(event.target));
+
+      if (!pickerRef.current.contains(event.target)) {
+        console.log('Closing picker...');
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     <>
@@ -214,21 +240,19 @@ export default function BasedOnLayerDropdown({
                 />
               </div>
             </div>
-
-            <div className="mt-3 relative">
-              <label className="text-[11px] text-[#555] whitespace-nowrap text-sm">
+            <div className="mt-3 relative " ref={pickerRef}>
+              <label className="text-[11px] text-[#555] whitespace-nowrap text-sm flex flex-col">
                 Pick a Color
               </label>
               <div>
                 <button
-                  className="w-[40%] h-10 rounded-md border border-gray-300"
+                  className="w-full h-10 rounded-md border border-gray-300"
                   style={{ backgroundColor: selectedColor }}
-                  onClick={() => setShowColorPicker(!showColorPicker)}
+                  onClick={() => setIsOpen(!isOpen)}
                 />
               </div>
-
-              {showColorPicker && (
-                <div className="absolute z-10 mt-2 bg-white p-2 border border-gray-300 shadow-md rounded-md">
+              {isOpen && (
+                <div className="absolute mt-2 bg-white p-2 border border-gray-300 shadow-md rounded-md">
                   <HexColorPicker color={selectedColor} onChange={handleColorChange} />
                 </div>
               )}
@@ -293,38 +317,37 @@ export default function BasedOnLayerDropdown({
                       ))}
                     </select>
                   ) : (
-                    // Regular text input for other properties
                     <input
-                      type="text"
-                      value={threshold}
-                      onChange={handleInputThresholdChange}
-                      className="bg-gray-50 text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex-1 min-w-[120px] outline-none"
-                      placeholder={`Enter ${basedOnProperty
-                        .replace(/_/g, ' ')
-                        .replace(/\b\w/g, (char: any) => char.toUpperCase())}`}
-                    />
+                    type="text"
+                    value={threshold}
+                    onChange={handleInputThresholdChange}
+                    className="bg-gray-50 text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex-1 min-w-[120px] outline-none"
+                    placeholder={`Enter ${basedOnProperty
+                      .replace(/_/g, ' ')
+                      .replace(/\b\w/g, (char: any) => char.toUpperCase())}${basedOnProperty === "rating" ? " up to 5" : ""}`}
+                  />
+                  
                   )}
                 </div>
               </div>
 
-              <div className="mt-3 relative">
-                <label className="text-[11px] text-[#555] whitespace-nowrap text-sm">
-                  Pick a Color
-                </label>
-                <div>
-                  <button
-                    className="w-[40%] h-10 rounded-md border border-gray-300"
-                    style={{ backgroundColor: selectedColor }}
-                    onClick={() => setShowColorPicker(!showColorPicker)}
-                  />
-                </div>
-
-                {showColorPicker && (
-                  <div className="absolute z-10 mt-2 bg-white p-2 border border-gray-300 shadow-md rounded-md">
-                    <HexColorPicker color={selectedColor} onChange={handleColorChange} />
-                  </div>
-                )}
+              <div className="mt-3 relative " ref={pickerRef}>
+              <label className="text-[11px] text-[#555] whitespace-nowrap text-sm flex flex-col">
+                Pick a Color
+              </label>
+              <div>
+                <button
+                  className="w-full h-10 rounded-md border border-gray-300"
+                  style={{ backgroundColor: selectedColor }}
+                  onClick={() => setIsOpen(!isOpen)}
+                />
               </div>
+              {isOpen && (
+                <div className="absolute mt-2 bg-white p-2 border border-gray-300 shadow-md rounded-md">
+                  <HexColorPicker color={selectedColor} onChange={handleColorChange} />
+                </div>
+              )}
+            </div>
             </>
           )}
       </div>

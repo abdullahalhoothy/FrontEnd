@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef} from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FaTrash } from 'react-icons/fa';
 import styles from './MultipleLayersSetting.module.css';
 import ColorSelect from '../ColorSelect/ColorSelect';
@@ -9,13 +9,14 @@ import {
   DisplayType,
 } from '../../types/allTypesAndInterfaces';
 import DropdownColorSelect from '../ColorSelect/DropdownColorSelect';
-import { IoIosArrowDropdown} from 'react-icons/io';
+import { IoIosArrowDropdown } from 'react-icons/io';
 import { RiCloseCircleLine } from 'react-icons/ri';
 import { HttpReq } from '../../services/apiService';
 import urls from '../../urls.json';
 import { useAuth } from '../../context/AuthContext';
 import apiRequest from '../../services/apiRequest';
 import BasedOnLayerDropdown from './BasedOnLayerDropdown';
+import { toast } from 'sonner';
 
 const initialBasedon = 'radius';
 const initialRadius = 1000;
@@ -291,7 +292,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
   const handleNameColorChange = (color: string) => {
     setSelectedColor(color);
-    console.log('Color selected:', color); // You can send this to the backend here
   };
 
   const [thresholdValue, setThresholdValue] = useState('');
@@ -343,7 +343,9 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         change_lyr_name: currentLayer.prdcer_layer_name || `Layer ${currentLayer.layerId}`,
         based_on_lyr_id: baseLayer.prdcer_lyr_id,
         based_on_lyr_name: baseLayer.prdcer_layer_name || `Layer ${baseLayer.layerId}`,
-        coverage_property: selectedBasedon,
+        // coverage_property: selectedBasedon,
+        coverage_property: '',
+
         coverage_value: radiusInput,
         color_based_on: basedOnProperty,
         list_names: nameInputs.filter(name => name.trim() !== ''),
@@ -353,8 +355,11 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
       const filterResponse = await handleFilteredZone(filterRequest);
 
+      if (!filterResponse || filterResponse.length === 0) {
+        toast.error('No features found based on the given criteria.');
+      }
       if (!filterResponse) {
-        throw new Error('Filter_data API failed.');
+        throw new Error('Filter data failed.');
       }
 
       setGeoPoints(prevGeoPoints =>
@@ -376,9 +381,10 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
           return layer; // Keep other layers unchanged
         })
       );
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error applying filter:', error);
-      setIsError(error instanceof Error ? error : new Error('Failed to apply filter'));
+      toast.error('Server error (500). Please try again later.');
+
     } finally {
       setIsLoading(false);
     }
@@ -775,33 +781,32 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                 </label>
               </div>
             </div>
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-lg font-semibold">Conditional</p>
-              </div>
-              <div className="flex items-center gap-3">
+            <div className="flex  justify-between items-center">
+              <p className="font-semibold">Conditional</p>
+              <div className="flex border-b">
                 <button
                   onClick={() => setSelectedOption('recolor')}
-                  className={`px-4 py-2 text-xs rounded-md border ${
+                  className={`px-4 py-2 text-sm font-medium flex text-center items-center gap-2 border-b-2 ${
                     selectedOption === 'recolor'
-                      ? 'bg-green-500 text-white border-green-700'
-                      : 'border-gray-300'
+                      ? 'border-primary text-primary font-bold' // Active tab styling
+                      : 'border-transparent text-gray-500 hover:text-black'
                   }`}
                 >
                   Recolor
                 </button>
                 <button
                   onClick={() => setSelectedOption('filter')}
-                  className={`px-4 py-2 text-xs rounded-md border ${
+                  className={`px-4 py-2 text-sm font-medium flex items-center text-center gap-2 border-b-2 ${
                     selectedOption === 'filter'
-                      ? 'bg-green-500 text-white border-green-700'
-                      : 'border-gray-300'
+                      ? 'border-primary text-primary font-bold' // Active tab styling
+                      : 'border-transparent text-gray-500 hover:text-black'
                   }`}
                 >
                   Filter
                 </button>
               </div>
             </div>
+
             <p className="text-sm mt-2 mb-0 font-medium">based on metric</p>
 
             <BasedOnLayerDropdown
