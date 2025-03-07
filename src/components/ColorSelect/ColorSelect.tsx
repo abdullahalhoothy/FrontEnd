@@ -21,7 +21,10 @@ function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
   };
 
   const dropdownIndex = layerId ?? -1;
-  const currentGeoPoint = geoPoints.find(point => String(point.layerId) === String(layerId));
+  const currentGeoPoint =
+    geoPoints.length > 1
+      ? geoPoints[0]
+      : geoPoints.find(point => String(point.layerId) === String(layerId));
   const colorHex =
     layerState?.selectedColor?.hex ||
     currentGeoPoint?.points_color ||

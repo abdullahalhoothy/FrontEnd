@@ -755,6 +755,7 @@ const FetchDatasetForm = () => {
               if (res.data.data.length === 0) nav('/profile/payment-methods');
               if (!isAuthenticated) nav('/auth');
               try {
+
                 await apiRequest({
                   url: urls.deduct_wallet,
                   method: 'Post',
@@ -764,6 +765,8 @@ const FetchDatasetForm = () => {
                   },
                 });
                 handleButtonClick('full data', e);
+
+    
               } catch (error: any) {
                 if (error.response.data.detail === 'Insufficient balance in wallet') {
                   setShowErrorMessage(true);
