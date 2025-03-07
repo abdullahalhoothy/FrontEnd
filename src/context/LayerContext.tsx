@@ -269,20 +269,176 @@ export function LayerProvider(props: { children: ReactNode }) {
     });
   }
 
+  // async function handleFetchDataset(action: string, pageToken?: string, layerId?: number) {
+  //   if (!pageToken && !layerId) {
+  //     setGeoPoints(prev => prev.filter(p => isIntelligentLayer(p)));
+  //     setLayerDataMap({});
+  //   }
+
+  //   let user_id: string;
+  //   let idToken: string;
+
+  //   try {
+  //     if (authResponse && 'idToken' in authResponse) {
+  //       user_id = authResponse.localId;
+  //       idToken = authResponse.idToken;
+  //     } else if (action == 'full data') {
+  //       navigate('/auth');
+  //       setIsError(new Error('User is not authenticated!'));
+  //       return;
+  //     } else {
+  //       user_id = '0000';
+  //       idToken = '';
+  //     }
+
+  //     const layers = layerId
+  //       ? [reqFetchDataset.layers.find(l => l.id === layerId)]
+  //       : reqFetchDataset.layers;
+
+  //     setReqFetchDataset(prev => ({
+  //       ...prev,
+  //       action: action,
+  //     }));
+  //     if (searchType !== 'keyword_search') {
+  //       for (const layer of layers) {
+  //         try {
+  //           if (!layer) continue;
+
+  //           if (layerDataMap[layer.id]) {
+  //             console.warn(`Layer ${layer.id} already processed, skipping...`);
+  //             continue;
+  //           }
+
+  //           const defaultName = `${reqFetchDataset.selectedCountry} ${reqFetchDataset.selectedCity} ${
+  //             layer.includedTypes?.map(type => type.replace('_', ' ')).join(' + ') || ''
+  //           }${
+  //             layer.excludedTypes?.length > 0
+  //               ? ' + not ' +
+  //                 layer.excludedTypes.map(type => type.replace('_', ' ')).join(' + not ')
+  //               : ''
+  //           }`;
+
+  //           const res = await apiRequest({
+  //             url: urls.fetch_dataset,
+  //             method: 'post',
+  //             body: {
+  //               country_name: reqFetchDataset.selectedCountry,
+  //               city_name: reqFetchDataset.selectedCity,
+  //               boolean_query: layer.includedTypes?.join(' OR '),
+  //               layerId: layer.id,
+  //               layer_name: defaultName,
+  //               action: action,
+  //               search_type: searchType,
+  //               text_search: textSearchInput?.trim() || '',
+  //               page_token: pageToken || '',
+  //               user_id: user_id,
+  //               zoom_level: currentZoomLevel,
+  //             },
+  //             isAuthRequest: true,
+  //           });
+  //           if (res?.data?.data) {
+  //             await assignPopularityCategory(res?.data?.data); //To be removed after fixed on backend
+  //             setLayerDataMap(prev => ({
+  //               ...prev,
+  //               [layer.id]: res.data.data,
+  //             }));
+
+  //             updateGeoJSONDataset(res.data.data, layer.id, defaultName);
+  //           }
+  //         } catch (error) {
+  //           console.error(`Error fetching layer ${layer?.id}:`, error);
+  //           setIsError(error instanceof Error ? error : new Error(String(error)));
+  //         }
+  //       }
+  //     } else {
+  //       let defaultName = `${reqFetchDataset.selectedCountry} ${reqFetchDataset.selectedCity} ${textSearchInput?.trim()}`;
+  //       const res = await apiRequest({
+  //         url: urls.fetch_dataset,
+  //         method: 'post',
+  //         body: {
+  //           country_name: reqFetchDataset.selectedCountry,
+  //           city_name: reqFetchDataset.selectedCity,
+  //           boolean_query: '',
+  //           layerId: 1,
+  //           layer_name: defaultName,
+  //           action: action,
+  //           search_type: searchType,
+  //           text_search: textSearchInput?.trim(),
+  //           page_token: pageToken || '',
+  //           user_id: user_id,
+  //           zoom_level: currentZoomLevel,
+  //         },
+  //         isAuthRequest: true,
+  //       });
+  //       if (res?.data?.data) {
+  //         await assignPopularityCategory(res?.data?.data); //To be removed after fixed on backend
+  //         setLayerDataMap(prev => ({
+  //           ...prev,
+  //           [1]: res.data.data,
+  //         }));
+  //         let layers = [
+  //           {
+  //             id: 1,
+  //             name: textSearchInput?.trim(),
+  //             points_color: '',
+  //             excludedTypes: [],
+  //             includedTypes: [textSearchInput?.trim()],
+  //             isAuthRequest: true, 
+  //           },
+  //         ];
+  //         if (res?.data?.data) {
+  //           // Update progress bar for the current layer
+  //           if (res.data.data.progress) {
+  //             setFetchingProgress(prev => ({
+  //               ...prev,
+  //               [layer.id]: res.data.data.progress || 0,
+  //             }));
+  //           }
+
+  //           // Handle delay before next call
+  //           if (res.data.delay_before_next_call) {
+  //             console.log(
+  //               `Waiting for ${res.data.delay_before_next_call} seconds before next call...`
+  //             );
+  //             await new Promise(resolve =>
+  //               setTimeout(resolve, res.data.delay_before_next_call * 1000)
+  //             );
+  //           }
+
+  //           setLayerDataMap(prev => ({
+  //             ...prev,
+  //             [layer.id]: res.data.data,
+  //           }));
+
+  //           updateGeoJSONDataset(res.data.data, layer.id, defaultName);
+  //         }
+  //       } catch (error) {
+  //         console.error(`Error fetching layer ${layer?.id}:`, error);
+  //         setIsError(error instanceof Error ? error : new Error(String(error)));
+  //       }
+  //     }
+  //   } catch (error) {
+  //     setIsError(error instanceof Error ? error : new Error(String(error)));
+  //   } finally {
+  //     // Reset loader
+  //     setShowLoaderTopup(false);
+  //   }
+  // }
+
   async function handleFetchDataset(action: string, pageToken?: string, layerId?: number) {
     if (!pageToken && !layerId) {
       setGeoPoints(prev => prev.filter(p => isIntelligentLayer(p)));
       setLayerDataMap({});
     }
-
+  
     let user_id: string;
     let idToken: string;
-
+  
     try {
       if (authResponse && 'idToken' in authResponse) {
         user_id = authResponse.localId;
         idToken = authResponse.idToken;
-      } else if (action == 'full data') {
+      } else if (action === 'full data') {
         navigate('/auth');
         setIsError(new Error('User is not authenticated!'));
         return;
@@ -290,34 +446,34 @@ export function LayerProvider(props: { children: ReactNode }) {
         user_id = '0000';
         idToken = '';
       }
-
+  
       const layers = layerId
         ? [reqFetchDataset.layers.find(l => l.id === layerId)]
         : reqFetchDataset.layers;
-
+  
       setReqFetchDataset(prev => ({
         ...prev,
         action: action,
       }));
+  
       if (searchType !== 'keyword_search') {
         for (const layer of layers) {
           try {
             if (!layer) continue;
-
+  
             if (layerDataMap[layer.id]) {
               console.warn(`Layer ${layer.id} already processed, skipping...`);
               continue;
             }
-
+  
             const defaultName = `${reqFetchDataset.selectedCountry} ${reqFetchDataset.selectedCity} ${
               layer.includedTypes?.map(type => type.replace('_', ' ')).join(' + ') || ''
             }${
               layer.excludedTypes?.length > 0
-                ? ' + not ' +
-                  layer.excludedTypes.map(type => type.replace('_', ' ')).join(' + not ')
+                ? ' + not ' + layer.excludedTypes.map(type => type.replace('_', ' ')).join(' + not ')
                 : ''
             }`;
-
+  
             const res = await apiRequest({
               url: urls.fetch_dataset,
               method: 'post',
@@ -336,13 +492,15 @@ export function LayerProvider(props: { children: ReactNode }) {
               },
               isAuthRequest: true,
             });
+  
             if (res?.data?.data) {
-              await assignPopularityCategory(res?.data?.data); //To be removed after fixed on backend
+              await assignPopularityCategory(res?.data?.data); // To be removed after fixed on backend
+  
               setLayerDataMap(prev => ({
                 ...prev,
                 [layer.id]: res.data.data,
               }));
-
+  
               updateGeoJSONDataset(res.data.data, layer.id, defaultName);
             }
           } catch (error) {
@@ -352,80 +510,76 @@ export function LayerProvider(props: { children: ReactNode }) {
         }
       } else {
         let defaultName = `${reqFetchDataset.selectedCountry} ${reqFetchDataset.selectedCity} ${textSearchInput?.trim()}`;
-        const res = await apiRequest({
-          url: urls.fetch_dataset,
-          method: 'post',
-          body: {
-            country_name: reqFetchDataset.selectedCountry,
-            city_name: reqFetchDataset.selectedCity,
-            boolean_query: '',
-            layerId: 1,
-            layer_name: defaultName,
-            action: action,
-            search_type: searchType,
-            text_search: textSearchInput?.trim(),
-            page_token: pageToken || '',
-            user_id: user_id,
-            zoom_level: currentZoomLevel,
-          },
-          isAuthRequest: true,
-        });
-        if (res?.data?.data) {
-          await assignPopularityCategory(res?.data?.data); //To be removed after fixed on backend
-          setLayerDataMap(prev => ({
-            ...prev,
-            [1]: res.data.data,
-          }));
-          let layers = [
-            {
-              id: 1,
-              name: textSearchInput?.trim(),
-              points_color: '',
-              excludedTypes: [],
-              includedTypes: [textSearchInput?.trim()],
+  
+        try {
+          const res = await apiRequest({
+            url: urls.fetch_dataset,
+            method: 'post',
+            body: {
+              country_name: reqFetchDataset.selectedCountry,
+              city_name: reqFetchDataset.selectedCity,
+              boolean_query: '',
+              layerId: 1,
+              layer_name: defaultName,
+              action: action,
+              search_type: searchType,
+              text_search: textSearchInput?.trim(),
+              page_token: pageToken || '',
+              user_id: user_id,
+              zoom_level: currentZoomLevel,
             },
             isAuthRequest: true,
           });
-
+  
           if (res?.data?.data) {
-            // Update progress bar for the current layer
-            if (res.data.data.progress) {
-              setFetchingProgress(prev => ({
-                ...prev,
-                [layer.id]: res.data.data.progress || 0,
-              }));
-            }
-
-            // Handle delay before next call
-            if (res.data.delay_before_next_call) {
-              console.log(
-                `Waiting for ${res.data.delay_before_next_call} seconds before next call...`
-              );
-              await new Promise(resolve =>
-                setTimeout(resolve, res.data.delay_before_next_call * 1000)
-              );
-            }
-
+            await assignPopularityCategory(res?.data?.data);
+  
             setLayerDataMap(prev => ({
               ...prev,
-              [layer.id]: res.data.data,
+              [1]: res.data.data,
             }));
-
-            updateGeoJSONDataset(res.data.data, layer.id, defaultName);
+  
+            let layers = [
+              {
+                id: 1,
+                name: textSearchInput?.trim(),
+                points_color: '',
+                excludedTypes: [],
+                includedTypes: [textSearchInput?.trim()],
+              },
+            ];
+  
+            if (res?.data?.data) {
+              setFetchingProgress(prev => ({
+                ...prev,
+                [1]: res.data.data.progress || 0,
+              }));
+  
+              if (res.data.delay_before_next_call) {
+                console.log(`Waiting for ${res.data.delay_before_next_call} seconds before next call...`);
+                await new Promise(resolve => setTimeout(resolve, res.data.delay_before_next_call * 1000));
+              }
+  
+              setLayerDataMap(prev => ({
+                ...prev,
+                [1]: res.data.data,
+              }));
+  
+              updateGeoJSONDataset(res.data.data, 1, defaultName);
+            }
           }
         } catch (error) {
-          console.error(`Error fetching layer ${layer?.id}:`, error);
+          console.error(`Error fetching layer:`, error);
           setIsError(error instanceof Error ? error : new Error(String(error)));
         }
       }
     } catch (error) {
       setIsError(error instanceof Error ? error : new Error(String(error)));
     } finally {
-      // Reset loader
       setShowLoaderTopup(false);
     }
   }
-
+  
   async function handleGetCountryCityCategory() {
     try {
       const res = await apiRequest({
