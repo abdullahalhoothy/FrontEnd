@@ -17,7 +17,7 @@ import { useLayerContext } from '../../context/LayerContext';
 
 function DataContainer() {
   const { selectedContainerType, handleAddClick, setGeoPoints } = useCatalogContext();
-  const {setSelectedCity, setSelectedCountry} = useLayerContext();
+  const { setSelectedCity, setSelectedCountry } = useLayerContext();
   const { isAuthenticated, authResponse, logout } = useAuth();
   const { closeModal } = useUIContext();
   const [activeTab, setActiveTab] = useState('Data Catalogue');
@@ -41,14 +41,6 @@ function DataContainer() {
     // Fetch catalog collection data
     async function fetchCatalogCollection() {
       setLoading(true);
-      // HttpReq<Catalog[]>(
-      //   urls.catlog_collection,
-      //   setCatalogCollectionData,
-      //   setResMessage,
-      //   setResId,
-      //   setLoading,
-      //   setError
-      // );
       try {
         const res = await apiRequest({
           url: urls.catlog_collection,
@@ -58,7 +50,11 @@ function DataContainer() {
         setResMessage(res.data.message);
         setResId(res.data.request_id);
       } catch (error) {
-        setError(error);
+        if (error instanceof Error) {
+          setError(error);
+        } else {
+          setError(new Error(String(error)));
+        }
       } finally {
         setLoading(false);
       }
@@ -68,17 +64,6 @@ function DataContainer() {
       setLoading(true);
 
       const body = { user_id: authResponse?.localId };
-      // HttpReq<UserLayer[]>(
-      //   urls.user_layers,
-      //   setUserLayersData,
-      //   setResMessage,
-      //   setResId,
-      //   setLoading,
-      //   setError,
-      //   "post",
-      //   body,
-      //   authResponse.idToken // Add this line
-      // );
       try {
         const res = await apiRequest({
           url: urls.user_layers,
@@ -90,7 +75,11 @@ function DataContainer() {
         setResMessage(res.data.message);
         setResId(res.data.request_id);
       } catch (error) {
-        setError(error);
+        if (error instanceof Error) {
+          setError(error);
+        } else {
+          setError(new Error(String(error)));
+        }
       } finally {
         setLoading(false);
       }
@@ -100,17 +89,6 @@ function DataContainer() {
       setLoading(true);
 
       const body = { user_id: authResponse?.localId };
-      // HttpReq<Catalog[]>(
-      //   urls.user_catalogs,
-      //   setUserCatalogsData,
-      //   setResMessage,
-      //   setResId,
-      //   setLoading,
-      //   setError,
-      //   "post",
-      //   body,
-      //   authResponse.idToken // Add this line
-      // );
       try {
         const res = await apiRequest({
           url: urls.user_catalogs,
@@ -122,7 +100,11 @@ function DataContainer() {
         setResMessage(res.data.message);
         setResId(res.data.request_id);
       } catch (error) {
-        setError(error);
+        if (error instanceof Error) {
+          setError(error);
+        } else {
+          setError(new Error(String(error)));
+        }
       } finally {
         setLoading(false);
       }
@@ -172,16 +154,6 @@ function DataContainer() {
   // Handle click event on catalog card
   async function handleCatalogCardClick(selectedItem: CardItem) {
     if (selectedContainerType === 'Home') {
-      // HttpReq<MapFeatures[]>(
-      //   urls.http_catlog_data,
-      //   setGeoPoints,
-      //   setWsResMessage,
-      //   setWsResId,
-      //   setWsResLoading,
-      //   setWsResError,
-      //   "post",
-      //   { catalogue_dataset_id: selectedItem.id }
-      // );
       setWsResLoading(true);
       try {
         const res = await apiRequest({
@@ -193,21 +165,21 @@ function DataContainer() {
         setWsResMessage(res.data.message);
         setWsResId(res.data.request_id);
       } catch (error) {
-        setWsResError(error);
+        if (error instanceof Error) {
+          setWsResError(error);
+        } else {
+          setWsResError(new Error(String(error)));
+        }
       } finally {
         setWsResLoading(false);
       }
     }
 
     if (selectedContainerType !== 'Home') {
-      handleAddClick(
-        selectedItem.id,
-        selectedItem.typeOfCard,
-        (country:string, city:string)=>{
-          setSelectedCountry(country);
-          setSelectedCity(city);
-        }
-      );
+      handleAddClick(selectedItem.id, selectedItem.typeOfCard, (country: string, city: string) => {
+        setSelectedCountry(country);
+        setSelectedCity(city);
+      });
     }
 
     closeModal();
@@ -217,6 +189,9 @@ function DataContainer() {
   function makeCard(item: Catalog | UserLayer, index: number) {
     if ('prdcer_lyr_id' in item) {
       // Render UserLayerCard if item is a user layer
+      // Add progress property with default value of 89 if not provided
+      const progress = (item as any).progress || 89;
+
       return (
         <UserLayerCard
           key={item.prdcer_lyr_id + '-' + index} // Use a combination of id and index
@@ -226,6 +201,7 @@ function DataContainer() {
           legend={item.layer_legend}
           typeOfCard="layer"
           points_color={item.points_color}
+          progress={progress}
           onMoreInfo={function () {
             handleCatalogCardClick({
               id: item.prdcer_lyr_id,

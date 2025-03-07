@@ -5,6 +5,7 @@ import {
   getDefaultLayerColor,
 } from '../../utils/helperFunctions';
 import { PiX } from 'react-icons/pi';
+import { FaSearch } from 'react-icons/fa';
 import urls from '../../urls.json';
 import { CategoryData, City, Layer } from '../../types/allTypesAndInterfaces';
 import { useLayerContext } from '../../context/LayerContext';
@@ -731,8 +732,16 @@ const FetchDatasetForm = () => {
             onClick={e => handleButtonClick('sample', e)}
             className="w-full h-10 bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
                  hover:bg-white transition-all cursor-pointer"
+            disabled={useLayerContext().showLoaderTopup}
           >
-            Get Sample
+            {useLayerContext().showLoaderTopup ? (
+              <div className="flex items-center">
+                <FaSearch className="animate-spin mr-2" />
+                <span>Loading...</span>
+              </div>
+            ) : (
+              'Get Sample'
+            )}
           </button>
 
           <button
@@ -762,8 +771,16 @@ const FetchDatasetForm = () => {
                 console.error(error);
               }
             }}
+            disabled={useLayerContext().showLoaderTopup}
           >
-            Full Data {isPriceVisible ? `($${costEstimate.toFixed(2)})` : null}
+            {useLayerContext().showLoaderTopup ? (
+              <div className="flex items-center">
+                <FaSearch className="animate-spin mr-2" />
+                <span>Loading...</span>
+              </div>
+            ) : (
+              <>Full Data {isPriceVisible ? `($${costEstimate.toFixed(2)})` : null}</>
+            )}
           </button>
         </div>
       </div>

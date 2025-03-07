@@ -66,6 +66,7 @@ export interface UserLayerCardProps {
   typeOfCard: string;
   legend: string;
   points_color?: string;
+  progress?: number;
   onMoreInfo(selectedCatalog: { id: string; name: string; typeOfCard: string }): void;
 }
 export interface CardItem {
