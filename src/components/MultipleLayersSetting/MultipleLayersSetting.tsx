@@ -177,14 +177,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   }
 
   async function handleGetGradientColors() {
-    // HttpReq<string[]>(
-    //   urls.fetch_gradient_colors,
-    //   setColors,
-    //   () => {},
-    //   () => {},
-    //   () => {},
-    //   setIsError
-    // );
+  
     try {
       const res = await apiRequest({
         url: urls.fetch_gradient_colors,
@@ -298,7 +291,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
   const handleThresholdChange = (value: string) => {
     setThresholdValue(value);
-    console.log('📌 Threshold Updated:', value); // ✅ Check in console
   };
   const handleApplyFilter = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -382,7 +374,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         })
       );
     } catch (error: any) {
-      console.error('Error applying filter:', error);
       toast.error('Server error (500). Please try again later.');
 
     } finally {
@@ -420,7 +411,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
       setReqGradientColorBasedOnZone(gradientRequest);
 
-      console.log('Calling gradient_zone_color_change API...');
       const gradientData = await handleNameBasedColorZone(gradientRequest);
 
       if (!gradientData || gradientData.length === 0) {
@@ -461,9 +451,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         )
       );
 
-      console.log('Recolor applied successfully!');
     } catch (error) {
-      console.error('Error applying recolor:', error);
       setIsError(error instanceof Error ? error : new Error('Failed to apply recolor'));
     } finally {
       setIsLoading(false);
@@ -480,9 +468,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       const baseLayer = geoPoints.find(layer => layer.prdcer_lyr_id === basedOnLayerId);
       const selectedColors = colors[chosenPallet || 0];
 
-      console.log(nameInputs, 'name inputs');
       if (!currentLayer || !baseLayer || !basedOnProperty || !selectedColors || !selectedBasedon) {
-        console.error('Missing required fields');
         return;
       }
       const filterRequest = {
@@ -497,17 +483,14 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         list_names: nameInputs,
       };
 
-      // ✅ Step 1: Call Filter_data API
-      console.log('Calling Filter_data...');
       const filterResponse = await handleFilteredZone(filterRequest);
 
       if (!filterResponse) {
         throw new Error('Filter_data API failed.');
       }
 
-      console.log('Filter_data applied successfully!');
 
-      // ✅ Step 2: Prepare Gradient API request
+      // Prepare Gradient API request
       const gradientRequest = {
         color_grid_choice: selectedColors,
         change_lyr_id: currentLayer.prdcer_lyr_id,
@@ -522,8 +505,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
       setReqGradientColorBasedOnZone(gradientRequest);
 
-      // ✅ Step 3: Call Gradient API
-      console.log('Calling gradient_zone_color_change...');
+      //  Call Gradient API
       const gradientData = await handleNameBasedColorZone(gradientRequest);
 
       if (!gradientData || gradientData.length === 0) {
@@ -590,7 +572,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   }, [layer, layerIndex, layerColors]);
 
   const handleDisplayTypeChange = (newType: (typeof DisplayType)[keyof typeof DisplayType]) => {
-    // Don't allow changes if it's a gradient layer
     if (layer.is_gradient) return;
 
     const isHeatmapNew = newType === DisplayType.HEATMAP;
@@ -600,7 +581,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     setIsHeatmap(isHeatmapNew);
     setIsGrid(isGridNew);
 
-    // Update the layer's features to include heatmap weight when switching to heatmap mode
     if (isHeatmapNew) {
       setGeoPoints(prev =>
         prev.map((point, idx) => {
@@ -612,7 +592,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                 ...feature,
                 properties: {
                   ...feature.properties,
-                  heatmap_weight: 1, // You might want to calculate this based on some property
+                  heatmap_weight: 1,
                 },
               })),
             };
