@@ -24,6 +24,8 @@ const FetchDatasetForm = () => {
     reqFetchDataset,
     setReqFetchDataset,
     handleFetchDataset,
+    showErrorMessage,
+    setShowErrorMessage,
     validateFetchDatasetForm,
     resetFetchDatasetForm,
     categories,
@@ -56,7 +58,6 @@ const FetchDatasetForm = () => {
   // FETCHED DATA
   const [layers, setLayers] = useState<Layer[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [showErrorMessage, setShowErrorMessage] = useState<boolean>(false);
   const [citiesData, setCitiesData] = useState<{ [country: string]: City[] }>({});
   const [errorMessage, setErrorMessage] = useState('');
   const [costEstimate, setCostEstimate] = useState<number>(0.0);
@@ -159,8 +160,8 @@ const FetchDatasetForm = () => {
         setCentralizeOnce(true);
       }
       setShowLoaderTopup(true);
-      incrementFormStage();
       handleFetchDataset(action);
+      incrementFormStage();
     } else if (result instanceof Error) {
       setError(result.message);
       return false;

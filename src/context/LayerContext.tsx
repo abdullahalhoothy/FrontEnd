@@ -113,6 +113,7 @@ export function LayerProvider(props: { children: ReactNode }) {
   const pageCountsRef = useRef<{ [layerId: string]: number }>({});
 
   const [layerDataMap, setLayerDataMap] = useState<LayerDataMap>({});
+  const [showErrorMessage, setShowErrorMessage] = useState<boolean>(false);
 
   const [selectedCountry, setSelectedCountry] = useState<string>('');
   const [selectedCity, setSelectedCity] = useState<string>('');
@@ -361,7 +362,14 @@ export function LayerProvider(props: { children: ReactNode }) {
             }
           } catch (error) {
             console.error(`Error fetching layer ${layer?.id}:`, error);
+            if (error?.response?.data?.detail === 'Insufficient balance in wallet') {
+              resetFormStage()
+              setShowErrorMessage(true);
+              return;
+            }
             setIsError(error instanceof Error ? error : new Error(String(error)));
+            // Re-throw to propagate it upward:
+            throw error;
           }
         }
       } else {
@@ -806,6 +814,8 @@ export function LayerProvider(props: { children: ReactNode }) {
         showLoaderTopup,
         setShowLoaderTopup,
         handleFetchDataset,
+        showErrorMessage,
+        setShowErrorMessage,
         textSearchInput,
         setTextSearchInput,
         searchType,
