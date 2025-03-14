@@ -234,7 +234,7 @@ export interface LayerContextType {
   setSaveMethod: React.Dispatch<React.SetStateAction<string>>;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
   incrementFormStage(): void;
-  handleSaveLayer(): void;
+  handleSaveLayer(layerData: LayerCustomization | { layers: LayerCustomization[] }): Promise<void>;
   resetFormStage(): void;
   selectedColor: Color | null;
   setSelectedColor: React.Dispatch<React.SetStateAction<Color | null>>;
@@ -280,6 +280,9 @@ export interface LayerContextType {
   resetFetchDatasetForm(): void;
   selectedCity: string;
   setSelectedCity: (city: string) => void;
+
+  layerDataMap: LayerDataMap;
+  setLayerDataMap: React.Dispatch<React.SetStateAction<LayerDataMap>>;
 
   currentLayerGroup: LayerGroup | null;
   setCurrentLayerGroup: React.Dispatch<React.SetStateAction<LayerGroup | null>>;
