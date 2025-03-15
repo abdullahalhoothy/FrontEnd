@@ -152,6 +152,9 @@ export interface CatalogContextType {
   setBasedOnLayerId: (id: string) => void;
   setBasedOnProperty: (id: string) => void;
   updateLayerLegend: (layerId: number, legend: string) => void;
+  handleFilteredZone: (zone: any) => void;
+  handleNameBasedColorZone: (name: string) => void;
+  setReqGradientColorBasedOnZone: React.Dispatch<React.SetStateAction<any>>;
 }
 
 export interface GradientColorBasedOnZone extends MapFeatures {

@@ -38,5 +38,6 @@
   "fetch_wallet":"/fetch_wallet",
   "deduct_wallet":"/deduct_wallet",
   "delete_producer_catalog":"/delete_producer_catalog",
-  "delete_layer":"/delete_layer"
+  "delete_layer":"/delete_layer",
+  "filter_based_zone": "/filter_based_on"
 }
