@@ -27,6 +27,7 @@ import {
 import urls from '../urls.json';
 import { useCatalogContext } from './CatalogContext';
 import { useAuth } from '../context/AuthContext';
+import { hasAuthCredentials } from '../guards';
 import { useNavigate } from 'react-router-dom';
 import { processCityData, getDefaultLayerColor, colorOptions } from '../utils/helperFunctions';
 import apiRequest from '../services/apiRequest';
@@ -58,10 +59,6 @@ export function LayerProvider(props: { children: ReactNode }) {
   // console.log(fetchingProgress, 'bdsdhksdk');
   const navigate = useNavigate();
   const { authResponse } = useAuth();
-  // Type guard to check if authResponse has localId and idToken
-  const hasAuthCredentials = (auth: any): auth is { localId: string; idToken: string } => {
-    return auth && typeof auth === 'object' && 'localId' in auth && 'idToken' in auth;
-  };
   const { children } = props;
   const { geoPoints, setGeoPoints } = useCatalogContext();
   // State from useLocationAndCategories
@@ -693,7 +690,7 @@ export function LayerProvider(props: { children: ReactNode }) {
           console.log('res', res);
           setGeoPoints(prevPoints => {
             const populationLayer: MapFeatures = {
-              layerId: 1001, // Special ID for population layer
+              layerId: 1001,
               type: 'FeatureCollection',
               features: res.data.data?.features || [],
               display: true,
@@ -761,17 +758,14 @@ export function LayerProvider(props: { children: ReactNode }) {
 
   // Define the required functions
   const addLayerToGroup = (groupId: string, layer: Layer) => {
-    // Implementation would go here in a real app
     console.log(`Adding layer ${layer.id} to group ${groupId}`);
   };
 
   const removeLayerFromGroup = (groupId: string, layerId: number) => {
-    // Implementation would go here in a real app
     console.log(`Removing layer ${layerId} from group ${groupId}`);
   };
 
   const updateLayerInGroup = (groupId: string, layerId: number, updates: Partial<Layer>) => {
-    // Implementation would go here in a real app
     console.log(`Updating layer ${layerId} in group ${groupId}`, updates);
   };
 
@@ -846,7 +840,6 @@ export function LayerProvider(props: { children: ReactNode }) {
         refetchPopulationLayer,
         propsFetchingProgress: fetchingProgress,
         propsSetFetchingProgress: setFetchingProgress,
-        // Add the missing properties
         currentLayerGroup,
         setCurrentLayerGroup,
         addLayerToGroup,

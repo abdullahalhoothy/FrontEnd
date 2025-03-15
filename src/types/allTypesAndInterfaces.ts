@@ -556,7 +556,7 @@ export type ProviderProps = {
   children: React.ReactNode;
 };
 
-export type GeoPointFeature = {
+export type GeoPoint = {
   features: Feature[];
   avgRating?: number;
   totalUserRatings?: number;
@@ -731,4 +731,12 @@ export interface PropertyStats {
   count: number;
   average?: number;
   median?: number;
+}
+
+export interface LegendFormatData {
+  selectedCountry: string;
+  selectedCity: string;
+  action?: string;
+  includedTypes: string[];
+  excludedTypes: string[];
 }

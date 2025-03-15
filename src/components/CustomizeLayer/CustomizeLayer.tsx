@@ -5,19 +5,11 @@ import { useLayerContext } from '../../context/LayerContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router';
 import SavedIconFeedback from '../SavedIconFeedback/SavedIconFeedback';
-import { LayerCustomization } from '../../types/allTypesAndInterfaces';
+import { LayerCustomization, LegendFormatData } from '../../types';
 import LayerCustomizationItem from '../LayerCustomizationItem/LayerCustomizationItem';
 import { useCatalogContext } from '../../context/CatalogContext';
 import { HiCheck, HiExclamation } from 'react-icons/hi';
 import { getDefaultLayerColor } from '../../utils/helperFunctions';
-
-interface LegendFormatData {
-  selectedCountry: string;
-  selectedCity: string;
-  action?: string;
-  includedTypes: string[];
-  excludedTypes: string[];
-}
 
 function autoFillLegendFormat(data: LegendFormatData): string {
   if (!data.selectedCountry || !data.selectedCity) return '';

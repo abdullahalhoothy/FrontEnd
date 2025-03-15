@@ -15,6 +15,9 @@ import { useUIContext } from '../../context/UIContext';
 import apiRequest from '../../services/apiRequest';
 import { useLayerContext } from '../../context/LayerContext';
 
+// Constants
+const DEFAULT_PROGRESS_VALUE = 89;
+
 function DataContainer() {
   const { selectedContainerType, handleAddClick, setGeoPoints } = useCatalogContext();
   const { setSelectedCity, setSelectedCountry } = useLayerContext();
@@ -189,8 +192,8 @@ function DataContainer() {
   function makeCard(item: Catalog | UserLayer, index: number) {
     if ('prdcer_lyr_id' in item) {
       // Render UserLayerCard if item is a user layer
-      // Add progress property with default value of 89 if not provided
-      const progress = (item as any).progress || 89;
+      // Add progress property with default value if not provided
+      const progress = (item as any).progress || DEFAULT_PROGRESS_VALUE;
 
       return (
         <UserLayerCard
