@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import CatalogueCard from '../CatalogueCard/CatalogueCard';
 import styles from './DataContainer.module.css';
-import { HttpReq } from '../../services/apiService';
 import urls from '../../urls.json';
 import { Catalog, UserLayer, CardItem } from '../../types/allTypesAndInterfaces';
 import { useCatalogContext } from '../../context/CatalogContext';
@@ -17,7 +16,7 @@ import { useLayerContext } from '../../context/LayerContext';
 
 function DataContainer() {
   const { selectedContainerType, handleAddClick, setGeoPoints } = useCatalogContext();
-  const {setSelectedCity, setSelectedCountry} = useLayerContext();
+  const { setSelectedCity, setSelectedCountry } = useLayerContext();
   const { isAuthenticated, authResponse, logout } = useAuth();
   const { closeModal } = useUIContext();
   const [activeTab, setActiveTab] = useState('Data Catalogue');
@@ -41,14 +40,6 @@ function DataContainer() {
     // Fetch catalog collection data
     async function fetchCatalogCollection() {
       setLoading(true);
-      // HttpReq<Catalog[]>(
-      //   urls.catlog_collection,
-      //   setCatalogCollectionData,
-      //   setResMessage,
-      //   setResId,
-      //   setLoading,
-      //   setError
-      // );
       try {
         const res = await apiRequest({
           url: urls.catlog_collection,
@@ -68,17 +59,6 @@ function DataContainer() {
       setLoading(true);
 
       const body = { user_id: authResponse?.localId };
-      // HttpReq<UserLayer[]>(
-      //   urls.user_layers,
-      //   setUserLayersData,
-      //   setResMessage,
-      //   setResId,
-      //   setLoading,
-      //   setError,
-      //   "post",
-      //   body,
-      //   authResponse.idToken // Add this line
-      // );
       try {
         const res = await apiRequest({
           url: urls.user_layers,
@@ -100,17 +80,6 @@ function DataContainer() {
       setLoading(true);
 
       const body = { user_id: authResponse?.localId };
-      // HttpReq<Catalog[]>(
-      //   urls.user_catalogs,
-      //   setUserCatalogsData,
-      //   setResMessage,
-      //   setResId,
-      //   setLoading,
-      //   setError,
-      //   "post",
-      //   body,
-      //   authResponse.idToken // Add this line
-      // );
       try {
         const res = await apiRequest({
           url: urls.user_catalogs,
@@ -172,16 +141,6 @@ function DataContainer() {
   // Handle click event on catalog card
   async function handleCatalogCardClick(selectedItem: CardItem) {
     if (selectedContainerType === 'Home') {
-      // HttpReq<MapFeatures[]>(
-      //   urls.http_catlog_data,
-      //   setGeoPoints,
-      //   setWsResMessage,
-      //   setWsResId,
-      //   setWsResLoading,
-      //   setWsResError,
-      //   "post",
-      //   { catalogue_dataset_id: selectedItem.id }
-      // );
       setWsResLoading(true);
       try {
         const res = await apiRequest({
@@ -200,14 +159,10 @@ function DataContainer() {
     }
 
     if (selectedContainerType !== 'Home') {
-      handleAddClick(
-        selectedItem.id,
-        selectedItem.typeOfCard,
-        (country:string, city:string)=>{
-          setSelectedCountry(country);
-          setSelectedCity(city);
-        }
-      );
+      handleAddClick(selectedItem.id, selectedItem.typeOfCard, (country: string, city: string) => {
+        setSelectedCountry(country);
+        setSelectedCity(city);
+      });
     }
 
     closeModal();

@@ -1,5 +1,4 @@
 import React, { useState, FormEvent } from 'react';
-import { HttpReq } from '../../services/apiService';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router';
 import urls from './../../urls.json';
@@ -34,19 +33,6 @@ const ChangePassword: React.FC = () => {
     }
     data.user_id = authResponse?.localId;
     data.email = authResponse?.email;
-
-    // await HttpReq(
-    //   urls.change_password,
-    //   () => {},
-    //   () => {},
-    //   () => {},
-    //   setLoading,
-    //   setError,
-    //   "post",
-    //   data,
-    //   authResponse?.idToken
-    // );
-
     setLoading(true);
     try {
       const res = await apiRequest({

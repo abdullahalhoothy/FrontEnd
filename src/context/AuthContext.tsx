@@ -1,5 +1,4 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { HttpReq } from '../services/apiService';
 import { AuthContextType, AuthResponse, AuthSuccessResponse } from '../types/allTypesAndInterfaces';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

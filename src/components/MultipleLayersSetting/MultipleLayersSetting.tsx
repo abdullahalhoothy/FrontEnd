@@ -11,7 +11,6 @@ import {
 import DropdownColorSelect from '../ColorSelect/DropdownColorSelect';
 import { IoIosArrowDropdown } from 'react-icons/io';
 import { RiCloseCircleLine } from 'react-icons/ri';
-import { HttpReq } from '../../services/apiService';
 import urls from '../../urls.json';
 import { useAuth } from '../../context/AuthContext';
 import apiRequest from '../../services/apiRequest';
@@ -177,7 +176,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   }
 
   async function handleGetGradientColors() {
-  
     try {
       const res = await apiRequest({
         url: urls.fetch_gradient_colors,

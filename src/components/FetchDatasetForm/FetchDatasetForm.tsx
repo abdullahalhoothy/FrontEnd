@@ -121,14 +121,6 @@ const FetchDatasetForm = () => {
   }, {} as CategoryData);
 
   async function handleGetCountryCityCategory() {
-    // HttpReq<string[]>(
-    //   urls.country_city,
-    //   (data) => setCountries(processCityData(data, setCitiesData)),
-    //   () => {},
-    //   () => {},
-    //   () => {},
-    //   setIsError
-    // );
     try {
       const res = await apiRequest({
         url: urls.country_city,
@@ -156,15 +148,6 @@ const FetchDatasetForm = () => {
         setIsError(new Error(String(error)));
       }
     }
-
-    // HttpReq<CategoryData>(
-    //   urls.nearby_categories,
-    //   setCategories,
-    //   () => {},
-    //   () => {},
-    //   () => {},
-    //   setIsError
-    // );
   }
   function handleButtonClick(action: string, event: React.MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
