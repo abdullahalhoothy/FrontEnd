@@ -9,7 +9,8 @@ import { MapFeatures } from '../../types/allTypesAndInterfaces';
 import UserLayerCard from '../UserLayerCard/UserLayerCard';
 import userIdData from '../../currentUserId.json';
 import { isValidColor } from '../../utils/helperFunctions';
-import { useAuth } from '../../context/AuthContext'; // Add this import
+import { useAuth } from '../../context/AuthContext';
+import { hasAuthCredentials } from '../../guards';
 import { useNavigate } from 'react-router-dom';
 import { useUIContext } from '../../context/UIContext';
 import apiRequest from '../../services/apiRequest';
@@ -66,7 +67,7 @@ function DataContainer() {
     async function fetchUserLayers() {
       setLoading(true);
 
-      const body = { user_id: authResponse?.localId };
+      const body = { user_id: hasAuthCredentials(authResponse) ? authResponse.localId : undefined };
       try {
         const res = await apiRequest({
           url: urls.user_layers,
@@ -91,7 +92,7 @@ function DataContainer() {
     async function fetchUserCatalogs() {
       setLoading(true);
 
-      const body = { user_id: authResponse?.localId };
+      const body = { user_id: hasAuthCredentials(authResponse) ? authResponse.localId : undefined };
       try {
         const res = await apiRequest({
           url: urls.user_catalogs,
@@ -188,12 +189,24 @@ function DataContainer() {
     closeModal();
   }
 
+  // Get the progress setting function from LayerContext
+  const { propsSetFetchingProgress } = useLayerContext();
+
   // Render a card based on the item type
   function makeCard(item: Catalog | UserLayer, index: number) {
     if ('prdcer_lyr_id' in item) {
       // Render UserLayerCard if item is a user layer
       // Add progress property with default value if not provided
       const progress = (item as any).progress || DEFAULT_PROGRESS_VALUE;
+
+      // Store the progress in LayerContext for use in CustomizeLayer component
+      const layerId = parseInt(item.prdcer_lyr_id);
+      if (!isNaN(layerId)) {
+        propsSetFetchingProgress(prev => ({
+          ...prev,
+          [layerId]: progress,
+        }));
+      }
 
       return (
         <UserLayerCard
