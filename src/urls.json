@@ -20,7 +20,7 @@
   "reset_password": "reset_password",
   "create_user_profile": "create_user_profile",
   "user_profile": "user_profile",
-  "update_user_profile":"update_user_profile",
+  "update_user_profile": "update_user_profile",
   "cost_calculator": "cost_calculator",
   "street_view_link": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=",
   "fetch_gradient_colors": "fetch_gradient_colors",
@@ -34,10 +34,9 @@
   "list_stripe_payment_methods": "/list_stripe_payment_methods",
   "detach_stripe_payment_method": "/detach_stripe_payment_method",
   "get_stripe_customer": "/fetch_stripe_customer",
-  "top_up_wallet":"/top_up_wallet",
-  "fetch_wallet":"/fetch_wallet",
-  "deduct_wallet":"/deduct_wallet",
-  "delete_producer_catalog":"/delete_producer_catalog",
-  "delete_layer":"/delete_layer",
-  "filter_based_zone": "/filter_based_on"
+  "top_up_wallet": "/top_up_wallet",
+  "fetch_wallet": "/fetch_wallet",
+  "deduct_wallet": "/deduct_wallet",
+  "delete_producer_catalog": "/delete_producer_catalog",
+  "delete_layer": "/delete_layer"
 }
