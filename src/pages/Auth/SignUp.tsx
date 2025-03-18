@@ -1,6 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as Yup from 'yup';
 import { FormErrors, SignUpProps, FormData } from '../../types';
+import countriesData from '../../fakeData/countries-data.json';
+
+interface Country {
+  isoAlpha3: string;
+  name: string;
+}
 
 const SignUp: React.FC<SignUpProps> = ({ onSubmit }) => {
   const [formData, setFormData] = useState<FormData>({
@@ -18,6 +24,14 @@ const SignUp: React.FC<SignUpProps> = ({ onSubmit }) => {
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [currentPage, setCurrentPage] = useState<number>(0);
+  const [countries, setCountries] = useState<Country[]>([]);
+
+  useEffect(() => {
+    // Load countries from the imported JSON file
+    if (countriesData && countriesData.countries) {
+      setCountries(countriesData.countries);
+    }
+  }, []);
 
   // First page validation schema
   const firstPageSchema = Yup.object().shape({
@@ -378,13 +392,11 @@ const SignUp: React.FC<SignUpProps> = ({ onSubmit }) => {
                       required
                     >
                       <option value="">Select country</option>
-                      <option value="United States of America (USA)">
-                        United States of America (USA)
-                      </option>
-                      <option value="Canada">Canada</option>
-                      <option value="United Kingdom">United Kingdom</option>
-                      <option value="Australia">Australia</option>
-                      {/* Add more countries as needed */}
+                      {countries.map(country => (
+                        <option key={country.isoAlpha3} value={country.name}>
+                          {country.name}
+                        </option>
+                      ))}
                     </select>
                     {errors.country && (
                       <p className="mt-1 text-sm text-red-500">{errors.country}</p>
@@ -439,7 +451,7 @@ const SignUp: React.FC<SignUpProps> = ({ onSubmit }) => {
                       <p className="mb-2 text-sm text-red-500">{errors.userType}</p>
                     )}
                     <div className="space-y-4">
-                      <label className="flex items-start p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50">
+                      <label className="flex items-start p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-black">
                         <input
                           type="radio"
                           name="userType"
@@ -452,11 +464,14 @@ const SignUp: React.FC<SignUpProps> = ({ onSubmit }) => {
                           <span className="block font-medium text-gray-100">
                             Want to Set Up an Account for the Team as an Admin
                           </span>
-                          <div className="mt-2 h-24 bg-gray-200 rounded"></div>
+                          <img
+                            className="mt-2 h-24 bg-gray-200 rounded"
+                            src={'src/assets/images/admin.png'}
+                          />
                         </div>
                       </label>
 
-                      <label className="flex items-start p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50">
+                      <label className="flex items-start p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-black">
                         <input
                           type="radio"
                           name="userType"
@@ -469,7 +484,10 @@ const SignUp: React.FC<SignUpProps> = ({ onSubmit }) => {
                           <span className="block font-medium text-gray-100">
                             Want to Join a Team
                           </span>
-                          <div className="mt-2 h-24 bg-gray-200 rounded"></div>
+                          <img
+                            className="mt-2 h-24 bg-gray-200 rounded"
+                            src={'src/assets/images/team.png'}
+                          />{' '}
                         </div>
                       </label>
                     </div>
@@ -504,7 +522,7 @@ const SignUp: React.FC<SignUpProps> = ({ onSubmit }) => {
                 </>
               )}
 
-              <div className="flex justify-between mt-6">
+              <div className="flex sm:flex-col gap-2 justify-between mt-6">
                 {currentPage === 1 && (
                   <button
                     type="button"
@@ -518,7 +536,7 @@ const SignUp: React.FC<SignUpProps> = ({ onSubmit }) => {
                 <button
                   type={currentPage === 1 ? 'submit' : 'button'}
                   onClick={currentPage === 0 ? handleNext : undefined}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 ml-auto"
+                  className="w-auto flex-grow px-4 py-2 text-sm font-medium text-white bg-secondary border border-transparent rounded-md hover:bg-focus:outline-none focus:ring-2 focus:ring-secondary"
                 >
                   {currentPage === 1 ? 'Submit' : 'Continue'}
                 </button>
