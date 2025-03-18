@@ -9,6 +9,7 @@ export default {
       },
       colors: {
         primary: '#115740',
+        secondary:"#42dc56",
         gem: {
           DEFAULT: '#7D00B8',
           dark: '#282d37',
