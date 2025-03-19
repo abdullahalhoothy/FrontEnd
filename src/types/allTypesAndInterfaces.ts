@@ -408,16 +408,27 @@ export interface TabularData {
   user_ratings_total: number;
   website: string;
 }
-export interface AuthSuccessResponse {
-  kind: string;
-  localId: string;
+export interface AuthUser {
+  id: string;
   email: string;
-  displayName: string;
+  firstName: string;
+  lastName: string;
+}
+
+export interface AuthSuccessResponse {
   idToken: string;
-  registered: boolean;
   refreshToken: string;
   expiresIn: string;
-  created_at: number; // We'll add this when saving to localStorage
+  user: AuthUser;
+}
+
+export type AuthResponse = AuthSuccessResponse | null;
+
+export interface AuthContextType {
+  authResponse: AuthResponse;
+  setAuthResponse: React.Dispatch<React.SetStateAction<AuthResponse>>;
+  isAuthenticated: boolean;
+  logout: () => void;
 }
 
 export interface AuthFailedResponse {
