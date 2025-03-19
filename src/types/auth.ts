@@ -11,7 +11,7 @@ export interface FormData {
   title: string;
   phone: string;
   country: string;
-  reason: string[];
+  reason: string;
   userType: string;
   teamId: string;
 }

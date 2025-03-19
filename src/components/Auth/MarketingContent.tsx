@@ -84,13 +84,13 @@ const MarketingContent: FC = () => {
 
       <div className="flex justify-center md:justify-start gap-4 md:h-8 w-auto">
         <img
-          fetchPriority="high"
+          fetchpriority="high"
           src={'src/assets/images/touch.png'}
           alt="Touch"
           className="aspect-[auto_482_/_264] rounded-lg md:rounded-md h-auto w-full md:w-auto"
         />
         <img
-          fetchPriority="high"
+          fetchpriority="high"
           src={'src/assets/images/city-baby.png'}
           alt="City Baby"
           className="aspect-[auto_482_/_264] rounded-lg md:rounded-md h-auto w-full md:w-auto"
