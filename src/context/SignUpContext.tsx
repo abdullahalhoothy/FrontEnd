@@ -3,6 +3,8 @@ import * as Yup from 'yup';
 import countriesData from '../fakeData/countries-data.json';
 import { Country, FormData, FormErrors } from '../types/auth';
 import { useAuth } from './AuthContext';
+import apiRequest from '../services/apiRequest';
+import urls from '../urls.json';
 
 interface SignUpContextType {
   formData: FormData;
@@ -14,6 +16,8 @@ interface SignUpContextType {
   handleNext: () => void;
   handlePrevious: () => void;
   handleSubmit: (e: React.FormEvent) => void;
+  isSubmitting: boolean;
+  submitError: string | null;
 }
 
 const SignUpContext = createContext<SignUpContextType | undefined>(undefined);
@@ -29,7 +33,7 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     title: '',
     phone: '',
     country: '',
-    reason: [],
+    reason: '',
     userType: '',
     teamId: '',
   });
@@ -37,9 +41,10 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [errors, setErrors] = useState<FormErrors>({});
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [countries, setCountries] = useState<Country[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Load countries from the imported JSON file
     if (countriesData && countriesData.countries) {
       setCountries(countriesData.countries);
     }
@@ -131,14 +136,76 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError(null);
 
     const isValid = await validateSecondPage();
     if (isValid) {
-      // Make an API call to register the user
-      const mockAuthResponse = {};
+      setIsSubmitting(true);
 
-      // Update auth context with the new user
-      //setAuthResponse(mockAuthResponse);
+      try {
+        const selectedCountry = countries.find(c => c.name === formData.country);
+
+        const registrationData = {
+          email: formData.email,
+          password: 'temporaryPassword',
+          username: `${formData.firstName} ${formData.lastName}`,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          company: formData.company,
+          title: formData.title,
+          phone: formData.phone,
+          country: selectedCountry?.isoAlpha3 || '',
+          reason: formData.reason || '',
+          account_type: formData.userType === 'admin' ? 'admin' : 'user',
+          teamId: formData.teamId,
+          show_price_on_purchase: false,
+          user_id: '',
+        };
+
+        const response = await apiRequest({
+          url: urls.create_user_profile,
+          method: 'POST',
+          body: registrationData,
+        });
+
+        if (response && response.data) {
+          const data = response.data;
+
+          if (Array.isArray(data) && data.length > 0) {
+            const userProfileResponse = data[0];
+
+            if (userProfileResponse?.data?.user_id) {
+              // Set auth response in context
+              setAuthResponse({
+                idToken: userProfileResponse.data.token || '',
+                refreshToken: userProfileResponse.data.refresh_token || '',
+                expiresIn: '3600',
+                user: {
+                  id: userProfileResponse.data.user_id,
+                  email: formData.email,
+                  firstName: formData.firstName,
+                  lastName: formData.lastName,
+                },
+              });
+
+              // Registration successful
+              setIsSubmitting(false);
+            } else {
+              throw new Error('Invalid registration response');
+            }
+          } else if (data?.detail) {
+            throw new Error(data.detail);
+          } else {
+            throw new Error('Registration failed - invalid response format');
+          }
+        } else {
+          throw new Error('Registration failed - no response data');
+        }
+      } catch (error) {
+        console.error('Registration error:', error);
+        setSubmitError(error.message || 'Registration failed. Please try again.');
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -157,6 +224,8 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     handleNext,
     handlePrevious,
     handleSubmit,
+    isSubmitting,
+    submitError,
   };
 
   return <SignUpContext.Provider value={value}>{children}</SignUpContext.Provider>;

@@ -156,9 +156,11 @@ const FirstPage: React.FC = () => {
         <select
           id="reason"
           name="reason"
+          value={formData.reason}
+          onChange={handleInputChange}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[#333333]"
         >
-          <option value="">Please choose all options that are correct</option>
+          <option value="">Please choose an option</option>
           <option value="None">None</option>
           <option value="Streamline-Delivery-Routes-Cut Costs">
             Streamline Delivery Routes &amp; Cut Costs
