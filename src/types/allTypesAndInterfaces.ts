@@ -416,6 +416,9 @@ export interface AuthUser {
 }
 
 export interface AuthSuccessResponse {
+  localId: string;
+  email: string;
+  displayName: string;
   idToken: string;
   refreshToken: string;
   expiresIn: string;

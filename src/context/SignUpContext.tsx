@@ -179,6 +179,9 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
             if (userProfileResponse?.data?.user_id) {
               setAuthResponse({
+                localId: userProfileResponse.data.user_id,
+                email: formData.email,
+                displayName: formData.firstName,
                 idToken: userProfileResponse.data.token || '',
                 refreshToken: userProfileResponse.data.refresh_token || '',
                 expiresIn: '3600',
