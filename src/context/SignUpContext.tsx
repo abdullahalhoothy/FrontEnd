@@ -195,7 +195,9 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
               setIsSubmitting(false);
 
-              toast.success('Registration successful! Welcome to S-Locator.');
+              toast.success('Registration successful! Please verify your e-mail.', {
+                duration: 3000,
+              });
 
               navigate('/');
             } else {
@@ -214,8 +216,9 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setSubmitError(error.message || 'Registration failed. Please try again.');
         setIsSubmitting(false);
 
-        // Show error notification
-        toast.error(error.message || 'Registration failed. Please try again.');
+        toast.error(error.message || 'Registration failed. Please try again.', {
+          duration: 3000,
+        });
       }
     }
   };
