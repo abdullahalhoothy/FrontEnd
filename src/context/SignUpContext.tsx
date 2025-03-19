@@ -1,5 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import * as Yup from 'yup';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import countriesData from '../fakeData/countries-data.json';
 import { Country, FormData, FormErrors } from '../types/auth';
 import { useAuth } from './AuthContext';
@@ -24,6 +26,7 @@ const SignUpContext = createContext<SignUpContextType | undefined>(undefined);
 
 export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { setAuthResponse } = useAuth();
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState<FormData>({
     firstName: '',
@@ -175,7 +178,6 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             const userProfileResponse = data[0];
 
             if (userProfileResponse?.data?.user_id) {
-              // Set auth response in context
               setAuthResponse({
                 idToken: userProfileResponse.data.token || '',
                 refreshToken: userProfileResponse.data.refresh_token || '',
@@ -188,8 +190,11 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 },
               });
 
-              // Registration successful
               setIsSubmitting(false);
+
+              toast.success('Registration successful! Welcome to S-Locator.');
+
+              navigate('/');
             } else {
               throw new Error('Invalid registration response');
             }
@@ -205,6 +210,9 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         console.error('Registration error:', error);
         setSubmitError(error.message || 'Registration failed. Please try again.');
         setIsSubmitting(false);
+
+        // Show error notification
+        toast.error(error.message || 'Registration failed. Please try again.');
       }
     }
   };
