@@ -365,8 +365,8 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
             return {
               ...layer,
-              features: mergedFeatures, // ✅ Replace old features with merged ones
-              points_color: matchedFilterData[0].points_color || layer.points_color, // ✅ Keep color from the first match
+              features: mergedFeatures,
+              points_color: matchedFilterData[0].points_color || layer.points_color,
             };
           }
 
@@ -375,90 +375,13 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       );
     } catch (error: any) {
       toast.error('Server error (500). Please try again later.');
-
     } finally {
       setIsLoading(false);
     }
   };
 
+  // ------------omar code -------
   const handleApplyRecolor = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      const currentLayer = geoPoints[layerIndex];
-      const baseLayer = geoPoints.find(layer => layer.prdcer_lyr_id === basedOnLayerId);
-      const selectedColors = colors[chosenPallet || 0];
-
-      if (!currentLayer || !baseLayer || !basedOnProperty || !selectedColors || !selectedBasedon) {
-        console.error('Missing required fields');
-        return;
-      }
-
-      const gradientRequest = {
-        is_zone_lyre: true,
-        color_grid_choice: selectedColors,
-        change_lyr_id: currentLayer.prdcer_lyr_id,
-        change_lyr_name: currentLayer.prdcer_layer_name || `Layer ${currentLayer.layerId}`,
-        based_on_lyr_id: baseLayer.prdcer_lyr_id,
-        based_on_lyr_name: baseLayer.prdcer_layer_name || `Layer ${baseLayer.layerId}`,
-        coverage_property: selectedBasedon,
-        coverage_value: radiusInput,
-        color_based_on: basedOnProperty,
-        list_names: nameInputs,
-        threshold: 5,
-      };
-
-      setReqGradientColorBasedOnZone(gradientRequest);
-
-      const gradientData = await handleNameBasedColorZone(gradientRequest);
-
-      if (!gradientData || gradientData.length === 0) {
-        throw new Error('No gradient data received.');
-      }
-      setGeoPoints(gradientData);
-
-      // Process gradient data for UI update
-      const combinedFeatures = gradientData.flatMap(group =>
-        group.features.map(feature => ({
-          ...feature,
-          properties: {
-            ...feature.properties,
-            gradient_color: group.points_color,
-            gradient_legend: group.layer_legend,
-          },
-        }))
-      );
-
-      setGeoPoints(prev =>
-        prev.map(point =>
-          point.prdcer_lyr_id === currentLayer.prdcer_lyr_id
-            ? {
-                ...point,
-                prdcer_layer_name: gradientData[0]?.prdcer_layer_name,
-                layer_legend: gradientData.map(g => g.layer_legend).join(' | '),
-                records_count: gradientData.reduce((sum, g) => sum + g.records_count, 0),
-                features: combinedFeatures,
-                gradient_groups: gradientData.map(group => ({
-                  color: group.points_color,
-                  legend: group.layer_legend,
-                  count: group.records_count,
-                })),
-                is_gradient: true,
-                gradient_based_on: baseLayer.prdcer_lyr_id,
-              }
-            : point
-        )
-      );
-
-    } catch (error) {
-      setIsError(error instanceof Error ? error : new Error('Failed to apply recolor'));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleApplyDynamicColor = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     setIsLoading(true);
 
@@ -471,7 +394,34 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       if (!currentLayer || !baseLayer || !basedOnProperty || !selectedColors || !selectedBasedon) {
         return;
       }
-      const filterRequest = {
+    
+      // Threshold Formatting
+      const getFormattedThreshold = () => {
+        if (
+          [
+            'id',
+            'address',
+            'phone',
+            'priceLevel',
+            'primaryType',
+            '',
+            'popularity_score_category',
+          ].includes(basedOnProperty)
+        ) {
+          return thresholdValue;
+        }
+        if (
+          ['rating', 'heatmap_weight', 'user_ratings_total', 'popularity_score'].includes(
+            basedOnProperty
+          )
+        ) {
+          return parseFloat(thresholdValue) || 0;
+        }
+        return thresholdValue;
+      };
+
+      // Prepare request
+      const recolorRequest = {
         color_grid_choice: selectedColors,
         change_lyr_id: currentLayer.prdcer_lyr_id,
         change_lyr_name: currentLayer.prdcer_layer_name || `Layer ${currentLayer.layerId}`,
@@ -480,15 +430,17 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         coverage_property: selectedBasedon,
         coverage_value: radiusInput,
         color_based_on: basedOnProperty,
-        list_names: nameInputs,
+        list_names: nameInputs.filter(name => name.trim() !== ''),
+        threshold: getFormattedThreshold(),
+        change_lyr_new_color: selectedColor,
       };
 
-      const filterResponse = await handleFilteredZone(filterRequest);
+      // Call Filter API (returns matched/unmatched both)
+      // const filterResponse = await handleNameBasedColorZone(recolorRequest);
 
-      if (!filterResponse) {
-        throw new Error('Filter_data API failed.');
-      }
-
+      // if (!filterResponse || filterResponse.length === 0) {
+      //   throw new Error('Filter API failed or empty response.');
+      // }
 
       // Prepare Gradient API request
       const gradientRequest = {
@@ -506,7 +458,8 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       setReqGradientColorBasedOnZone(gradientRequest);
 
       //  Call Gradient API
-      const gradientData = await handleNameBasedColorZone(gradientRequest);
+      const gradientData = await handleNameBasedColorZone(recolorRequest);
+      
 
       if (!gradientData || gradientData.length === 0) {
         throw new Error('No gradient data received.');
@@ -838,7 +791,10 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                     </select>
                   </div>
                 </div>
+                {basedOnProperty && selectedOption === 'recolor' && basedOnProperty !== 'name' && (
+
                 <DropdownColorSelect layerIndex={layerIndex} />
+                ) }
               </>
             )}
             <div>
