@@ -32,6 +32,7 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     firstName: '',
     lastName: '',
     email: '',
+    password: '',
     company: '',
     title: '',
     phone: '',
@@ -58,6 +59,13 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     firstName: Yup.string().required('First name is required'),
     lastName: Yup.string().required('Last name is required'),
     email: Yup.string().email('Invalid email address').required('Email is required'),
+    password: Yup.string()
+      .required('Password is required')
+      .min(8, 'Password must be at least 8 characters')
+      .matches(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+        'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+      ),
     company: Yup.string().required('Company is required'),
     title: Yup.string().required('Title is required'),
     country: Yup.string().required('Country is required'),
@@ -150,7 +158,7 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         const registrationData = {
           email: formData.email,
-          password: 'temporaryPassword',
+          password: formData.password,
           username: `${formData.firstName} ${formData.lastName}`,
           firstName: formData.firstName,
           lastName: formData.lastName,
