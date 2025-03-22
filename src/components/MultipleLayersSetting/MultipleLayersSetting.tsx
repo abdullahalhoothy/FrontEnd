@@ -11,7 +11,6 @@ import {
 import DropdownColorSelect from '../ColorSelect/DropdownColorSelect';
 import { IoIosArrowDropdown } from 'react-icons/io';
 import { RiCloseCircleLine } from 'react-icons/ri';
-import { HttpReq } from '../../services/apiService';
 import urls from '../../urls.json';
 import { useAuth } from '../../context/AuthContext';
 import apiRequest from '../../services/apiRequest';
@@ -177,7 +176,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   }
 
   async function handleGetGradientColors() {
-  
+
     try {
       const res = await apiRequest({
         url: urls.fetch_gradient_colors,
@@ -283,6 +282,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   };
   const [selectedColor, setSelectedColor] = useState<string>('#000000');
 
+
   const handleNameColorChange = (color: string) => {
     setSelectedColor(color);
   };
@@ -365,6 +365,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
             return {
               ...layer,
+
               features: mergedFeatures,
               points_color: matchedFilterData[0].points_color || layer.points_color,
             };
@@ -375,23 +376,27 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       );
     } catch (error: any) {
       toast.error('Server error (500). Please try again later.');
+
     } finally {
       setIsLoading(false);
     }
   };
 
+
   // ------------omar code -------
+
   const handleApplyRecolor = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // Validate required data
+
       const currentLayer = geoPoints[layerIndex];
       const baseLayer = geoPoints.find(layer => layer.prdcer_lyr_id === basedOnLayerId);
       const selectedColors = colors[chosenPallet || 0];
 
       if (!currentLayer || !baseLayer || !basedOnProperty || !selectedColors || !selectedBasedon) {
+
         return;
       }
     
@@ -444,6 +449,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
       // Prepare Gradient API request
       const gradientRequest = {
+
         color_grid_choice: selectedColors,
         change_lyr_id: currentLayer.prdcer_lyr_id,
         change_lyr_name: currentLayer.prdcer_layer_name || `Layer ${currentLayer.layerId}`,
@@ -453,17 +459,22 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         coverage_value: radiusInput,
         color_based_on: basedOnProperty,
         list_names: nameInputs,
+
+
       };
 
       setReqGradientColorBasedOnZone(gradientRequest);
+
 
       //  Call Gradient API
       const gradientData = await handleNameBasedColorZone(recolorRequest);
       
 
+
       if (!gradientData || gradientData.length === 0) {
         throw new Error('No gradient data received.');
       }
+      setGeoPoints(gradientData);
 
       // Process gradient data for UI update
       const combinedFeatures = gradientData.flatMap(group =>
@@ -476,6 +487,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
           },
         }))
       );
+
 
       setGeoPoints(prev =>
         prev.map(point =>
@@ -498,6 +510,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         )
       );
     } catch (error) {
+
       console.error('Error applying dynamic color:', error);
       setIsError(error instanceof Error ? error : new Error('Failed to apply dynamic color'));
     } finally {
@@ -791,10 +804,12 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                     </select>
                   </div>
                 </div>
+
                 {basedOnProperty && selectedOption === 'recolor' && basedOnProperty !== 'name' && (
 
                 <DropdownColorSelect layerIndex={layerIndex} />
                 ) }
+
               </>
             )}
             <div>

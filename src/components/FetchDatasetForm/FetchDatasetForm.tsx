@@ -24,6 +24,8 @@ const FetchDatasetForm = () => {
     reqFetchDataset,
     setReqFetchDataset,
     handleFetchDataset,
+    showErrorMessage,
+    setShowErrorMessage,
     validateFetchDatasetForm,
     resetFetchDatasetForm,
     categories,
@@ -56,7 +58,6 @@ const FetchDatasetForm = () => {
   // FETCHED DATA
   const [layers, setLayers] = useState<Layer[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [showErrorMessage, setShowErrorMessage] = useState<boolean>(false);
   const [citiesData, setCitiesData] = useState<{ [country: string]: City[] }>({});
   const [errorMessage, setErrorMessage] = useState('');
   const [costEstimate, setCostEstimate] = useState<number>(0.0);
@@ -121,14 +122,6 @@ const FetchDatasetForm = () => {
   }, {} as CategoryData);
 
   async function handleGetCountryCityCategory() {
-    // HttpReq<string[]>(
-    //   urls.country_city,
-    //   (data) => setCountries(processCityData(data, setCitiesData)),
-    //   () => {},
-    //   () => {},
-    //   () => {},
-    //   setIsError
-    // );
     try {
       const res = await apiRequest({
         url: urls.country_city,
@@ -156,15 +149,6 @@ const FetchDatasetForm = () => {
         setIsError(new Error(String(error)));
       }
     }
-
-    // HttpReq<CategoryData>(
-    //   urls.nearby_categories,
-    //   setCategories,
-    //   () => {},
-    //   () => {},
-    //   () => {},
-    //   setIsError
-    // );
   }
   function handleButtonClick(action: string, event: React.MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
@@ -176,8 +160,8 @@ const FetchDatasetForm = () => {
         setCentralizeOnce(true);
       }
       setShowLoaderTopup(true);
-      incrementFormStage();
       handleFetchDataset(action);
+      incrementFormStage();
     } else if (result instanceof Error) {
       setError(result.message);
       return false;
@@ -760,17 +744,6 @@ const FetchDatasetForm = () => {
               if (!isAuthenticated) nav('/auth');
               try {
                 handleButtonClick('full data', e);
-                // if (!error) {
-                //   console.log('----money');
-                //   await apiRequest({
-                //     url: urls.deduct_wallet,
-                //     method: 'Post',
-                //     body: {
-                //       user_id: authResponse?.localId,
-                //       amount: costEstimate * 100,
-                //     },
-                //   });
-                // }
               } catch (error: any) {
                 if (error.response.data.detail === 'Insufficient balance in wallet') {
                   setShowErrorMessage(true);

@@ -45,7 +45,9 @@ export default function BasedOnLayerDropdown({
   ];
 
   const [isOpen, setIsOpen] = useState(false);
+
   const pickerRef = useRef<HTMLDivElement>(null);
+
 
   const handleColorChange = (color: string) => {
     setSelectedColor(color);
@@ -122,8 +124,10 @@ export default function BasedOnLayerDropdown({
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (!pickerRef.current) {
+
         return;
       }
+
 
       if (!pickerRef.current.contains(event.target)) {
         console.log('Closing picker...');
@@ -192,8 +196,10 @@ export default function BasedOnLayerDropdown({
               <option
                 key={metric}
                 value={metric}
+
                 // disabled={selectedOption === 'recolor' && metric.toLowerCase() === 'name'}
                 // disabled={selectedOption === 'recolor' && metric.toLowerCase() === 'name'}
+
               >
                 {formatSubcategoryName(metric)}
               </option>
@@ -202,6 +208,7 @@ export default function BasedOnLayerDropdown({
         </select>
 
         {basedOnProperty === 'name' && (
+
           <>
             <div className="flex flex-col mt-2">
               <label className="text-[11px] text-[#555] whitespace-nowrap text-sm">
@@ -249,13 +256,16 @@ export default function BasedOnLayerDropdown({
                 />
               </div>
               {isOpen && (
+
                 <div className="absolute mt-2 bg-white p-2 border border-gray-300 shadow-md rounded-md z-50">
+
                   <HexColorPicker color={selectedColor} onChange={handleColorChange} />
                 </div>
               )}
             </div>
           </>
         )}
+
         {basedOnProperty && filterableProperties.includes(basedOnProperty) && (
           //&& selectedOption === 'filter'
           <>
@@ -320,6 +330,7 @@ export default function BasedOnLayerDropdown({
                     className="bg-gray-50 text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex-1 min-w-[120px] outline-none"
                     placeholder={`Enter ${basedOnProperty
                       .replace(/_/g, ' ')
+
                       .replace(/\b\w/g, (char: any) =>
                         char.toUpperCase()
                       )}${basedOnProperty === 'rating' ? ' up to 5' : ''}`}
@@ -330,6 +341,7 @@ export default function BasedOnLayerDropdown({
             {basedOnProperty && basedOnProperty !== 'name' && selectedOption !== 'recolor'  && (
 
             <div className="mt-3 relative " ref={pickerRef}>
+
               <label className="text-[11px] text-[#555] whitespace-nowrap text-sm flex flex-col">
                 Pick a Color
               </label>
@@ -341,14 +353,18 @@ export default function BasedOnLayerDropdown({
                 />
               </div>
               {isOpen && (
+
                 <div className="absolute mt-2 bg-white p-2 border border-gray-300 shadow-md rounded-md z-50">
+
                   <HexColorPicker color={selectedColor} onChange={handleColorChange} />
                 </div>
               )}
             </div>
+
             )}
           </>
         )}
+
       </div>
     </>
   );

@@ -1,7 +1,6 @@
 import React, { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
-import { HttpReq } from '../../services/apiService';
 import urls from './../../urls.json';
 import apiRequest from '../../services/apiRequest';
 
@@ -35,18 +34,6 @@ const ChangeEmail: React.FC = () => {
     }
     data.user_id = authResponse?.localId;
     data.current_email = authResponse?.email;
-
-    // await HttpReq(
-    //   urls.change_email,
-    //   () => {},
-    //   () => {},
-    //   () => {},
-    //   setLoading,
-    //   setError,
-    //   "post",
-    //   data,
-    //   authResponse?.idToken
-    // );
 
     setLoading(true);
     try {
