@@ -71,6 +71,28 @@ const FirstPage: React.FC = () => {
         {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
       </div>
 
+      <div>
+        <label htmlFor="password" className="block text-sm font-medium text-gray-100 mb-1">
+          Password <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          value={formData.password}
+          onChange={handleInputChange}
+          placeholder="Enter your password"
+          className={`w-full px-3 py-2 border ${
+            errors.password ? 'border-red-500' : 'border-gray-300'
+          } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[#333333]`}
+          required
+        />
+        {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
+        <p className="mt-1 text-xs text-gray-400">
+          Password must be at least 8 characters and contain uppercase, lowercase, and numbers
+        </p>
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label htmlFor="company" className="block text-sm font-medium text-gray-100 mb-1">
