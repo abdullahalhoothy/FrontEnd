@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import FirstPage from './FirstPage';
 import SecondPage from './SecondPage';
 import { useSignUp } from '../../../context/SignUpContext';
@@ -9,6 +10,18 @@ const SignUpForm: React.FC = () => {
 
   return (
     <div className="rounded-lg shadow-[0px_0px_10px_0px_rgba(0,0,0,0.5)] p-8 lg:w-1/3">
+      <div className="flex justify-end mb-6">
+        <p className="text-sm text-gray-300">
+          Already have an account?{' '}
+          <Link
+            to="/auth"
+            className="text-blue-400 hover:text-blue-300 font-medium transition-colors duration-150 ease-in-out"
+          >
+            Sign In
+          </Link>
+        </p>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-6">
         {currentPage === 0 ? <FirstPage /> : <SecondPage />}
 
