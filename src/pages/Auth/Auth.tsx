@@ -235,8 +235,12 @@ const Auth = () => {
           <div className="flex justify-between mt-4">
             <button
               onClick={() => {
-                setIsLogin(!isLogin);
-                setIsPasswordReset(false);
+                if (isLogin) {
+                  nav('/sign-up');
+                } else {
+                  setIsLogin(true);
+                  setIsPasswordReset(false);
+                }
               }}
               className="text-[#006400] text-sm hover:underline"
             >
