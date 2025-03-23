@@ -196,10 +196,6 @@ export default function BasedOnLayerDropdown({
               <option
                 key={metric}
                 value={metric}
-
-                // disabled={selectedOption === 'recolor' && metric.toLowerCase() === 'name'}
-                // disabled={selectedOption === 'recolor' && metric.toLowerCase() === 'name'}
-
               >
                 {formatSubcategoryName(metric)}
               </option>
