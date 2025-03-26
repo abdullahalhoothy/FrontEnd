@@ -16,7 +16,7 @@ export const PopulationControl: React.FC = () => {
   useEffect(() => {
     if (!isEnabled) setIsOpen(false);
   }, [isEnabled]);
-  
+
   return (
     <div className="relative">
       <button

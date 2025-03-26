@@ -278,7 +278,12 @@ export function LayerProvider(props: { children: ReactNode }) {
     layerDataMapRef.current = layerDataMap;
   }, [layerDataMap]);
 
-  async function handleFetchDataset(action: string, pageToken?: string, layerId?: number, prevPrdcerLyrId?: string) {
+  async function handleFetchDataset(
+    action: string,
+    pageToken?: string,
+    layerId?: number,
+    prevPrdcerLyrId?: string
+  ) {
     if (!pageToken && !layerId) {
       setGeoPoints(prev => prev.filter(p => isIntelligentLayer(p)));
       setLayerDataMap({});
@@ -328,10 +333,9 @@ export function LayerProvider(props: { children: ReactNode }) {
             }`;
 
             const prdcerLayerId = layerDataMapRef.current[layer.id]?.prdcer_lyr_id;
-            const payloadLayerId = pageToken 
-            ? (prevPrdcerLyrId || layerDataMapRef.current[layer.id]?.prdcer_lyr_id || '')
-            : '';
-          
+            const payloadLayerId = pageToken
+              ? prevPrdcerLyrId || layerDataMapRef.current[layer.id]?.prdcer_lyr_id || ''
+              : '';
 
             const res = await apiRequest({
               url: urls.fetch_dataset,
@@ -363,7 +367,7 @@ export function LayerProvider(props: { children: ReactNode }) {
           } catch (error) {
             console.error(`Error fetching layer ${layer?.id}:`, error);
             if (error?.response?.data?.detail === 'Insufficient balance in wallet') {
-              resetFormStage()
+              resetFormStage();
               setShowErrorMessage(true);
               return;
             }

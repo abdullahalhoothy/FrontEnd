@@ -624,9 +624,8 @@ export function useMapLayers() {
 
                     if (popup) {
                       const popupElement = popup.getElement();
-                      popupElement.addEventListener('click', (e) => e.stopPropagation());
+                      popupElement.addEventListener('click', e => e.stopPropagation());
                     }
-
                   }
                 };
 
@@ -634,7 +633,7 @@ export function useMapLayers() {
                   if (!map) return;
                   isOverPoint = false;
                   map.getCanvas().style.cursor = '';
-           
+
                   if (hoveredStateId !== null) {
                     map.setFeatureState({ source: sourceId, id: hoveredStateId }, { hover: false });
                   }

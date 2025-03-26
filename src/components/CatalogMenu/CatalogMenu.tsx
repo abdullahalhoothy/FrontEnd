@@ -27,7 +27,7 @@ function CatalogMenu() {
     setChosenPallet,
   } = useCatalogContext();
 
-  const {setSelectedCity, setSelectedCountry} = useLayerContext();
+  const { setSelectedCity, setSelectedCountry } = useLayerContext();
 
   const [showRestorePrompt, setShowRestorePrompt] = useState(false);
 
@@ -54,7 +54,9 @@ function CatalogMenu() {
     if (savedGeoPoints) {
       setGeoPoints(prevGeoPoints => [...prevGeoPoints, ...JSON.parse(savedGeoPoints)]);
       setSelectedCity(JSON.parse(savedGeoPoints)[0].city_name);
-      setSelectedCountry(JSON.parse(savedGeoPoints)[0].country_name || defaultMapConfig.fallBackCountry);
+      setSelectedCountry(
+        JSON.parse(savedGeoPoints)[0].country_name || defaultMapConfig.fallBackCountry
+      );
     }
     localStorage.removeItem('unsavedGeoPoints');
     setShowRestorePrompt(false);
