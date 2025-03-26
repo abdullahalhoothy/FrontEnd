@@ -18,6 +18,7 @@
     "@stripe/stripe-js": "^4.5.0",
     "@turf/turf": "^7.1.0",
     "@types/html2canvas": "^1.0.0",
+    "@types/yup": "^0.32.0",
     "ag-grid-community": "31.3.2",
     "ag-grid-react": "31.3.2",
     "axios": "^1.7.4",
@@ -35,7 +36,8 @@
     "react-router-dom": "^6.26.1",
     "sonner": "^2.0.1",
     "vaul": "^1.1.1",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "yup": "^1.6.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
