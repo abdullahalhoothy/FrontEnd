@@ -373,7 +373,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       );
     } catch (error: any) {
       toast.error('Server error (500). Please try again later.');
-
     } finally {
       setIsLoading(false);
     }
@@ -448,7 +447,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
             : point
         )
       );
-
     } catch (error) {
       setIsError(error instanceof Error ? error : new Error('Failed to apply recolor'));
     } finally {
@@ -486,7 +484,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       if (!filterResponse) {
         throw new Error('Filter_data API failed.');
       }
-
 
       // Prepare Gradient API request
       const gradientRequest = {

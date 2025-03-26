@@ -83,15 +83,15 @@ StylesControl.prototype.onAdd = function (map) {
       if (selectedStyle && selectedStyle !== this.currentStyle) {
         // Temporarily store the current controls
         const currentControls = [...this._map._controls];
-  
+
         // Update the map style
         this._map.setStyle(selectedStyle);
-  
+
         // Re-add controls after the style loads
         this._map.once('styledata', () => {
           currentControls.forEach(control => this._map.addControl(control));
         });
-  
+
         // Update the UI
         this._updateButtons(selectedStyle);
         this.setCurrentStyle(selectedStyle);
@@ -101,7 +101,6 @@ StylesControl.prototype.onAdd = function (map) {
       }
     }
   });
-  
 
   return this._container;
 };

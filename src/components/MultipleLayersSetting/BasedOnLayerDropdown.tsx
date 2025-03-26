@@ -45,7 +45,7 @@ export default function BasedOnLayerDropdown({
   ];
 
   const [isOpen, setIsOpen] = useState(false);
-  const pickerRef = useRef<HTMLDivElement>(null); 
+  const pickerRef = useRef<HTMLDivElement>(null);
 
   const handleColorChange = (color: string) => {
     setSelectedColor(color);
@@ -318,36 +318,37 @@ export default function BasedOnLayerDropdown({
                     </select>
                   ) : (
                     <input
-                    type="text"
-                    value={threshold}
-                    onChange={handleInputThresholdChange}
-                    className="bg-gray-50 text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex-1 min-w-[120px] outline-none"
-                    placeholder={`Enter ${basedOnProperty
-                      .replace(/_/g, ' ')
-                      .replace(/\b\w/g, (char: any) => char.toUpperCase())}${basedOnProperty === "rating" ? " up to 5" : ""}`}
-                  />
-                  
+                      type="text"
+                      value={threshold}
+                      onChange={handleInputThresholdChange}
+                      className="bg-gray-50 text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex-1 min-w-[120px] outline-none"
+                      placeholder={`Enter ${basedOnProperty
+                        .replace(/_/g, ' ')
+                        .replace(/\b\w/g, (char: any) =>
+                          char.toUpperCase()
+                        )}${basedOnProperty === 'rating' ? ' up to 5' : ''}`}
+                    />
                   )}
                 </div>
               </div>
 
               <div className="mt-3 relative " ref={pickerRef}>
-              <label className="text-[11px] text-[#555] whitespace-nowrap text-sm flex flex-col">
-                Pick a Color
-              </label>
-              <div>
-                <button
-                  className="w-full h-10 rounded-md border border-gray-300"
-                  style={{ backgroundColor: selectedColor }}
-                  onClick={() => setIsOpen(!isOpen)}
-                />
-              </div>
-              {isOpen && (
-                <div className="absolute mt-2 bg-white p-2 border border-gray-300 shadow-md rounded-md">
-                  <HexColorPicker color={selectedColor} onChange={handleColorChange} />
+                <label className="text-[11px] text-[#555] whitespace-nowrap text-sm flex flex-col">
+                  Pick a Color
+                </label>
+                <div>
+                  <button
+                    className="w-full h-10 rounded-md border border-gray-300"
+                    style={{ backgroundColor: selectedColor }}
+                    onClick={() => setIsOpen(!isOpen)}
+                  />
                 </div>
-              )}
-            </div>
+                {isOpen && (
+                  <div className="absolute mt-2 bg-white p-2 border border-gray-300 shadow-md rounded-md">
+                    <HexColorPicker color={selectedColor} onChange={handleColorChange} />
+                  </div>
+                )}
+              </div>
             </>
           )}
       </div>

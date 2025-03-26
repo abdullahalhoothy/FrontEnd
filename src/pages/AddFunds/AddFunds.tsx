@@ -1,9 +1,9 @@
-import { loadStripe } from "@stripe/stripe-js";
-import React, { useState, FormEvent, useLayoutEffect } from "react";
-import { useNavigate } from "react-router";
-import { useAuth } from "../../context/AuthContext";
-import apiRequest from "../../services/apiRequest";
-import urls from "../../urls.json";
+import { loadStripe } from '@stripe/stripe-js';
+import React, { useState, FormEvent, useLayoutEffect } from 'react';
+import { useNavigate } from 'react-router';
+import { useAuth } from '../../context/AuthContext';
+import apiRequest from '../../services/apiRequest';
+import urls from '../../urls.json';
 
 const AddFundsForm: React.FC = () => {
   const { authResponse } = useAuth();
@@ -13,8 +13,6 @@ const AddFundsForm: React.FC = () => {
   // State for individual card field errors
   const [submitting, setSubmitting] = useState(false);
   const [cost, setCost] = useState<number | null>(null);
-
-
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -27,7 +25,7 @@ const AddFundsForm: React.FC = () => {
 
       const response = await apiRequest({
         url: urls.top_up_wallet,
-        method: "POST",
+        method: 'POST',
         body: {
           amount: cost * 100, //multiply by 100 to convert cents to dollars
           user_id: authResponse.localId,
@@ -35,11 +33,11 @@ const AddFundsForm: React.FC = () => {
         isAuthRequest: true,
       });
 
-      navigate("/profile/wallet");
+      navigate('/profile/wallet');
     } catch (error) {
       console.log(error);
       console.log(error);
-      setErrorMessage("An unexpected error occurred. Please try again later.");
+      setErrorMessage('An unexpected error occurred. Please try again later.');
     } finally {
       setSubmitting(false);
     }
@@ -49,9 +47,7 @@ const AddFundsForm: React.FC = () => {
     <div className="h-full flex items-center ">
       <div className="my-8 border w-full max-w-3xl mx-auto bg-white shadow rounded-lg overflow-hidden">
         <div className="p-4 border-b border-gray-200">
-          <h1 className="text-xl font-semibold text-gray-800">
-            Add Funds
-          </h1>
+          <h1 className="text-xl font-semibold text-gray-800">Add Funds</h1>
         </div>
         <form onSubmit={handleSubmit} className="px-4 py-4">
           <div className="space-y-4">
@@ -60,7 +56,7 @@ const AddFundsForm: React.FC = () => {
                 id="cardholder-name"
                 type="text"
                 value={cost}
-                onChange={(e) => setCost(e.target.value)}
+                onChange={e => setCost(e.target.value)}
                 className="w-full p-3 border border-gray-200 shadow-sm rounded-md focus:outline-none"
                 placeholder="Amount (USD)"
                 required
@@ -92,13 +88,13 @@ const AddFunds: React.FC = () => {
   const navigate = useNavigate();
 
   if (!isAuthenticated) {
-    navigate("/auth");
+    navigate('/auth');
     return null;
   }
 
   return (
     <>
-        <AddFundsForm />
+      <AddFundsForm />
     </>
   );
 };

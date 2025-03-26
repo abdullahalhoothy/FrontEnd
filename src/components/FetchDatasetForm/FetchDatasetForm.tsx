@@ -568,8 +568,7 @@ const FetchDatasetForm = () => {
                 onChange={e => setTextSearchInput(e.target.value)}
               />
 
-              
-          {errorMessage && <p className="text-red-500 text-sm mt-2">{errorMessage}</p>}
+              {errorMessage && <p className="text-red-500 text-sm mt-2">{errorMessage}</p>}
             </div>
           )}
           <div className="pt-4">
