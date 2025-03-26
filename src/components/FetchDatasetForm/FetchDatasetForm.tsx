@@ -15,6 +15,10 @@ import LayerDisplaySubCategories from '../LayerDisplaySubCategories/LayerDisplay
 import CategoriesBrowserSubCategories from '../CategoriesBrowserSubCategories/CategoriesBrowserSubCategories';
 import { useCatalogContext } from '../../context/CatalogContext';
 import { useMapContext } from '../../context/MapContext';
+import ChatTrigger from '../Chat/ChatTrigger';
+import Chat from '../Chat/Chat';
+import { topics } from '../../types';
+import { FaWandMagicSparkles } from 'react-icons/fa6';
 
 const FetchDatasetForm = () => {
   const nav = useNavigate();
@@ -50,6 +54,7 @@ const FetchDatasetForm = () => {
     setIsError,
     switchPopulationLayer,
     includePopulation,
+    handleSubmitFetchDataset,
   } = useLayerContext();
 
   // AUTH CONTEXT
@@ -150,21 +155,10 @@ const FetchDatasetForm = () => {
       }
     }
   }
-  function handleButtonClick(action: string, event: React.MouseEvent<HTMLButtonElement>) {
-    event.preventDefault();
-
-    const result = validateFetchDatasetForm();
-
-    if (result === true) {
-      if (action === 'full data') {
-        setCentralizeOnce(true);
-      }
-      setShowLoaderTopup(true);
-      handleFetchDataset(action);
-      incrementFormStage();
-    } else if (result instanceof Error) {
+  function onButtonClick(action: string, event: React.MouseEvent<HTMLButtonElement>) {
+    const result = handleSubmitFetchDataset(action, event);
+    if (result instanceof Error) {
       setError(result.message);
-      return false;
     }
   }
 
@@ -488,10 +482,27 @@ const FetchDatasetForm = () => {
         <div className="w-full p-4 overflow-y-auto ">
           {error && <div className="mt-6 text-red-500 font-semibold">{error}</div>}
 
+          <div className="mb-6">
+            <label className="block mb-2 text-base font-medium text-black" htmlFor="ai-fetch">
+              AI-Powered Dataset Finder
+            </label>
+            <div className="flex relative w-full">
+              <ChatTrigger
+                title="AI Dataset Finder"
+                position="auto"
+                cN="flex-grow"
+                size="h-14"
+                colors="bg-gem-gradient border text-gray-200 rounded-lg shadow-md hover:shadow-lg transition-all"
+                beforeIcon={<FaWandMagicSparkles />}
+                afterIcon={<></>}
+              />
+              <Chat topic={topics.DATASET} position="fixed left-[27.5rem] mx-2 inset-y-auto z-50" />
+            </div>
+          </div>
+
           <label className="block mb-2 text-base font-medium text-black" htmlFor="layers">
             Layers
           </label>
-          {/* Div to contain all layers should looke like a sub-section with border */}
           <div
             id="layers"
             className="flex text-sm flex-col border border-gray-300 rounded-lg p-4 gap-4"
@@ -724,7 +735,7 @@ const FetchDatasetForm = () => {
       <div className="flex-col flex  px-2 py-2 select-none border-t lg:mb-0 mb-14">
         <div className="flex space-x-2">
           <button
-            onClick={e => handleButtonClick('sample', e)}
+            onClick={e => onButtonClick('sample', e)}
             className="w-full h-10 bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
                  hover:bg-white transition-all cursor-pointer"
           >
@@ -733,23 +744,7 @@ const FetchDatasetForm = () => {
 
           <button
             className="w-full h-10 bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer"
-            onClick={async e => {
-              const res = await apiRequest({
-                url: `${urls.list_stripe_payment_methods}?user_id=${authResponse?.localId}`,
-                method: 'get',
-                isAuthRequest: true,
-              });
-              if (res.data.data.length === 0) nav('/profile/payment-methods');
-              if (!isAuthenticated) nav('/auth');
-              try {
-                handleButtonClick('full data', e);
-              } catch (error: any) {
-                if (error.response.data.detail === 'Insufficient balance in wallet') {
-                  setShowErrorMessage(true);
-                }
-                console.error(error);
-              }
-            }}
+            onClick={e => onButtonClick('full data', e)}
           >
             Full Data {isPriceVisible ? `($${costEstimate.toFixed(2)})` : null}
           </button>
