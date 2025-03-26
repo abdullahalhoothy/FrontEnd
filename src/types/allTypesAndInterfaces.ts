@@ -300,6 +300,10 @@ export interface LayerContextType {
   handlePopulationLayer: (shouldInclude: boolean) => Promise<void>;
   switchPopulationLayer: () => Promise<void>;
   refetchPopulationLayer: () => Promise<void>;
+  handleSubmitFetchDataset: (
+    action: string,
+    event?: React.MouseEvent<HTMLButtonElement>
+  ) => boolean | Error;
 }
 
 export interface ReqFetchDataset {

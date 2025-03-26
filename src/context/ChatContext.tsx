@@ -1,29 +1,17 @@
 import { createContext, useContext, useState, useRef, useEffect, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import apiRequest from '../services/apiRequest';
-import { Message, ChatContextType, topics } from '../types';
+import { ChatContextType, topics, ChatMessage } from '../types';
 import urls from '../urls.json';
 import { useCatalogContext } from './CatalogContext';
-import { ChatMessage, GradientColorResponse } from '../types/allTypesAndInterfaces';
-
-interface ChatContextType {
-  messages: ChatMessage[];
-  isLoading: boolean;
-  isOpen: boolean;
-  sendMessage: (content: string) => Promise<void>;
-  toggleChat: () => void;
-  closeChat: () => void;
-  clearChat: () => void;
-  applyGradientColor: (endpoint: string, body: any) => Promise<void>;
-  topic: topics;
-  setTopic: (topic: topics) => void;
-}
+import { useLayerContext } from './LayerContext';
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 export function ChatProvider({ children }: { children: ReactNode }) {
   const { authResponse } = useAuth();
   const { geoPoints } = useCatalogContext();
+  const { handleFetchDataset, setCentralizeOnce, incrementFormStage } = useLayerContext();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -58,6 +46,69 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     clearChat();
   };
 
+  const fetchDataset = async (endpoint: string, body: any) => {
+    try {
+      setIsLoading(true);
+
+      const response = await apiRequest({
+        url: endpoint,
+        method: 'post',
+        body: body,
+        isAuthRequest: true,
+      });
+
+      const responseData = response?.data?.data;
+
+      const successMessage: ChatMessage = {
+        content: `Dataset fetched successfully. ${responseData?.features?.length || 0} records retrieved.`,
+        isUser: false,
+        timestamp: new Date().toISOString(),
+        responseData: {
+          is_valid: true,
+          reason: null,
+          suggestions: null,
+          endpoint: endpoint,
+          body: responseData,
+        },
+      };
+
+      setMessages(prev => [...prev, successMessage]);
+
+      if (body.action === 'full data') {
+        setCentralizeOnce(true);
+      }
+
+      setShowLoaderTopup(true);
+
+      await handleFetchDataset(body.action || 'sample', undefined, undefined, undefined, body);
+
+      incrementFormStage();
+
+      return responseData;
+    } catch (error) {
+      console.error('Error fetching dataset:', error);
+
+      const errorMessage: ChatMessage = {
+        content: 'Sorry, there was an error fetching the dataset.',
+        isUser: false,
+        timestamp: new Date().toISOString(),
+        responseData: {
+          is_valid: false,
+          reason: error instanceof Error ? error.message : 'Unknown error',
+          suggestions: null,
+          endpoint: null,
+          body: null,
+        },
+      };
+
+      setMessages(prev => [...prev, errorMessage]);
+
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const sendMessage = async (content: string) => {
     try {
       setIsLoading(true);
@@ -68,21 +119,42 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       };
       setMessages(prev => [...prev, userMessage]);
 
-      const reqBody = { user_id: authResponse?.localId, prompt: content.trim(), layers: geoPoints };
+      let url = '';
+      let reqBody = {};
+
+      if (topic === topics.RECOLOR) {
+        url = urls.gradient_color_based_on_zone_llm;
+        reqBody = { user_id: authResponse?.localId, prompt: content.trim(), layers: geoPoints };
+      } else if (topic === topics.DATASET) {
+        url = urls.process_llm_query;
+        reqBody = { query: content.trim(), user_id: authResponse?.localId };
+      } else {
+        url = urls.gradient_color_based_on_zone_llm;
+        reqBody = { user_id: authResponse?.localId, prompt: content.trim(), layers: geoPoints };
+      }
 
       const response = await apiRequest({
-        url: urls.gradient_color_based_on_zone_llm,
+        url,
         method: 'post',
         body: reqBody,
         isAuthRequest: true,
       });
 
-      const responseData: GradientColorResponse = response?.data?.data;
+      const responseData = response?.data?.data;
+
+      let responseMessage = '';
+      if (responseData?.is_valid === 'Valid' || responseData?.is_valid === true) {
+        if (topic === topics.DATASET) {
+          responseMessage = `I found a dataset matching your request: "${responseData.body.boolean_query}" in ${responseData.body.city_name}, ${responseData.body.country_name}.`;
+        } else {
+          responseMessage = 'I can apply these changes for you. Would you like to proceed?';
+        }
+      } else {
+        responseMessage = responseData?.reason || 'Sorry, I could not process your request.';
+      }
 
       const botMessage: ChatMessage = {
-        content: responseData?.is_valid
-          ? 'I can apply these changes for you. Would you like to proceed?'
-          : responseData?.reason || 'Sorry, I could not process your request.',
+        content: responseMessage,
         isUser: false,
         timestamp: new Date().toISOString(),
         responseData: responseData,
@@ -146,8 +218,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         closeChat,
         clearChat,
         applyGradientColor,
+        fetchDataset,
         topic,
         setTopic,
+        setMessages,
       }}
     >
       {children}
