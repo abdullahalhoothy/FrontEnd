@@ -40,5 +40,6 @@
   "delete_producer_catalog": "/delete_producer_catalog",
   "delete_layer": "/delete_layer",
   "filter_based_zone": "/filter_based_on",
-  "process_llm_query": "/process_llm_query"
+  "process_llm_query": "/process_llm_query",
+  "gradient_color_based_on_zone_llm": "gradient_color_based_on_zone_llm"
 }
