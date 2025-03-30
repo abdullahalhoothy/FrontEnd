@@ -2,7 +2,7 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import * as Yup from 'yup';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import countriesData from '../fakeData/countries-data.json';
+import countriesData from '../countries-data.json';
 import { Country, FormData, FormErrors } from '../types/auth';
 import { useAuth } from './AuthContext';
 import apiRequest from '../services/apiRequest';
