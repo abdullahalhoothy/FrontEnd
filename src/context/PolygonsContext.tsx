@@ -83,16 +83,10 @@ const PolygonsProvider = ({ children }: ProviderProps) => {
           const areaName = polygonData.areas[index];
           const matchingFeatures =
             geoPoint.features?.filter(feature => {
-              if (
-                          !feature.geometry?.coordinates ||
-                          !Array.isArray(feature.geometry.coordinates)
-                        ) {
-                          console.error(
-                            'Invalid coordinates found:',
-                            feature.geometry?.coordinates
-                          );
-                          return false;
-                        }
+              if (!feature.geometry?.coordinates || !Array.isArray(feature.geometry.coordinates)) {
+                console.error('Invalid coordinates found:', feature.geometry?.coordinates);
+                return false;
+              }
 
               const featureCoords = JSON.stringify(feature.geometry.coordinates);
               if (previouslyMatchedPoints.has(featureCoords)) return false;

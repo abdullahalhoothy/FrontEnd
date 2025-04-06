@@ -376,7 +376,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       );
     } catch (error: any) {
       toast.error('Server error (500). Please try again later.');
-
     } finally {
       setIsLoading(false);
     }
@@ -385,7 +384,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
   // ------------omar code -------
 
-  const handleApplyRecolor = async (e: React.MouseEvent<HTMLButtonElement>) => {
+   const handleApplyRecolor = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     setIsLoading(true);
 
