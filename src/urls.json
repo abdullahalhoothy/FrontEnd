@@ -34,6 +34,7 @@
   "list_stripe_payment_methods": "/list_stripe_payment_methods",
   "detach_stripe_payment_method": "/detach_stripe_payment_method",
   "get_stripe_customer": "/fetch_stripe_customer",
+
   "top_up_wallet": "/top_up_wallet",
   "fetch_wallet": "/fetch_wallet",
   "deduct_wallet": "/deduct_wallet",

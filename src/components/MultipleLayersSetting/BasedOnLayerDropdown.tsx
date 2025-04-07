@@ -45,7 +45,9 @@ export default function BasedOnLayerDropdown({
   ];
 
   const [isOpen, setIsOpen] = useState(false);
+
   const pickerRef = useRef<HTMLDivElement>(null);
+
 
   const handleColorChange = (color: string) => {
     setSelectedColor(color);
@@ -122,13 +124,10 @@ export default function BasedOnLayerDropdown({
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (!pickerRef.current) {
-        console.log('pickerRef is null');
+
         return;
       }
 
-      console.log('Clicked element:', event.target);
-      console.log('Picker element:', pickerRef.current);
-      console.log('Is inside picker:', pickerRef.current.contains(event.target));
 
       if (!pickerRef.current.contains(event.target)) {
         console.log('Closing picker...');
@@ -197,7 +196,6 @@ export default function BasedOnLayerDropdown({
               <option
                 key={metric}
                 value={metric}
-                disabled={selectedOption === 'recolor' && metric.toLowerCase() === 'name'}
               >
                 {formatSubcategoryName(metric)}
               </option>
@@ -205,7 +203,8 @@ export default function BasedOnLayerDropdown({
           })}
         </select>
 
-        {basedOnProperty === 'name' && selectedOption === 'filter' && (
+        {basedOnProperty === 'name' && (
+
           <>
             <div className="flex flex-col mt-2">
               <label className="text-[11px] text-[#555] whitespace-nowrap text-sm">
@@ -240,6 +239,7 @@ export default function BasedOnLayerDropdown({
                 />
               </div>
             </div>
+
             <div className="mt-3 relative " ref={pickerRef}>
               <label className="text-[11px] text-[#555] whitespace-nowrap text-sm flex flex-col">
                 Pick a Color
@@ -252,105 +252,115 @@ export default function BasedOnLayerDropdown({
                 />
               </div>
               {isOpen && (
-                <div className="absolute mt-2 bg-white p-2 border border-gray-300 shadow-md rounded-md">
+
+                <div className="absolute mt-2 bg-white p-2 border border-gray-300 shadow-md rounded-md z-50">
+
                   <HexColorPicker color={selectedColor} onChange={handleColorChange} />
                 </div>
               )}
             </div>
           </>
         )}
-        {basedOnProperty &&
-          filterableProperties.includes(basedOnProperty) &&
-          selectedOption === 'filter' && (
-            <>
-              <div className="flex flex-col mt-2">
-                <label className="text-[11px] text-[#555] whitespace-nowrap text-sm">
-                  {`Enter ${basedOnProperty
-                    .replace(/_/g, ' ')
-                    .replace(/\b\w/g, (char: any) => char.toUpperCase())}`}
-                </label>
 
-                <div className="flex flex-wrap gap-2 border border-gray-300 p-2 rounded-md bg-gray-50">
-                  {nameInputs
-                    .filter(name => name.trim() !== '')
-                    .map((name, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center text-black border-2 rounded-xl px-2 py-0 text-xs"
+        {basedOnProperty && filterableProperties.includes(basedOnProperty) && (
+          //&& selectedOption === 'filter'
+          <>
+            <div className="flex flex-col mt-2">
+              <label className="text-[11px] text-[#555] whitespace-nowrap text-sm">
+                {`Enter ${basedOnProperty
+                  .replace(/_/g, ' ')
+                  .replace(/\b\w/g, (char: any) => char.toUpperCase())}`}
+              </label>
+
+              <div className="flex flex-wrap gap-2 border border-gray-300 p-2 rounded-md bg-gray-50">
+                {nameInputs
+                  .filter(name => name.trim() !== '')
+                  .map((name, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center text-black border-2 rounded-xl px-2 py-0 text-xs"
+                    >
+                      {name}
+                      <button
+                        onClick={() => handleRemoveName(index)}
+                        className="ml-2 text-red-500 font-bold text-xs shadow-sm p-1"
                       >
-                        {name}
-                        <button
-                          onClick={() => handleRemoveName(index)}
-                          className="ml-2 text-red-500 font-bold text-xs shadow-sm p-1"
-                        >
-                          ✕
-                        </button>
-                      </div>
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+
+                {basedOnProperty === 'popularity_score_category' ? (
+                  <select
+                    value={threshold}
+                    onChange={handleInputThresholdChange}
+                    className="bg-gray-50 text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex-1 min-w-[120px] outline-none p-1 rounded-md"
+                  >
+                    <option value="">Select Category</option>
+                    <option value="High">High</option>
+                    <option value="Very High">Very High</option>
+                    <option value="Low">Low</option>
+                    <option value="Very Low">Very Low</option>
+                  </select>
+                ) : basedOnProperty === 'primaryType' ? (
+                  // Select dropdown for primaryType from availableTypes
+                  <select
+                    value={threshold}
+                    onChange={handleInputThresholdChange}
+                    className="bg-gray-50 text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex-1 min-w-[120px] outline-none p-1 rounded-md"
+                  >
+                    <option value="">Select Primary Type</option>
+                    {availableTypes.map((type, index) => (
+                      <option key={index} value={type}>
+                        {type
+                          .replace(/_/g, ' ')
+                          .replace(/\b\w/g, (char: any) => char.toUpperCase())}
+                      </option>
                     ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={threshold}
+                    onChange={handleInputThresholdChange}
+                    className="bg-gray-50 text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex-1 min-w-[120px] outline-none"
+                    placeholder={`Enter ${basedOnProperty
+                      .replace(/_/g, ' ')
 
-                  {basedOnProperty === 'popularity_score_category' ? (
-                    <select
-                      value={threshold}
-                      onChange={handleInputThresholdChange}
-                      className="bg-gray-50 text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex-1 min-w-[120px] outline-none p-1 rounded-md"
-                    >
-                      <option value="">Select Category</option>
-                      <option value="High">High</option>
-                      <option value="Very High">Very High</option>
-                      <option value="Low">Low</option>
-                      <option value="Very Low">Very Low</option>
-                    </select>
-                  ) : basedOnProperty === 'primaryType' ? (
-                    // Select dropdown for primaryType from availableTypes
-                    <select
-                      value={threshold}
-                      onChange={handleInputThresholdChange}
-                      className="bg-gray-50 text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex-1 min-w-[120px] outline-none p-1 rounded-md"
-                    >
-                      <option value="">Select Primary Type</option>
-                      {availableTypes.map((type, index) => (
-                        <option key={index} value={type}>
-                          {type
-                            .replace(/_/g, ' ')
-                            .replace(/\b\w/g, (char: any) => char.toUpperCase())}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      type="text"
-                      value={threshold}
-                      onChange={handleInputThresholdChange}
-                      className="bg-gray-50 text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex-1 min-w-[120px] outline-none"
-                      placeholder={`Enter ${basedOnProperty
-                        .replace(/_/g, ' ')
-                        .replace(/\b\w/g, (char: any) =>
-                          char.toUpperCase()
-                        )}${basedOnProperty === 'rating' ? ' up to 5' : ''}`}
-                    />
-                  )}
-                </div>
-              </div>
-
-              <div className="mt-3 relative " ref={pickerRef}>
-                <label className="text-[11px] text-[#555] whitespace-nowrap text-sm flex flex-col">
-                  Pick a Color
-                </label>
-                <div>
-                  <button
-                    className="w-full h-10 rounded-md border border-gray-300"
-                    style={{ backgroundColor: selectedColor }}
-                    onClick={() => setIsOpen(!isOpen)}
+                      .replace(/\b\w/g, (char: any) =>
+                        char.toUpperCase()
+                      )}${basedOnProperty === 'rating' ? ' up to 5' : ''}`}
                   />
-                </div>
-                {isOpen && (
-                  <div className="absolute mt-2 bg-white p-2 border border-gray-300 shadow-md rounded-md">
-                    <HexColorPicker color={selectedColor} onChange={handleColorChange} />
-                  </div>
                 )}
               </div>
-            </>
-          )}
+            </div>
+            {basedOnProperty && basedOnProperty !== 'name' && selectedOption !== 'recolor'  && (
+
+            <div className="mt-3 relative " ref={pickerRef}>
+
+              <label className="text-[11px] text-[#555] whitespace-nowrap text-sm flex flex-col">
+                Pick a Color
+              </label>
+              <div>
+                <button
+                  className="w-full h-10 rounded-md border border-gray-300"
+                  style={{ backgroundColor: selectedColor }}
+                  onClick={() => setIsOpen(!isOpen)}
+                />
+              </div>
+              {isOpen && (
+
+                <div className="absolute mt-2 bg-white p-2 border border-gray-300 shadow-md rounded-md z-50">
+
+                  <HexColorPicker color={selectedColor} onChange={handleColorChange} />
+                </div>
+              )}
+            </div>
+
+            )}
+          </>
+        )}
+
       </div>
     </>
   );
