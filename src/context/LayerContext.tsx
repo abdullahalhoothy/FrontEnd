@@ -444,6 +444,13 @@ export function LayerProvider(props: { children: ReactNode }) {
             fetchBody.page_token = pageToken;
           }
 
+          const res = await apiRequest({
+            url: urls.fetch_dataset,
+            method: 'post',
+            body: fetchBody,
+            isAuthRequest: true,
+          });
+
           if (res?.data?.data) {
             await assignPopularityCategory(res?.data?.data);
 
