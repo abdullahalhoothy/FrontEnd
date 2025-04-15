@@ -12,11 +12,12 @@ export interface ChatContextType {
   toggleChat: () => void;
   closeChat: () => void;
   clearChat: () => void;
-  applyGradientColor: (endpoint: string, body: any) => Promise<void>;
+  applyGradientColor: (endpointOrResponseData: string | any, body?: any) => Promise<void>;
   takeAction: any;
   fetchDataset: (endpoint: string, body: any) => Promise<any> | any;
   topic: topics;
   setTopic: (topic: topics) => void;
+  setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
 }
 
 export interface LlmGradientColorResponse {
