@@ -1,0 +1,33 @@
+# Vite Best Practices (React Project)
+
+---
+description: Vite configuration and optimization techniques for this React project
+globs: vite.config.{ts,js}
+alwaysApply: true
+---
+
+## General Configuration
+- Define configurations in `vite.config.ts` using `defineConfig`.
+- Utilize the `@vitejs/plugin-react-swc` plugin for fast React Fast Refresh and SWC transforms.
+
+## Server Configuration (`server`)
+- Configure the development server port and host as needed (currently `3000` and `0.0.0.0`).
+- Set up proxies (`server.proxy`) for API requests during development to avoid CORS issues (currently proxying `/fastapi`).
+
+## Build Configuration (`build`)
+- Specify the output directory for assets using `build.assetsDir` (currently `assets`).
+- Consider using `build.rollupOptions` for advanced code splitting or output customization if needed.
+- Monitor build output and configure `build.chunkSizeWarningLimit` if necessary.
+
+## Dependency Optimization (`optimizeDeps`)
+- While not explicitly configured currently, Vite automatically optimizes dependencies. Review `optimizeDeps` options if encountering issues with specific dependencies.
+
+## Environment Variables
+- Use `.env` files for environment variables (see `codebase-patterns.mdc`).
+- Ensure environment variables used in client-side code are prefixed with `VITE_`.
+
+## Hot Module Replacement (HMR)
+- Leverage HMR provided by `@vitejs/plugin-react-swc` for faster development cycles.
+
+## Public Directory (`publicDir`)
+- Place static assets that should not be processed by Vite in the `public` directory (currently `public`).
