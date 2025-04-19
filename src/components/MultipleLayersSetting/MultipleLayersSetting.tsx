@@ -20,6 +20,32 @@ import { toast } from 'sonner';
 const initialBasedon = 'radius';
 const initialRadius = 1000;
 
+
+const getFormattedThreshold = (value: string, basedOn: string | null) => {
+  if (
+    basedOn === 'id' ||
+    basedOn === 'address' ||
+    basedOn === 'phone' ||
+    basedOn === 'priceLevel' ||
+    basedOn === 'primaryType' ||
+    basedOn === '' ||
+    basedOn === 'popularity_score_category'
+  ) {
+    return value;
+  }
+
+  if (
+    basedOn === 'rating' ||
+    basedOn === 'heatmap_weight' ||
+    basedOn === 'user_ratings_total' ||
+    basedOn === 'popularity_score'
+  ) {
+    return parseFloat(value) || 0;
+  }
+
+  return value;
+};
+
 function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   const { layerIndex } = props;
   const {
@@ -54,7 +80,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     setBasedOnProperty,
     setIsLoading,
     isLoading,
-    handleColorBasedZone,
     gradientColorBasedOnZone,
     handleFilteredZone,
     handleNameBasedColorZone,
@@ -176,7 +201,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   }
 
   async function handleGetGradientColors() {
-
     try {
       const res = await apiRequest({
         url: urls.fetch_gradient_colors,
@@ -223,6 +247,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         color_grid_choice: colors[chosenPallet || 0],
         change_lyr_id,
         based_on_lyr_id: prdcer_lyr_id,
+        threshold: getFormattedThreshold(thresholdValue, basedOnProperty),
         coverage_value: newRadius,
         coverage_property: selectedBasedon,
         color_based_on: basedOnProperty,
@@ -282,7 +307,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   };
   const [selectedColor, setSelectedColor] = useState<string>('#000000');
 
-
   const handleNameColorChange = (color: string) => {
     setSelectedColor(color);
   };
@@ -305,30 +329,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         console.error('Missing required fields');
         return;
       }
-      const getFormattedThreshold = () => {
-        if (
-          basedOnProperty === 'id' ||
-          basedOnProperty === 'address' ||
-          basedOnProperty === 'phone' ||
-          basedOnProperty === 'priceLevel' ||
-          basedOnProperty === 'primaryType' ||
-          basedOnProperty === '' ||
-          basedOnProperty === 'popularity_score_category'
-        ) {
-          return thresholdValue; // Keep as string
-        }
-
-        if (
-          basedOnProperty === 'rating' ||
-          basedOnProperty === 'heatmap_weight' ||
-          basedOnProperty === 'user_ratings_total' ||
-          basedOnProperty === 'popularity_score'
-        ) {
-          return parseFloat(thresholdValue) || 0; // Convert to float
-        }
-
-        return thresholdValue; // Default case
-      };
       const filterRequest = {
         color_grid_choice: selectedColors,
         change_lyr_id: currentLayer.prdcer_lyr_id,
@@ -341,7 +341,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         coverage_value: radiusInput,
         color_based_on: basedOnProperty,
         list_names: nameInputs.filter(name => name.trim() !== ''),
-        threshold: getFormattedThreshold(),
+        threshold: getFormattedThreshold(thresholdValue, basedOnProperty),
         change_lyr_new_color: selectedColor,
       };
 
@@ -381,10 +381,9 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     }
   };
 
-
   // ------------omar code -------
 
-   const handleApplyRecolor = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleApplyRecolor = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     setIsLoading(true);
 
@@ -397,31 +396,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       if (!currentLayer || !baseLayer || !basedOnProperty || !selectedColors || !selectedBasedon) {
         return;
       }
-
-      // Threshold Formatting
-      const getFormattedThreshold = () => {
-        if (
-          [
-            'id',
-            'address',
-            'phone',
-            'priceLevel',
-            'primaryType',
-            '',
-            'popularity_score_category',
-          ].includes(basedOnProperty)
-        ) {
-          return thresholdValue;
-        }
-        if (
-          ['rating', 'heatmap_weight', 'user_ratings_total', 'popularity_score'].includes(
-            basedOnProperty
-          )
-        ) {
-          return parseFloat(thresholdValue) || 0;
-        }
-        return thresholdValue;
-      };
 
       // Prepare request
       const recolorRequest = {
@@ -436,7 +410,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         coverage_value: radiusInput,
         color_based_on: basedOnProperty,
         list_names: nameInputs.filter(name => name.trim() !== ''),
-        threshold: getFormattedThreshold(),
+        threshold: getFormattedThreshold(thresholdValue, basedOnProperty),
         change_lyr_new_color: selectedColor,
       };
 
@@ -457,6 +431,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         based_on_lyr_id: baseLayer.prdcer_lyr_id,
         based_on_lyr_name: baseLayer.prdcer_layer_name || `Layer ${baseLayer.layerId}`,
         coverage_property: selectedBasedon,
+        threshold: getFormattedThreshold(thresholdValue, basedOnProperty),
         coverage_value: radiusInput,
         color_based_on: basedOnProperty,
         list_names: nameInputs,
@@ -465,18 +440,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       setReqGradientColorBasedOnZone(gradientRequest);
 
       //  Call Gradient API
-      const gradientData = await handleNameBasedColorZone({
-        prdcer_lyr_id: currentLayer.prdcer_lyr_id,
-        user_id: authResponse?.localId || '',
-        color_grid_choice: selectedColors,
-        change_lyr_id: currentLayer.prdcer_lyr_id,
-        change_lyr_name: currentLayer.prdcer_layer_name || `Layer ${currentLayer.layerId}`,
-        based_on_lyr_id: baseLayer.prdcer_lyr_id,
-        based_on_lyr_name: baseLayer.prdcer_layer_name || `Layer ${baseLayer.layerId}`,
-        coverage_property: selectedBasedon,
-        coverage_value: radiusInput,
-        color_based_on: basedOnProperty,
-      });
+      const gradientData = await handleNameBasedColorZone(gradientRequest);
 
       if (!gradientData || gradientData.length === 0) {
         throw new Error('No gradient data received.');
@@ -811,10 +775,8 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                 </div>
 
                 {basedOnProperty && selectedOption === 'recolor' && basedOnProperty !== 'name' && (
-
-                <DropdownColorSelect layerIndex={layerIndex} />
-                ) }
-
+                  <DropdownColorSelect layerIndex={layerIndex} />
+                )}
               </>
             )}
             <div>
