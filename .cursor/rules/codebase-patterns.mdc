@@ -1,0 +1,103 @@
+# Codebase Patterns and Rules
+
+## Directory Structure
+- Components should be organized in feature-based directories under `src/components/`
+- Each component directory should contain its related components, styles, and tests
+- Types should be defined in `src/types/` directory
+- Shared utilities should be placed in `src/utils/`
+- Context providers should be in `src/context/`
+- Pages should be in `src/pages/`
+- Services should be in `src/services/`
+
+## Component Patterns
+- Components should be functional components using TypeScript
+- Props should be defined using TypeScript interfaces
+- Component files should be named using PascalCase
+- Each component should have its own directory with index.tsx as the main file
+- Component-specific types should be co-located with the component
+- Components should use proper prop types and avoid any
+- Components should follow a consistent structure:
+  ```typescript
+  interface ComponentProps {
+    // props definition
+  }
+
+  export const Component: React.FC<ComponentProps> = ({ prop1, prop2 }) => {
+    // component logic
+    return (
+      // JSX
+    );
+  };
+  ```
+
+## Type Definitions
+- Types should be defined in `src/types/` directory
+- Avoid large monolithic type files (like `allTypesAndInterfaces.ts`); prefer splitting types into domain-specific files.
+- Use TypeScript interfaces for object types
+- Use type aliases for union types
+- Export types through index.ts
+- Keep types close to their usage when component-specific
+
+## Styling
+- Use Tailwind CSS for styling as the primary method.
+- Define custom CSS classes in `src/index.css` or component-specific style files if needed.
+- Follow BEM naming convention for any custom CSS classes.
+- Keep styles modular and component-specific
+
+## State Management
+- Use React Context for global state
+- Keep state as local as possible
+- Use custom hooks for reusable state logic
+- Follow the container/presenter pattern where appropriate
+
+## File Naming
+- React components: PascalCase (e.g., `UserProfile.tsx`)
+- Utilities: camelCase (e.g., `formatDate.ts`)
+- Constants: UPPER_SNAKE_CASE
+- Test files: `*.test.tsx` or `*.test.ts`
+
+## Code Organization
+- Keep files focused and single-responsibility
+- Use index.ts files for clean exports
+- Group related functionality together
+- Keep components small and focused
+- Use proper TypeScript types and avoid `any`
+
+## Code Quality & Consistency
+- Use ESLint and Prettier to enforce code style and catch potential errors.
+- Adhere to configurations defined in `eslint.config.js` and `.prettierrc.cjs`.
+
+## Import/Export
+- Use named exports for components
+- Use default exports for pages
+- Group imports by type (React, third-party, local)
+- Use absolute imports starting from the `src` directory (e.g., `import Component from 'components/MyComponent'`)
+
+## Testing
+- Test files should be co-located with source files
+- Use meaningful test names
+- Follow AAA pattern (Actions, Arrange, Assert)
+- Test both success and error cases
+
+## Documentation
+- Use JSDoc comments for complex functions
+- Document component props using TypeScript
+- Keep README files up to date
+- Document any non-obvious business logic
+
+## Environment Variables
+- Use `.env` files for environment-specific configurations (e.g., API endpoints).
+- Access environment variables using `import.meta.env.VITE_VARIABLE_NAME`.
+- Do not commit sensitive information in `.env` files; use `.env.example` instead.
+
+## Performance
+- Use React.memo for expensive components
+- Implement proper loading states
+- Use proper key props in lists
+- Avoid unnecessary re-renders
+
+## Git
+- Use meaningful commit messages
+- Keep commits focused and atomic
+- Follow conventional commits format
+- Don't commit large files or build artifacts
