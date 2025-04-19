@@ -389,16 +389,15 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     setIsLoading(true);
 
     try {
-
       const currentLayer = geoPoints[layerIndex];
       const baseLayer = geoPoints.find(layer => layer.prdcer_lyr_id === basedOnLayerId);
+      const currentLayerId = currentLayer.prdcer_lyr_id;
       const selectedColors = colors[chosenPallet || 0];
 
       if (!currentLayer || !baseLayer || !basedOnProperty || !selectedColors || !selectedBasedon) {
-
         return;
       }
-    
+
       // Threshold Formatting
       const getFormattedThreshold = () => {
         if (
@@ -426,6 +425,8 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
       // Prepare request
       const recolorRequest = {
+        prdcer_lyr_id: currentLayer.prdcer_lyr_id,
+        user_id: authResponse?.localId || '',
         color_grid_choice: selectedColors,
         change_lyr_id: currentLayer.prdcer_lyr_id,
         change_lyr_name: currentLayer.prdcer_layer_name || `Layer ${currentLayer.layerId}`,
@@ -448,7 +449,8 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
       // Prepare Gradient API request
       const gradientRequest = {
-
+        prdcer_lyr_id: currentLayer.prdcer_lyr_id,
+        user_id: authResponse?.localId || '',
         color_grid_choice: selectedColors,
         change_lyr_id: currentLayer.prdcer_lyr_id,
         change_lyr_name: currentLayer.prdcer_layer_name || `Layer ${currentLayer.layerId}`,
@@ -458,22 +460,27 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         coverage_value: radiusInput,
         color_based_on: basedOnProperty,
         list_names: nameInputs,
-
-
       };
 
       setReqGradientColorBasedOnZone(gradientRequest);
 
-
       //  Call Gradient API
-      const gradientData = await handleNameBasedColorZone(recolorRequest);
-      
-
+      const gradientData = await handleNameBasedColorZone({
+        prdcer_lyr_id: currentLayer.prdcer_lyr_id,
+        user_id: authResponse?.localId || '',
+        color_grid_choice: selectedColors,
+        change_lyr_id: currentLayer.prdcer_lyr_id,
+        change_lyr_name: currentLayer.prdcer_layer_name || `Layer ${currentLayer.layerId}`,
+        based_on_lyr_id: baseLayer.prdcer_lyr_id,
+        based_on_lyr_name: baseLayer.prdcer_layer_name || `Layer ${baseLayer.layerId}`,
+        coverage_property: selectedBasedon,
+        coverage_value: radiusInput,
+        color_based_on: basedOnProperty,
+      });
 
       if (!gradientData || gradientData.length === 0) {
         throw new Error('No gradient data received.');
       }
-      setGeoPoints(gradientData);
 
       // Process gradient data for UI update
       const combinedFeatures = gradientData.flatMap(group =>
@@ -487,29 +494,28 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         }))
       );
 
-
-      setGeoPoints(prev =>
-        prev.map(point =>
-          point.prdcer_lyr_id === currentLayer.prdcer_lyr_id
-            ? {
-                ...point,
-                prdcer_layer_name: gradientData[0]?.prdcer_layer_name,
-                layer_legend: gradientData.map(g => g.layer_legend).join(' | '),
-                records_count: gradientData.reduce((sum, g) => sum + g.records_count, 0),
-                features: combinedFeatures,
-                gradient_groups: gradientData.map(group => ({
-                  color: group.points_color,
-                  legend: group.layer_legend,
-                  count: group.records_count,
-                })),
-                is_gradient: true,
-                gradient_based_on: baseLayer.prdcer_lyr_id,
-              }
-            : point
-        )
-      );
+      setGeoPoints(prev => {
+        return prev.map(point => {
+          if (point.prdcer_lyr_id === currentLayerId) {
+            return {
+              ...point,
+              prdcer_layer_name: gradientData[0]?.prdcer_layer_name,
+              layer_legend: gradientData.map(g => g.layer_legend).join(' | '),
+              records_count: gradientData.reduce((sum, g) => sum + g.records_count, 0),
+              features: combinedFeatures,
+              gradient_groups: gradientData.map(group => ({
+                color: group.points_color || '#000000',
+                legend: group.layer_legend || '',
+                count: group.records_count,
+              })),
+              is_gradient: true,
+              gradient_based_on: basedOnLayerId || '',
+            };
+          }
+          return point;
+        });
+      });
     } catch (error) {
-
       console.error('Error applying dynamic color:', error);
       setIsError(error instanceof Error ? error : new Error('Failed to apply dynamic color'));
     } finally {

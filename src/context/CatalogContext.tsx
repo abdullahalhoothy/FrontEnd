@@ -390,7 +390,9 @@ export function CatalogProvider(props: { children: ReactNode }) {
       cB(geoPointsToUse[0].city_name, geoPointsToUse[0].country_name);
   }
 
-  async function handleColorBasedZone(requestData?: ReqGradientColorBasedOnZone) {
+  async function handleColorBasedZone(
+    requestData?: ReqGradientColorBasedOnZone
+  ): Promise<GradientColorBasedOnZone[]> {
     const dataToUse = requestData || reqGradientColorBasedOnZone;
 
     try {
@@ -448,7 +450,9 @@ export function CatalogProvider(props: { children: ReactNode }) {
     );
   };
 
-  async function handleFilteredZone(requestData?: ReqGradientColorBasedOnZone) {
+  async function handleFilteredZone(
+    requestData?: ReqGradientColorBasedOnZone
+  ): Promise<GradientColorBasedOnZone[]> {
     const dataToUse = requestData || reqGradientColorBasedOnZone;
 
     try {
@@ -470,7 +474,9 @@ export function CatalogProvider(props: { children: ReactNode }) {
     }
   }
 
-  async function handleNameBasedColorZone(requestData?: ReqGradientColorBasedOnZone) {
+  async function handleNameBasedColorZone(
+    requestData?: ReqGradientColorBasedOnZone
+  ): Promise<GradientColorBasedOnZone[]> {
     const dataToUse = requestData || reqGradientColorBasedOnZone;
 
     try {
