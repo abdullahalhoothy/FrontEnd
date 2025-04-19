@@ -179,6 +179,8 @@ export interface ReqGradientColorBasedOnZone {
   coverage_value: number | string;
   coverage_property: string;
   color_based_on: string;
+  threshold?: number | string;
+  list_names?: string[];
 }
 
 interface Color {
