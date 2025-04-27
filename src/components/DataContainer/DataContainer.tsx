@@ -15,7 +15,7 @@ import apiRequest from '../../services/apiRequest';
 import { useLayerContext } from '../../context/LayerContext';
 
 function DataContainer() {
-  const { selectedContainerType, handleAddClick, setGeoPoints } = useCatalogContext();
+  const { selectedContainerType, setMarkers, handleAddClick, setGeoPoints } = useCatalogContext();
   const { setSelectedCity, setSelectedCountry } = useLayerContext();
   const { isAuthenticated, authResponse, logout } = useAuth();
   const { closeModal } = useUIContext();
@@ -212,6 +212,7 @@ function DataContainer() {
               typeOfCard: typeOfCard,
               ...(typeOfCard === 'userCatalog' && { lyrs: item.lyrs }),
             });
+            setMarkers(item.display_elements.markers || []);
           }}
           can_access={item.can_access ?? false}
           typeOfCard={typeOfCard}

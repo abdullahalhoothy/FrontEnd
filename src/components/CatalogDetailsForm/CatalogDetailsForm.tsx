@@ -20,6 +20,7 @@ function CatalogDetailsForm() {
     isLoading,
     isError,
     saveResponse,
+    markers,
   } = useCatalogContext();
 
   const [error, setError] = useState<string | null>(null);
@@ -118,6 +119,14 @@ function CatalogDetailsForm() {
             onChange={handleChange}
           ></textarea>
         </div>
+        {markers.length > 0 && (
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <p className="text-sm text-blue-800">
+              <span className="font-medium">Note:</span> {markers.length} saved{' '}
+              {markers.length === 1 ? 'location' : 'locations'} will be included with this catalog.
+            </p>
+          </div>
+        )}
       </div>
 
       {isError && <p className="text-red-500 font-semibold px-4">{isError.message}</p>}

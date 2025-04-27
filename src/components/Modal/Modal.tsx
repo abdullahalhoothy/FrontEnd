@@ -20,6 +20,7 @@ function Modal(props: ModalProps) {
       } ${isSmaller ? 'pointer-events-none' : ''}`}
       onClick={e => {
         e.stopPropagation();
+        console.log(`closing modal ... ${e.target.id}`);
         if (e.target.id) closeModal();
       }}
     >

@@ -5,7 +5,8 @@ import {
   ReqGradientColorBasedOnZone,
   SaveResponse,
   VisualizationMode,
-} from '../types/allTypesAndInterfaces';
+  MarkerData,
+} from '../types';
 import urls from '../urls.json';
 import userIdData from '../currentUserId.json';
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
@@ -14,6 +15,7 @@ import apiRequest from '../services/apiRequest';
 import html2canvas from 'html2canvas';
 import defaultMapConfig from '../mapConfig.json';
 import { isIntelligentLayer } from '../utils/layerUtils';
+import { v4 as uuidv4 } from 'uuid';
 
 const CatalogContext = createContext<CatalogContextType | undefined>(undefined);
 
@@ -90,6 +92,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
   >([]);
   const [basedOnLayerId, setBasedOnLayerId] = useState<string | null>(null);
   const [basedOnProperty, setBasedOnProperty] = useState<string | null>(null);
+  const [markers, setMarkers] = useState<MarkerData[]>([]);
 
   async function fetchGeoPoints(
     id: string,
@@ -224,22 +227,31 @@ export function CatalogProvider(props: { children: ReactNode }) {
             points_color: layer.points_color,
           })),
           user_id: authResponse.localId,
-          display_elements: geoPoints.map(layer => ({
-            layer_id: layer.layerId,
-            display: layer.display,
-            points_color: layer.points_color,
-            is_heatmap: layer.is_heatmap,
-            is_grid: layer.is_grid,
-          })),
-          catalog_layer_options: geoPoints.map(layer => ({
-            layer_id: layer.layerId,
-            is_enabled: layer.is_enabled || true,
-            opacity: layer.opacity || 1,
-          })),
+          display_elements: {
+            details: geoPoints.map(layer => ({
+              layer_id: layer.layerId,
+              display: layer.display,
+              points_color: layer.points_color,
+              is_heatmap: layer.is_heatmap,
+              is_grid: layer.is_grid,
+              is_enabled: layer.is_enabled || true,
+              opacity: layer.opacity || 1,
+            })),
+            markers: markers.map(marker => ({
+              id: marker.id,
+              name: marker.name,
+              description: marker.description,
+              coordinates: marker.coordinates,
+              timestamp: marker.timestamp,
+            })),
+          },
+          thumbnail_url: thumbnailDataUrl,
         },
       };
 
       formData.append('req', JSON.stringify(requestBody));
+
+      console.log(requestBody);
 
       const res = await apiRequest({
         url: urls.save_producer_catalog,
@@ -498,6 +510,28 @@ export function CatalogProvider(props: { children: ReactNode }) {
     }
   }
 
+  function addMarker(name: string, description: string, coordinates: [number, number]) {
+    const newMarker: MarkerData = {
+      id: uuidv4(),
+      name,
+      description,
+      coordinates,
+      timestamp: Date.now(),
+    };
+
+    setMarkers(prevMarkers => {
+      const updatedMarkers = [...prevMarkers, newMarker];
+      return updatedMarkers;
+    });
+  }
+
+  function deleteMarker(id: string) {
+    setMarkers(prevMarkers => {
+      const updatedMarkers = prevMarkers.filter(marker => marker.id !== id);
+      return updatedMarkers;
+    });
+  }
+
   return (
     <CatalogContext.Provider
       value={{
@@ -573,6 +607,10 @@ export function CatalogProvider(props: { children: ReactNode }) {
         handleStoreUnsavedGeoPoint,
         handleNameBasedColorZone,
         handleFilteredZone,
+        markers,
+        setMarkers,
+        addMarker,
+        deleteMarker,
       }}
     >
       {children}
