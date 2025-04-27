@@ -129,3 +129,36 @@
   background-repeat: no-repeat;
   background-position: center;
 }
+
+.marker-popup {
+  z-index: 10;
+}
+
+.marker-popup .mapboxgl-popup-content {
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.marker-popup-content {
+  cursor: default;
+  user-select: text;
+  min-width: 150px;
+}
+
+.marker-popup-content h3 {
+  margin-bottom: 6px;
+  color: #333;
+}
+
+.marker-popup-content p {
+  margin-bottom: 10px;
+  color: #666;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.mapboxgl-popup-close-button {
+  padding: 6px;
+  font-size: 16px;
+}

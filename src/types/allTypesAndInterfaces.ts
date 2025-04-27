@@ -1,5 +1,6 @@
 import { AxiosRequestConfig } from 'axios';
 import React, { ReactNode } from 'react';
+import { MarkerData } from './marker';
 
 export interface ModalProps {
   children: React.ReactNode;
@@ -28,6 +29,16 @@ export interface Catalog {
   total_records?: number;
   ctlg_description?: string;
   lyrs?: { layer_id: string; points_color: string }[];
+  display_elements: {
+    details: any[];
+    markers: {
+      id: string;
+      description: string;
+      name: string;
+      timestamp: number;
+      coordinates: [number, number];
+    }[];
+  };
 }
 
 export interface UserLayer {
@@ -74,6 +85,16 @@ export interface CardItem {
   typeOfCard: string;
   points_color?: string;
   legend?: string;
+  display_elements?: {
+    details: any[];
+    markers: {
+      id: string;
+      description: string;
+      name: string;
+      timestamp: number;
+      coordinates: [number, number];
+    }[];
+  };
   lyrs?: { layer_id: string; points_color: string }[];
   city_name?: string;
 }
@@ -161,6 +182,10 @@ export interface CatalogContextType {
     requestData?: ReqGradientColorBasedOnZone
   ) => Promise<GradientColorBasedOnZone[]>;
   setReqGradientColorBasedOnZone: React.Dispatch<React.SetStateAction<any>>;
+  markers: MarkerData[];
+  setMarkers: React.Dispatch<React.SetStateAction<MarkerData[]>>;
+  addMarker: (name: string, description: string, coordinates: [number, number]) => void;
+  deleteMarker: (id: string) => void;
 }
 
 export interface GradientColorBasedOnZone extends MapFeatures {
