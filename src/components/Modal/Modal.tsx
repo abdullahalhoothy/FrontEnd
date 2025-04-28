@@ -1,11 +1,9 @@
-import React from 'react';
 import ReactDOM from 'react-dom';
-import styles from './Modal.module.css';
-import { ModalProps } from '../../types/allTypesAndInterfaces';
+import { ModalProps } from '../../types';
 import { useUIContext } from '../../context/UIContext';
 
 function Modal(props: ModalProps) {
-  const { children, darkBackground = false, isSmaller = false } = props;
+  const { children, darkBackground = false, isSmaller = false, hasAutoHeight = false } = props;
   const { closeModal, isModalOpen } = useUIContext();
 
   if (!isModalOpen) {
@@ -20,12 +18,13 @@ function Modal(props: ModalProps) {
       } ${isSmaller ? 'pointer-events-none' : ''}`}
       onClick={e => {
         e.stopPropagation();
-        console.log(`closing modal ... ${e.target.id}`);
-        if (e.target.id) closeModal();
+        if ((e.target as HTMLElement).id === 'overlay') {
+          closeModal();
+        }
       }}
     >
       <div
-        className={`bg-white p-5 w-full max-w-[950px] relative lg:h-5/6 lg:rounded-lg h-full border shadow overflow-y-auto ${
+        className={`bg-white p-5 w-full max-w-[950px] relative ${hasAutoHeight ? '' : 'lg:h-5/6 h-full'} lg:rounded-lg border shadow overflow-y-auto ${
           isSmaller ? 'flex justify-center items-center max-w-[400px] absolute left-[120px]' : ''
         } pointer-events-auto`}
       >
