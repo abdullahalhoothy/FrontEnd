@@ -223,7 +223,7 @@ const SavedLocations: React.FC = () => {
         </div>
       );
 
-      openModal(modalContent);
+      openModal(modalContent, { hasAutoHeight: true });
     };
 
     map.on('dblclick', handleDoubleClick);
