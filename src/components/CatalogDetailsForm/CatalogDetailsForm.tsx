@@ -21,6 +21,7 @@ function CatalogDetailsForm() {
     isError,
     saveResponse,
     markers,
+    setMarkers,
   } = useCatalogContext();
 
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +38,7 @@ function CatalogDetailsForm() {
   function handleButtonClick() {
     if (validateForm()) {
       handleSaveCatalog();
+      setMarkers([]);
     }
   }
 
@@ -45,6 +47,7 @@ function CatalogDetailsForm() {
     setName('');
     setDescription('');
     setSubscriptionPrice('');
+    setMarkers([]);
     setFormStage('catalog');
   }
 
@@ -122,8 +125,8 @@ function CatalogDetailsForm() {
         {markers.length > 0 && (
           <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
             <p className="text-sm text-blue-800">
-              <span className="font-medium">Note:</span> {markers.length} saved{' '}
-              {markers.length === 1 ? 'location' : 'locations'} will be included with this catalog.
+              <span className="font-medium">Note:</span> {markers.length}{' '}
+              {markers.length === 1 ? 'location' : 'locations'} will be saved with this catalog.
             </p>
           </div>
         )}
