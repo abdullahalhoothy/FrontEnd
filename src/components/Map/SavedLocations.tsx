@@ -8,17 +8,16 @@ const SavedLocations: React.FC = () => {
   const { mapRef, shouldInitializeFeatures } = useMapContext();
   const { openModal, closeModal } = useUIContext();
   const [tempMarker, setTempMarker] = useState<mapboxgl.Marker | null>(null);
-  const { formStage, markers, addMarker, deleteMarker } = useCatalogContext();
-  const [isEnabled, setIsEnabled] = useState<boolean>(false);
-
-  useEffect(() => {
-    setIsEnabled('catalog' === formStage);
-  }, [formStage]);
+  const { markers, addMarker, deleteMarker, setMarkers, isMarkersEnabled } = useCatalogContext();
 
   const markersRef = useRef<{ [id: string]: mapboxgl.Marker }>({});
 
   useEffect(() => {
-    if (!isEnabled) {
+    console.log('markers', markers);
+  }, [markers]);
+
+  useEffect(() => {
+    if (!isMarkersEnabled) {
       if (tempMarker) {
         tempMarker.remove();
         setTempMarker(null);
@@ -34,7 +33,7 @@ const SavedLocations: React.FC = () => {
 
       markersRef.current = {};
     }
-  }, [isEnabled, tempMarker]);
+  }, [isMarkersEnabled, tempMarker, setMarkers]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -43,7 +42,7 @@ const SavedLocations: React.FC = () => {
     Object.values(markersRef.current).forEach(marker => marker.remove());
     markersRef.current = {};
 
-    if (!isEnabled) return;
+    if (!isMarkersEnabled) return;
 
     markers.forEach(markerData => {
       const marker = new mapboxgl.Marker().setLngLat(markerData.coordinates).addTo(map);
@@ -109,11 +108,11 @@ const SavedLocations: React.FC = () => {
     return () => {
       Object.values(markersRef.current).forEach(marker => marker.remove());
     };
-  }, [markers, shouldInitializeFeatures, mapRef, isEnabled]);
+  }, [markers, shouldInitializeFeatures, mapRef, isMarkersEnabled]);
 
   const handleDelete = useCallback(
     (id: string) => {
-      if (!isEnabled) return;
+      if (!isMarkersEnabled) return;
 
       const currentMarkers = markersRef.current;
       if (currentMarkers[id]) {
@@ -123,14 +122,14 @@ const SavedLocations: React.FC = () => {
 
       deleteMarker(id);
     },
-    [isEnabled, deleteMarker]
+    [isMarkersEnabled, deleteMarker]
   );
 
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !shouldInitializeFeatures) return;
 
-    if (!isEnabled) {
+    if (!isMarkersEnabled) {
       if (tempMarker) {
         tempMarker.remove();
         setTempMarker(null);
@@ -139,7 +138,7 @@ const SavedLocations: React.FC = () => {
     }
 
     const handleDoubleClick = (e: mapboxgl.MapMouseEvent) => {
-      if (!isEnabled) return;
+      if (!isMarkersEnabled) return;
 
       e.preventDefault();
 
@@ -231,7 +230,15 @@ const SavedLocations: React.FC = () => {
     return () => {
       map.off('dblclick', handleDoubleClick);
     };
-  }, [mapRef, shouldInitializeFeatures, tempMarker, openModal, closeModal, isEnabled, addMarker]);
+  }, [
+    mapRef,
+    shouldInitializeFeatures,
+    tempMarker,
+    openModal,
+    closeModal,
+    isMarkersEnabled,
+    addMarker,
+  ]);
 
   return null;
 };

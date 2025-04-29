@@ -36,9 +36,9 @@ export function CatalogProvider(props: { children: ReactNode }) {
   >('Home');
 
   const [geoPoints, setGeoPoints] = useState<MapFeatures[]>([]);
-  const [lastGeoIdRequest, setLastGeoIdRequest] = useState<string | undefined>();
-  const [lastGeoMessageRequest, setLastGeoMessageRequest] = useState<string | undefined>();
-  const [lastGeoError, setLastGeoError] = useState<Error | null>(null);
+  const [, setLastGeoIdRequest] = useState<string | undefined>();
+  const [, setLastGeoMessageRequest] = useState<string | undefined>();
+  const [, setLastGeoError] = useState<Error | null>(null);
 
   const [selectedColor, setSelectedColor] = useState<{
     name: string;
@@ -76,9 +76,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [gradientColorBasedOnZone, setGradientColorBasedOnZone] = useState<
     GradientColorBasedOnZone[]
   >([]);
-  const [localLoading, setLocalLoading] = useState<boolean>(false);
-  const [postResMessage, setPostResMessage] = useState<string>('');
-  const [postResId, setPostResId] = useState<string>('');
   const [chosenPallet, setChosenPallet] = useState(null);
   const [selectedBasedon, setSelectedBasedon] = useState<string>('');
   const [layerColors, setLayerColors] = useState({});
@@ -93,6 +90,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [basedOnLayerId, setBasedOnLayerId] = useState<string | null>(null);
   const [basedOnProperty, setBasedOnProperty] = useState<string | null>(null);
   const [markers, setMarkers] = useState<MarkerData[]>([]);
+  const [isMarkersEnabled, setIsMarkersEnabled] = useState<boolean>(false);
 
   async function fetchGeoPoints(
     id: string,
@@ -611,6 +609,8 @@ export function CatalogProvider(props: { children: ReactNode }) {
         setMarkers,
         addMarker,
         deleteMarker,
+        isMarkersEnabled,
+        setIsMarkersEnabled,
       }}
     >
       {children}

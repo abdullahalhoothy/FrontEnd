@@ -143,50 +143,57 @@ export interface CatalogContextType {
   setChosenPallet: React.Dispatch<React.SetStateAction<any>>;
   radiusInput: number | null;
   setRadiusInput: React.Dispatch<React.SetStateAction<number | null>>;
+  openDropdownIndices: (number | null)[];
+  setOpenDropdownIndices: React.Dispatch<React.SetStateAction<(number | null)[]>>;
+  updateDropdownIndex: (index: number, value: number | null) => void;
+  reqGradientColorBasedOnZone: ReqGradientColorBasedOnZone;
+  setReqGradientColorBasedOnZone: React.Dispatch<React.SetStateAction<ReqGradientColorBasedOnZone>>;
   gradientColorBasedOnZone: GradientColorBasedOnZone[];
   setGradientColorBasedOnZone: React.Dispatch<React.SetStateAction<GradientColorBasedOnZone[]>>;
   handleColorBasedZone: (
     requestData?: ReqGradientColorBasedOnZone
   ) => Promise<GradientColorBasedOnZone[]>;
-  visualizationMode: VisualizationMode;
-  setVisualizationMode: React.Dispatch<React.SetStateAction<VisualizationMode>>;
-  updateLayerColor: (layerId: number, newColor: string) => void;
-  updateLayerDisplay: (layerIndex: number, display: boolean) => void;
-  updateLayerHeatmap: (layerIndex: number, isHeatmap: boolean) => void;
-  handleStoreUnsavedGeoPoint: (geoPoints: any) => void;
-  removeLayer: (layerIndex: number) => void;
-  isAdvanced: boolean;
-  setIsAdvanced: React.Dispatch<React.SetStateAction<boolean>>;
-  isAdvancedMode: Record<string, any>;
-  setIsAdvancedMode: React.Dispatch<React.SetStateAction<Record<string, any>>>;
-  openDropdownIndices: (number | null)[];
-  setOpenDropdownIndices: React.Dispatch<React.SetStateAction<(number | null)[]>>;
-  updateDropdownIndex: (index: number, value: number | null) => void;
   selectedBasedon: string;
   setSelectedBasedon: React.Dispatch<React.SetStateAction<string>>;
   layerColors: Record<string, any>;
   setLayerColors: React.Dispatch<React.SetStateAction<Record<string, any>>>;
   isRadiusMode: boolean;
   setIsRadiusMode: React.Dispatch<React.SetStateAction<boolean>>;
+  isAdvanced: boolean;
+  setIsAdvanced: React.Dispatch<React.SetStateAction<boolean>>;
+  isAdvancedMode: Record<string, any>;
+  setIsAdvancedMode: React.Dispatch<React.SetStateAction<Record<string, any>>>;
+  updateLayerColor: (layerId: number, newColor: string) => void;
+  updateLayerDisplay: (layerIndex: number, display: boolean) => void;
+  updateLayerHeatmap: (layerIndex: number, isHeatmap: boolean) => void;
   updateLayerGrid: (layerIndex: number, isGrid: boolean) => void;
-  deletedLayers: Array<{ layer: MapFeatures; index: number; timestamp: number }>;
+  removeLayer: (layerIndex: number) => void;
   restoreLayer: (timestamp: number) => void;
+  deletedLayers: {
+    layer: MapFeatures;
+    index: number;
+    timestamp: number;
+  }[];
+  visualizationMode: VisualizationMode;
+  setVisualizationMode: React.Dispatch<React.SetStateAction<VisualizationMode>>;
   basedOnLayerId: string | null;
+  setBasedOnLayerId: React.Dispatch<React.SetStateAction<string | null>>;
   basedOnProperty: string | null;
-  setBasedOnLayerId: (id: string) => void;
-  setBasedOnProperty: (id: string) => void;
+  setBasedOnProperty: React.Dispatch<React.SetStateAction<string | null>>;
   updateLayerLegend: (layerId: number, legend: string) => void;
-  handleFilteredZone: (
-    requestData?: ReqGradientColorBasedOnZone
-  ) => Promise<GradientColorBasedOnZone[]>;
+  handleStoreUnsavedGeoPoint: (geoPoints: any) => void;
   handleNameBasedColorZone: (
     requestData?: ReqGradientColorBasedOnZone
   ) => Promise<GradientColorBasedOnZone[]>;
-  setReqGradientColorBasedOnZone: React.Dispatch<React.SetStateAction<any>>;
+  handleFilteredZone: (
+    requestData?: ReqGradientColorBasedOnZone
+  ) => Promise<GradientColorBasedOnZone[]>;
   markers: MarkerData[];
   setMarkers: React.Dispatch<React.SetStateAction<MarkerData[]>>;
   addMarker: (name: string, description: string, coordinates: [number, number]) => void;
   deleteMarker: (id: string) => void;
+  isMarkersEnabled: boolean;
+  setIsMarkersEnabled: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export interface GradientColorBasedOnZone extends MapFeatures {

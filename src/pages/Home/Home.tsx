@@ -14,14 +14,10 @@ const Home = () => {
   const { isAuthenticated } = useAuth();
   const nav = useNavigate();
 
-  const [selectedTab, setSelectedTab] = useState<'LAYER' | 'CATALOG'>('LAYER');
+  const [selectedTab] = useState<'LAYER' | 'CATALOG'>('LAYER');
 
-  const handleTabSwitch = (tab: 'LAYER' | 'CATALOG') => {
-    setSelectedTab(tab);
-  };
-
-  const { openModal, resetViewState } = useUIContext();
-  const [hasOpened, setHasOpened] = useState(false);
+  const { openModal } = useUIContext();
+  const [, setHasOpened] = useState(false);
 
   const { setSelectedContainerType } = useCatalogContext();
 
@@ -32,15 +28,6 @@ const Home = () => {
     });
     setHasOpened(true);
   }, []);
-
-  // useEffect(() => {
-  //   if (!hasOpened) {
-  //     openModal(<DataContainer />, {
-  //       darkBackground: true,
-  //     });
-  //     setHasOpened(true);
-  //   }
-  // }, [hasOpened, openModal]);
 
   useEffect(() => {
     if (!isAuthenticated && selectedTab === 'CATALOG') nav('/auth');
@@ -91,20 +78,22 @@ export function HomeContent() {
 
   const [selectedTab, setSelectedTab] = useState<'LAYER' | 'CATALOG'>('LAYER');
 
-  const { setSelectedContainerType, geoPoints, handleStoreUnsavedGeoPoint } = useCatalogContext();
+  const {
+    setSelectedContainerType,
+    geoPoints,
+    handleStoreUnsavedGeoPoint,
+    setMarkers,
+    setIsMarkersEnabled,
+  } = useCatalogContext();
+
   const handleTabSwitch = (tab: 'LAYER' | 'CATALOG') => {
     setSelectedTab(tab);
+    console.log('handleTabSwitch received:', tab);
     setSelectedContainerType(tab === 'CATALOG' ? 'Catalogue' : 'Layer');
-  };
 
-  // useEffect(() => {
-  //   if (!hasOpened) {
-  //     openModal(<DataContainer />, {
-  //       darkBackground: true,
-  //     });
-  //     setHasOpened(true);
-  //   }
-  // }, [hasOpened, openModal]);
+    setIsMarkersEnabled(tab === 'CATALOG');
+    setMarkers([]);
+  };
 
   useEffect(() => {
     if (!isAuthenticated && selectedTab === 'CATALOG') nav('/auth');
