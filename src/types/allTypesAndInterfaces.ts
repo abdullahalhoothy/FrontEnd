@@ -6,7 +6,7 @@ export interface ModalProps {
   children: React.ReactNode;
   darkBackground?: boolean;
   isSmaller?: boolean;
-  hasAutoHeight?: boolean;
+  hasAutoSize?: boolean;
 }
 
 export interface ExpandableMenuProps {
@@ -366,7 +366,7 @@ export interface ReqFetchDataset {
 export interface ModalOptions {
   darkBackground?: boolean;
   isSmaller?: boolean;
-  hasAutoHeight?: boolean;
+  hasAutoSize?: boolean;
 }
 
 export interface UIContextProps {

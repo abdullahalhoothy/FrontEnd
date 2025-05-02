@@ -3,7 +3,7 @@ import { ModalProps } from '../../types';
 import { useUIContext } from '../../context/UIContext';
 
 function Modal(props: ModalProps) {
-  const { children, darkBackground = false, isSmaller = false, hasAutoHeight = false } = props;
+  const { children, darkBackground = false, isSmaller = false, hasAutoSize = false } = props;
   const { closeModal, isModalOpen } = useUIContext();
 
   if (!isModalOpen) {
@@ -24,8 +24,10 @@ function Modal(props: ModalProps) {
       }}
     >
       <div
-        className={`bg-white p-5 w-full max-w-[950px] relative ${hasAutoHeight ? '' : 'lg:h-5/6 h-full'} lg:rounded-lg border shadow overflow-y-auto ${
-          isSmaller ? 'flex justify-center items-center max-w-[400px] absolute left-[120px]' : ''
+        className={`bg-white p-5 max-w-[950px] relative ${hasAutoSize ? 'w-auto' : 'w-full lg:h-5/6 h-full'} lg:rounded-lg border shadow overflow-y-auto ${
+          isSmaller
+            ? 'flex justify-center items-center max-w-[400px] absolute inset-x-0 md:left-[140px]'
+            : ''
         } pointer-events-auto`}
       >
         <button
