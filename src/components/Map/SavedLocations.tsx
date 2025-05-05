@@ -4,6 +4,7 @@ import { useMapContext } from '../../context/MapContext';
 import { useUIContext } from '../../context/UIContext';
 import { useCatalogContext } from '../../context/CatalogContext';
 import { useLongPress } from 'use-long-press';
+import MapMenu from './MapMenu';
 import './mapbox-custom.css';
 
 const isMobile = () => {
@@ -18,6 +19,8 @@ const SavedLocations: React.FC = () => {
   const [tempMarker, setTempMarker] = useState<mapboxgl.Marker | null>(null);
   const { markers, addMarker, deleteMarker, setMarkers, isMarkersEnabled } = useCatalogContext();
   const [lastLngLat, setLastLngLat] = useState<mapboxgl.LngLat | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
+  const [menuLngLat, setMenuLngLat] = useState<mapboxgl.LngLat | null>(null);
 
   const markersRef = useRef<{ [id: string]: mapboxgl.Marker }>({});
 
@@ -259,8 +262,16 @@ const SavedLocations: React.FC = () => {
     },
     [isMarkersEnabled, markers, openModal, createMarkerModal, setMarkers]
   );
+  const formatCoordinates = useCallback((lngLat: mapboxgl.LngLat | null) => {
+    if (!lngLat) return '';
+    return `${lngLat.lng.toFixed(6)}, ${lngLat.lat.toFixed(6)}`;
+  }, []);
 
-  // Function to create a new marker at the given coordinates
+  const closeMenu = useCallback(() => {
+    setMenuPosition(null);
+    setMenuLngLat(null);
+  }, []);
+
   const createNewMarker = useCallback(
     (lngLat: mapboxgl.LngLat) => {
       if (!isMarkersEnabled || !mapRef.current) return;
@@ -288,15 +299,18 @@ const SavedLocations: React.FC = () => {
     [isMarkersEnabled, mapRef, tempMarker, addMarker, openModal, createMarkerModal]
   );
 
-  // Create a long press handler for mobile devices
   const longPressHandler = useLongPress(
-    () => {
-      if (lastLngLat) {
-        createNewMarker(lastLngLat);
+    event => {
+      if (!isMarkersEnabled || !lastLngLat) return;
+
+      if (event.target) {
+        const touch = (event as unknown as TouchEvent).touches[0];
+        setMenuPosition({ x: touch.clientX, y: touch.clientY });
+        setMenuLngLat(lastLngLat);
       }
     },
     {
-      threshold: 500, // time in ms
+      threshold: 500,
       captureEvent: true,
       cancelOnMovement: true,
     }
@@ -311,6 +325,7 @@ const SavedLocations: React.FC = () => {
         tempMarker.remove();
         setTempMarker(null);
       }
+      closeMenu();
       return;
     }
 
@@ -318,7 +333,10 @@ const SavedLocations: React.FC = () => {
     const handleRightClick = (e: mapboxgl.MapMouseEvent) => {
       if (!isMarkersEnabled) return;
       e.preventDefault();
-      createNewMarker(e.lngLat);
+
+      // Show the context menu at the clicked position
+      setMenuPosition({ x: e.originalEvent.clientX, y: e.originalEvent.clientY });
+      setMenuLngLat(e.lngLat);
     };
 
     // Handle touch for mobile (to capture coordinates)
@@ -336,10 +354,14 @@ const SavedLocations: React.FC = () => {
       });
     }
 
+    const handleMapClick = () => {
+      closeMenu();
+    };
+
     map.on('contextmenu', handleRightClick);
     map.on('touchstart', handleTouchStart);
+    map.on('click', handleMapClick);
 
-    // Remove temp marker when the modal is closed for any reason
     const handleModalClose = () => {
       if (tempMarker) {
         tempMarker.remove();
@@ -351,12 +373,14 @@ const SavedLocations: React.FC = () => {
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
         handleModalClose();
+        closeMenu();
       }
     });
 
     return () => {
       map.off('contextmenu', handleRightClick);
       map.off('touchstart', handleTouchStart);
+      map.off('click', handleMapClick);
 
       if (isMobile() && map.getContainer()) {
         const container = map.getContainer();
@@ -371,6 +395,7 @@ const SavedLocations: React.FC = () => {
       document.removeEventListener('keydown', e => {
         if (e.key === 'Escape') {
           handleModalClose();
+          closeMenu();
         }
       });
     };
@@ -386,9 +411,23 @@ const SavedLocations: React.FC = () => {
     createNewMarker,
     lastLngLat,
     longPressHandler,
+    closeMenu,
   ]);
 
-  return null;
+  return (
+    <>
+      {menuPosition && menuLngLat && (
+        <MapMenu
+          coordinates={formatCoordinates(menuLngLat)}
+          position={menuPosition}
+          lngLat={menuLngLat}
+          onClose={closeMenu}
+          onSave={createNewMarker}
+          onAction={action => console.log('Action:', action)}
+        />
+      )}
+    </>
+  );
 };
 
 export default SavedLocations;
