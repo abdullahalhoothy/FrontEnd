@@ -83,16 +83,74 @@ const PolygonsProvider = ({ children }: ProviderProps) => {
           const areaName = polygonData.areas[index];
           const matchingFeatures =
             geoPoint.features?.filter(feature => {
+              if (!feature.geometry?.coordinates || !Array.isArray(feature.geometry.coordinates)) {
+                console.error('Invalid coordinates found:', feature.geometry?.coordinates);
+                return false;
+              }
+
               const featureCoords = JSON.stringify(feature.geometry.coordinates);
               if (previouslyMatchedPoints.has(featureCoords)) return false;
-              if (
-                turf.booleanPointInPolygon(turf.point(feature.geometry.coordinates), polygonShape)
-              ) {
-                previouslyMatchedPoints.add(featureCoords);
-                return true;
+
+              try {
+                // Handling different geometry types
+                let point;
+                if (feature.geometry.type === 'Point') {
+                  // Standard point format [lng, lat]
+                  point = turf.point(feature.geometry.coordinates);
+                } else if (feature.geometry.type === 'Polygon') {
+                  // For polygons, we are using the first coordinate of the first ring
+                  if (
+                    Array.isArray(feature.geometry.coordinates[0]) &&
+                    Array.isArray(feature.geometry.coordinates[0][0])
+                  ) {
+                    point = turf.point(feature.geometry.coordinates[0][0]);
+                  } else {
+                    console.error(
+                      'Invalid polygon coordinates structure:',
+                      feature.geometry.coordinates
+                    );
+                    return false;
+                  }
+                } else {
+                  // Extracting coordinates based on the structure
+                  let coords;
+                  if (Array.isArray(feature.geometry.coordinates[0])) {
+                    if (Array.isArray(feature.geometry.coordinates[0][0])) {
+                      // Nested array like [[[x,y],[x,y]]]
+                      coords = feature.geometry.coordinates[0][0];
+                    } else {
+                      // Array like [[x,y]]
+                      coords = feature.geometry.coordinates[0];
+                    }
+                  } else {
+                    // Simple array like [x,y]
+                    coords = feature.geometry.coordinates;
+                  }
+
+                  if (!Array.isArray(coords) || coords.length < 2) {
+                    console.error('Could not extract valid coordinates:', coords);
+                    return false;
+                  }
+
+                  point = turf.point(coords);
+                }
+
+                const isInPolygon = turf.booleanPointInPolygon(point, polygonShape);
+
+                if (isInPolygon) {
+                  previouslyMatchedPoints.add(featureCoords);
+                  return true;
+                }
+                return false;
+              } catch (error) {
+                console.error('Error processing feature:', error.message);
+                console.error('Problematic coordinates:', feature.geometry?.coordinates);
+                console.error('Feature type:', feature.geometry?.type);
+                return false;
               }
-              return false;
             }) || [];
+          console.log(`Found ${matchingFeatures.length} matching features for area ${areaName}`);
+
           matchingFeatures.forEach(feature => {
             Object.entries(feature.properties).forEach(([key, val]) => {
               if (!excludedProperties.has(key)) {
@@ -204,9 +262,66 @@ export default PolygonsProvider;
 export function calculatePolygonStats(polygon: any, geoPoints: any[]) {
   // Process points within polygon
   const pointsWithin = geoPoints.map(layer => {
-    const matchingPoints = layer.features.filter(point =>
-      turf.booleanPointInPolygon(point, polygon)
+    console.log(
+      `Processing layer in calculatePolygonStats: ${layer.prdcer_layer_name || 'unnamed'}`
     );
+    console.log(`Layer has ${layer.features?.length || 0} features`);
+
+    const matchingPoints = layer.features.filter(point => {
+      try {
+        // Check if coordinates exist
+        if (!point.geometry?.coordinates || !Array.isArray(point.geometry.coordinates)) {
+          console.error('Invalid point coordinates:', point.geometry?.coordinates);
+          return false;
+        }
+
+        // Handle different geometry types and coordinate structures
+        let turfPoint;
+        if (point.geometry.type === 'Point') {
+          // Standard point format [lng, lat]
+          turfPoint = turf.point(point.geometry.coordinates);
+        } else if (point.geometry.type === 'Polygon') {
+          // For polygons, use the first coordinate of the first ring
+          if (
+            Array.isArray(point.geometry.coordinates[0]) &&
+            Array.isArray(point.geometry.coordinates[0][0])
+          ) {
+            turfPoint = turf.point(point.geometry.coordinates[0][0]);
+          } else {
+            console.error('Invalid polygon coordinates structure:', point.geometry.coordinates);
+            return false;
+          }
+        } else {
+          // Extract coordinates based on the structure
+          let coords;
+          if (Array.isArray(point.geometry.coordinates[0])) {
+            if (Array.isArray(point.geometry.coordinates[0][0])) {
+              // Nested array like [[[x,y],[x,y]]]
+              coords = point.geometry.coordinates[0][0];
+            } else {
+              // Array like [[x,y]]
+              coords = point.geometry.coordinates[0];
+            }
+          } else {
+            // Simple array like [x,y]
+            coords = point.geometry.coordinates;
+          }
+
+          if (!Array.isArray(coords) || coords.length < 2) {
+            console.error('Could not extract valid coordinates:', coords);
+            return false;
+          }
+
+          turfPoint = turf.point(coords);
+        }
+
+        return turf.booleanPointInPolygon(turfPoint, polygon);
+      } catch (error) {
+        console.error('Error in point-in-polygon check:', error.message);
+        console.error('Problematic point geometry:', point.geometry);
+        return false;
+      }
+    });
 
     return {
       title: layer.layer_legend || layer.prdcer_layer_name,

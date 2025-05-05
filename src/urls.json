@@ -1,5 +1,5 @@
 {
-  "REACT_APP_API_URL": "http://localhost:8000/fastapi",
+  "REACT_APP_API_URL": "/fastapi",
   "catlog_collection": "/catlog_collection",
   "layer_collection": "/layer_collection",
   "fetch_acknowlg_id": "/fetch_acknowlg_id",
@@ -34,9 +34,13 @@
   "list_stripe_payment_methods": "/list_stripe_payment_methods",
   "detach_stripe_payment_method": "/detach_stripe_payment_method",
   "get_stripe_customer": "/fetch_stripe_customer",
+
   "top_up_wallet": "/top_up_wallet",
   "fetch_wallet": "/fetch_wallet",
   "deduct_wallet": "/deduct_wallet",
   "delete_producer_catalog": "/delete_producer_catalog",
-  "delete_layer": "/delete_layer"
+  "delete_layer": "/delete_layer",
+  "filter_based_zone": "/filter_based_on",
+  "process_llm_query": "/process_llm_query",
+  "gradient_color_based_on_zone_llm": "gradient_color_based_on_zone_llm"
 }

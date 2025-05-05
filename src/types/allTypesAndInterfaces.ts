@@ -1,10 +1,12 @@
 import { AxiosRequestConfig } from 'axios';
 import React, { ReactNode } from 'react';
+import { MarkerData } from './marker';
 
 export interface ModalProps {
   children: React.ReactNode;
   darkBackground?: boolean;
   isSmaller?: boolean;
+  hasAutoSize?: boolean;
 }
 
 export interface ExpandableMenuProps {
@@ -28,6 +30,16 @@ export interface Catalog {
   total_records?: number;
   ctlg_description?: string;
   lyrs?: { layer_id: string; points_color: string }[];
+  display_elements: {
+    details: any[];
+    markers: {
+      id: string;
+      description: string;
+      name: string;
+      timestamp: number;
+      coordinates: [number, number];
+    }[];
+  };
 }
 
 export interface UserLayer {
@@ -66,7 +78,6 @@ export interface UserLayerCardProps {
   typeOfCard: string;
   legend: string;
   points_color?: string;
-  progress?: number;
   onMoreInfo(selectedCatalog: { id: string; name: string; typeOfCard: string }): void;
 }
 export interface CardItem {
@@ -75,6 +86,16 @@ export interface CardItem {
   typeOfCard: string;
   points_color?: string;
   legend?: string;
+  display_elements?: {
+    details: any[];
+    markers: {
+      id: string;
+      description: string;
+      name: string;
+      timestamp: number;
+      coordinates: [number, number];
+    }[];
+  };
   lyrs?: { layer_id: string; points_color: string }[];
   city_name?: string;
 }
@@ -122,37 +143,57 @@ export interface CatalogContextType {
   setChosenPallet: React.Dispatch<React.SetStateAction<any>>;
   radiusInput: number | null;
   setRadiusInput: React.Dispatch<React.SetStateAction<number | null>>;
-  gradientColorBasedOnZone: GradientColorBasedOnZone[];
-  setGradientColorBasedOnZone: React.Dispatch<React.SetStateAction<GradientColorBasedOnZone[]>>;
-  handleColorBasedZone: (requestData?: ReqGradientColorBasedOnZone) => Promise<void>;
-  visualizationMode: VisualizationMode;
-  setVisualizationMode: React.Dispatch<React.SetStateAction<VisualizationMode>>;
-  updateLayerColor: (layerId: number, newColor: string) => void;
-  updateLayerDisplay: (layerIndex: number, display: boolean) => void;
-  updateLayerHeatmap: (layerIndex: number, isHeatmap: boolean) => void;
-  handleStoreUnsavedGeoPoint: (geoPoints: any) => void;
-  removeLayer: (layerIndex: number) => void;
-  isAdvanced: boolean;
-  setIsAdvanced: React.Dispatch<React.SetStateAction<boolean>>;
-  isAdvancedMode: Record<string, any>;
-  setIsAdvancedMode: React.Dispatch<React.SetStateAction<Record<string, any>>>;
   openDropdownIndices: (number | null)[];
   setOpenDropdownIndices: React.Dispatch<React.SetStateAction<(number | null)[]>>;
   updateDropdownIndex: (index: number, value: number | null) => void;
+  reqGradientColorBasedOnZone: ReqGradientColorBasedOnZone;
+  setReqGradientColorBasedOnZone: React.Dispatch<React.SetStateAction<ReqGradientColorBasedOnZone>>;
+  gradientColorBasedOnZone: GradientColorBasedOnZone[];
+  setGradientColorBasedOnZone: React.Dispatch<React.SetStateAction<GradientColorBasedOnZone[]>>;
+  handleColorBasedZone: (
+    requestData?: ReqGradientColorBasedOnZone
+  ) => Promise<GradientColorBasedOnZone[]>;
   selectedBasedon: string;
   setSelectedBasedon: React.Dispatch<React.SetStateAction<string>>;
   layerColors: Record<string, any>;
   setLayerColors: React.Dispatch<React.SetStateAction<Record<string, any>>>;
   isRadiusMode: boolean;
   setIsRadiusMode: React.Dispatch<React.SetStateAction<boolean>>;
+  isAdvanced: boolean;
+  setIsAdvanced: React.Dispatch<React.SetStateAction<boolean>>;
+  isAdvancedMode: Record<string, any>;
+  setIsAdvancedMode: React.Dispatch<React.SetStateAction<Record<string, any>>>;
+  updateLayerColor: (layerId: number, newColor: string) => void;
+  updateLayerDisplay: (layerIndex: number, display: boolean) => void;
+  updateLayerHeatmap: (layerIndex: number, isHeatmap: boolean) => void;
   updateLayerGrid: (layerIndex: number, isGrid: boolean) => void;
-  deletedLayers: Array<{ layer: MapFeatures; index: number; timestamp: number }>;
+  removeLayer: (layerIndex: number) => void;
   restoreLayer: (timestamp: number) => void;
+  deletedLayers: {
+    layer: MapFeatures;
+    index: number;
+    timestamp: number;
+  }[];
+  visualizationMode: VisualizationMode;
+  setVisualizationMode: React.Dispatch<React.SetStateAction<VisualizationMode>>;
   basedOnLayerId: string | null;
+  setBasedOnLayerId: React.Dispatch<React.SetStateAction<string | null>>;
   basedOnProperty: string | null;
-  setBasedOnLayerId: (id: string) => void;
-  setBasedOnProperty: (id: string) => void;
+  setBasedOnProperty: React.Dispatch<React.SetStateAction<string | null>>;
   updateLayerLegend: (layerId: number, legend: string) => void;
+  handleStoreUnsavedGeoPoint: (geoPoints: any) => void;
+  handleNameBasedColorZone: (
+    requestData?: ReqGradientColorBasedOnZone
+  ) => Promise<GradientColorBasedOnZone[]>;
+  handleFilteredZone: (
+    requestData?: ReqGradientColorBasedOnZone
+  ) => Promise<GradientColorBasedOnZone[]>;
+  markers: MarkerData[];
+  setMarkers: React.Dispatch<React.SetStateAction<MarkerData[]>>;
+  addMarker: (name: string, description: string, coordinates: [number, number]) => void;
+  deleteMarker: (id: string) => void;
+  isMarkersEnabled: boolean;
+  setIsMarkersEnabled: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export interface GradientColorBasedOnZone extends MapFeatures {
@@ -171,6 +212,8 @@ export interface ReqGradientColorBasedOnZone {
   coverage_value: number | string;
   coverage_property: string;
   color_based_on: string;
+  threshold?: number | string;
+  list_names?: string[];
 }
 
 interface Color {
@@ -234,7 +277,7 @@ export interface LayerContextType {
   setSaveMethod: React.Dispatch<React.SetStateAction<string>>;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
   incrementFormStage(): void;
-  handleSaveLayer(layerData: LayerCustomization | { layers: LayerCustomization[] }): Promise<void>;
+  handleSaveLayer(): void;
   resetFormStage(): void;
   selectedColor: Color | null;
   setSelectedColor: React.Dispatch<React.SetStateAction<Color | null>>;
@@ -281,9 +324,6 @@ export interface LayerContextType {
   selectedCity: string;
   setSelectedCity: (city: string) => void;
 
-  layerDataMap: LayerDataMap;
-  setLayerDataMap: React.Dispatch<React.SetStateAction<LayerDataMap>>;
-
   currentLayerGroup: LayerGroup | null;
   setCurrentLayerGroup: React.Dispatch<React.SetStateAction<LayerGroup | null>>;
 
@@ -301,8 +341,10 @@ export interface LayerContextType {
   handlePopulationLayer: (shouldInclude: boolean) => Promise<void>;
   switchPopulationLayer: () => Promise<void>;
   refetchPopulationLayer: () => Promise<void>;
-  propsFetchingProgress: { [layerId: number]: number };
-  propsSetFetchingProgress: React.Dispatch<React.SetStateAction<{ [layerId: number]: number }>>;
+  handleSubmitFetchDataset: (
+    action: string,
+    event?: React.MouseEvent<HTMLButtonElement>
+  ) => boolean | Error;
 }
 
 export interface ReqFetchDataset {
@@ -324,6 +366,7 @@ export interface ReqFetchDataset {
 export interface ModalOptions {
   darkBackground?: boolean;
   isSmaller?: boolean;
+  hasAutoSize?: boolean;
 }
 
 export interface UIContextProps {
@@ -345,11 +388,11 @@ export interface UIContextProps {
   setIsDrawerOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export interface GeoPointLocation {
+export interface GeoPoint {
   location: { lat: number; lng: number };
 }
 
-export type ArrayGeoPoint = Array<GeoPointLocation>;
+export type ArrayGeoPoint = Array<GeoPoint>;
 
 export interface BoxmapProperties {
   name: string;
@@ -411,16 +454,30 @@ export interface TabularData {
   user_ratings_total: number;
   website: string;
 }
+export interface AuthUser {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+}
+
 export interface AuthSuccessResponse {
-  kind: string;
   localId: string;
   email: string;
   displayName: string;
   idToken: string;
-  registered: boolean;
   refreshToken: string;
   expiresIn: string;
-  created_at: number; // We'll add this when saving to localStorage
+  user: AuthUser;
+}
+
+export type AuthResponse = AuthSuccessResponse | null;
+
+export interface AuthContextType {
+  authResponse: AuthResponse;
+  setAuthResponse: React.Dispatch<React.SetStateAction<AuthResponse>>;
+  isAuthenticated: boolean;
+  logout: () => void;
 }
 
 export interface AuthFailedResponse {
@@ -731,12 +788,4 @@ export interface PropertyStats {
   count: number;
   average?: number;
   median?: number;
-}
-
-export interface LegendFormatData {
-  selectedCountry: string;
-  selectedCity: string;
-  action?: string;
-  includedTypes: string[];
-  excludedTypes: string[];
 }

@@ -20,14 +20,10 @@ import {
   LayerCustomization,
   LayerState,
   MapFeatures,
-  Feature,
-  LayerGroup,
-  Layer,
 } from '../types/allTypesAndInterfaces';
 import urls from '../urls.json';
 import { useCatalogContext } from './CatalogContext';
 import { useAuth } from '../context/AuthContext';
-import { hasAuthCredentials } from '../guards';
 import { useNavigate } from 'react-router-dom';
 import { processCityData, getDefaultLayerColor, colorOptions } from '../utils/helperFunctions';
 import apiRequest from '../services/apiRequest';
@@ -35,6 +31,7 @@ import { defaultMapConfig } from '../hooks/map/useMapInitialization';
 import { useMapContext } from './MapContext';
 import { isIntelligentLayer } from '../utils/layerUtils';
 import { mapZoomToFakeDataZoom } from '../utils/mapZoomUtils';
+import _ from 'lodash';
 
 const FAKE_IS_ENABLED = true;
 
@@ -55,8 +52,6 @@ const getFakeData = async (zoomLevel: number) => {
 const LayerContext = createContext<LayerContextType | undefined>(undefined);
 
 export function LayerProvider(props: { children: ReactNode }) {
-  const [fetchingProgress, setFetchingProgress] = useState<{ [layerId: number]: number }>({});
-  // console.log(fetchingProgress, 'bdsdhksdk');
   const navigate = useNavigate();
   const { authResponse } = useAuth();
   const { children } = props;
@@ -119,6 +114,7 @@ export function LayerProvider(props: { children: ReactNode }) {
   const pageCountsRef = useRef<{ [layerId: string]: number }>({});
 
   const [layerDataMap, setLayerDataMap] = useState<LayerDataMap>({});
+  const [showErrorMessage, setShowErrorMessage] = useState<boolean>(false);
 
   const [selectedCountry, setSelectedCountry] = useState<string>('');
   const [selectedCity, setSelectedCity] = useState<string>('');
@@ -140,9 +136,7 @@ export function LayerProvider(props: { children: ReactNode }) {
     }
   }
 
-  async function handleSaveLayer(
-    layerData: LayerCustomization | { layers: LayerCustomization[] }
-  ): Promise<void> {
+  async function handleSaveLayer(layerData: LayerCustomization | { layers: LayerCustomization[] }) {
     if ('layers' in layerData) {
       // Handle multiple layers
       for (const layer of layerData.layers) {
@@ -163,7 +157,7 @@ export function LayerProvider(props: { children: ReactNode }) {
       layer_legend: layerData.legend,
       layer_description: layerData.description,
       city_name: reqFetchDataset.selectedCity,
-      user_id: hasAuthCredentials(authResponse) ? authResponse.localId : undefined,
+      user_id: authResponse?.localId,
     };
 
     try {
@@ -186,18 +180,14 @@ export function LayerProvider(props: { children: ReactNode }) {
     setCreateLayerformStage('initial');
   }
 
-  async function updateGeoJSONDataset(
-    response: FetchDatasetResponse,
-    layerId: number,
-    defaultName: string
-  ) {
+  function updateGeoJSONDataset(data: any, layerId: number, layerName: string) {
     setGeoPoints((prevPoints: MapFeatures[] | MapFeatures | any) => {
       const layerKey = String(layerId);
 
       pageCountsRef.current[layerKey] = (pageCountsRef.current[layerKey] || 0) + 1;
 
       // Skip merging if response has no features
-      if (!response.features?.length) {
+      if (!data.features?.length) {
         console.warn(`No features in response for layer ${layerId}, skipping...`);
         return prevPoints;
       }
@@ -210,7 +200,7 @@ export function LayerProvider(props: { children: ReactNode }) {
         type: 'FeatureCollection',
         features: [
           ...(existingPoint?.features || []), // Keep existing features if any
-          ...response.features.map((f: Feature) => ({
+          ...data.features.map(f => ({
             type: 'Feature',
             geometry: f.geometry,
             properties: f.properties,
@@ -221,27 +211,22 @@ export function LayerProvider(props: { children: ReactNode }) {
         points_color: existingPoint?.points_color || getDefaultLayerColor(layerId),
         layerId: String(layerId),
         city_name: reqFetchDataset.selectedCity,
-        layer_legend: defaultName,
-        prdcer_layer_name: defaultName,
-        prdcer_lyr_id: response.prdcer_lyr_id,
-        bknd_dataset_id: response.bknd_dataset_id,
+        layer_legend: layerName,
+        prdcer_layer_name: layerName,
+        prdcer_lyr_id: data.prdcer_lyr_id,
+        bknd_dataset_id: data.bknd_dataset_id,
       };
 
-      const filteredPoints = prevPoints.filter(
-        (p: MapFeatures) => String(p.layerId) !== String(layerId)
-      );
+      const filteredPoints = prevPoints.filter(p => String(p.layerId) !== String(layerId));
       const newPoints = [...filteredPoints, newPoint];
 
-      if (response.next_page_token) {
-        handleFetchDataset('full data', response.next_page_token, layerId).catch(err => {
-          console.error(`Error fetching page for layer ${layerId}:`, err);
-        });
+      if (data.next_page_token) {
+        fetchAllPagesForLayer(layerId, layerName, data.next_page_token, data.prdcer_lyr_id).catch(
+          err => {
+            console.error(`Error fetching page for layer ${layerId}:`, err);
+          }
+        );
       } else {
-        // No more pages to fetch, set progress to 100%
-        setFetchingProgress(prev => ({
-          ...prev,
-          [layerId]: 100,
-        }));
         delete pageCountsRef.current[layerKey];
       }
 
@@ -249,20 +234,14 @@ export function LayerProvider(props: { children: ReactNode }) {
     });
   }
   //To be removed after fixed on backend
-  function assignPopularityCategory(json: {
-    features: Array<{
-      properties: { popularity_score: number; popularity_score_category?: string };
-    }>;
-  }): void {
+  function assignPopularityCategory(json: any): void {
     let features = json.features;
 
     // Extract popularity scores
-    let scores = features.map(
-      (f: { properties: { popularity_score: number } }) => f.properties.popularity_score
-    );
+    let scores = features.map(f => f.properties.popularity_score);
 
     // Compute percentiles
-    scores.sort((a: number, b: number) => b - a);
+    scores.sort((a, b) => b - a);
     let quartile = Math.ceil(scores.length / 4);
 
     let thresholds = {
@@ -272,27 +251,34 @@ export function LayerProvider(props: { children: ReactNode }) {
     };
 
     // Assign categories
-    features.forEach(
-      (feature: {
-        properties: { popularity_score: number; popularity_score_category?: string };
-      }) => {
-        if (!feature.properties.popularity_score_category) {
-          let score = feature.properties.popularity_score;
-          if (score >= thresholds.very_high) {
-            feature.properties.popularity_score_category = 'very high';
-          } else if (score >= thresholds.high) {
-            feature.properties.popularity_score_category = 'high';
-          } else if (score >= thresholds.mid) {
-            feature.properties.popularity_score_category = 'mid';
-          } else {
-            feature.properties.popularity_score_category = 'low';
-          }
+    features.forEach(feature => {
+      if (!feature.properties.popularity_score_category) {
+        let score = feature.properties.popularity_score;
+        if (score >= thresholds.very_high) {
+          feature.properties.popularity_score_category = 'very high';
+        } else if (score >= thresholds.high) {
+          feature.properties.popularity_score_category = 'high';
+        } else if (score >= thresholds.mid) {
+          feature.properties.popularity_score_category = 'mid';
+        } else {
+          feature.properties.popularity_score_category = 'low';
         }
       }
-    );
+    });
   }
 
-  async function handleFetchDataset(action: string, pageToken?: string, layerId?: number) {
+  const layerDataMapRef = useRef<LayerDataMap>({});
+  useEffect(() => {
+    layerDataMapRef.current = layerDataMap;
+  }, [layerDataMap]);
+
+  async function handleFetchDataset(
+    action: string,
+    pageToken?: string,
+    layerId?: number,
+    prevPrdcerLyrId?: string,
+    customBody?: any
+  ) {
     if (!pageToken && !layerId) {
       setGeoPoints(prev => prev.filter(p => isIntelligentLayer(p)));
       setLayerDataMap({});
@@ -302,7 +288,7 @@ export function LayerProvider(props: { children: ReactNode }) {
     let idToken: string;
 
     try {
-      if (hasAuthCredentials(authResponse)) {
+      if (authResponse && 'idToken' in authResponse) {
         user_id = authResponse.localId;
         idToken = authResponse.idToken;
       } else if (action == 'full data') {
@@ -322,9 +308,7 @@ export function LayerProvider(props: { children: ReactNode }) {
         ...prev,
         action: action,
       }));
-
       if (searchType !== 'keyword_search') {
-        // Handle category search
         for (const layer of layers) {
           try {
             if (!layer) continue;
@@ -343,6 +327,11 @@ export function LayerProvider(props: { children: ReactNode }) {
                 : ''
             }`;
 
+            const prdcerLayerId = layerDataMapRef.current[layer.id]?.prdcer_lyr_id;
+            const payloadLayerId = pageToken
+              ? prevPrdcerLyrId || layerDataMapRef.current[layer.id]?.prdcer_lyr_id || ''
+              : '';
+
             const res = await apiRequest({
               url: urls.fetch_dataset,
               method: 'post',
@@ -350,7 +339,7 @@ export function LayerProvider(props: { children: ReactNode }) {
                 country_name: reqFetchDataset.selectedCountry,
                 city_name: reqFetchDataset.selectedCity,
                 boolean_query: layer.includedTypes?.join(' OR '),
-                layerId: layer.id,
+                layerId: payloadLayerId,
                 layer_name: defaultName,
                 action: action,
                 search_type: searchType,
@@ -361,126 +350,212 @@ export function LayerProvider(props: { children: ReactNode }) {
               },
               isAuthRequest: true,
             });
-
             if (res?.data?.data) {
-              // Update progress bar for the current layer
-              if (res.data.data.progress) {
-                setFetchingProgress(prev => ({
-                  ...prev,
-                  [layer.id]: res.data.data.progress || 0,
-                }));
-              }
-
-              // Handle delay before next call
-              if (res.data.delay_before_next_call) {
-                console.log(
-                  `Waiting for ${res.data.delay_before_next_call} seconds before next call...`
-                );
-                await new Promise(resolve =>
-                  setTimeout(resolve, res.data.delay_before_next_call * 1000)
-                );
-              }
-
+              await assignPopularityCategory(res?.data?.data); //To be removed after fixed on backend
               setLayerDataMap(prev => ({
                 ...prev,
                 [layer.id]: res.data.data,
               }));
 
-              // If there's no next_page_token, set progress to 100%
-              if (!res.data.data.next_page_token) {
-                setFetchingProgress(prev => ({
-                  ...prev,
-                  [layer.id]: 100,
-                }));
-              }
-
               updateGeoJSONDataset(res.data.data, layer.id, defaultName);
             }
           } catch (error) {
             console.error(`Error fetching layer ${layer?.id}:`, error);
+            if (error?.response?.data?.detail === 'Insufficient balance in wallet') {
+              resetFormStage();
+              setShowErrorMessage(true);
+              return;
+            }
             setIsError(error instanceof Error ? error : new Error(String(error)));
+            // Re-throw to propagate it upward:
+            throw error;
           }
         }
       } else {
-        // Handle keyword search
-        try {
-          const defaultName = `${reqFetchDataset.selectedCountry} ${reqFetchDataset.selectedCity} ${textSearchInput?.trim()}`;
-          const res = await apiRequest({
-            url: urls.fetch_dataset,
-            method: 'post',
-            body: {
-              country_name: reqFetchDataset.selectedCountry,
-              city_name: reqFetchDataset.selectedCity,
-              boolean_query: '',
-              layerId: 1,
-              layer_name: defaultName,
-              action: action,
-              search_type: searchType,
-              text_search: textSearchInput?.trim(),
-              page_token: pageToken || '',
-              user_id: user_id,
-              zoom_level: currentZoomLevel,
-            },
-            isAuthRequest: true,
-          });
-
-          if (res?.data?.data) {
-            await assignPopularityCategory(res?.data?.data); // To be removed after fixed on backend
-
-            // Update progress bar for the keyword search layer
-            if (res.data.data.progress) {
-              setFetchingProgress(prev => ({
-                ...prev,
-                [1]: res.data.data.progress || 0,
-              }));
-            }
-
-            // Handle delay before next call
-            if (res.data.delay_before_next_call) {
-              console.log(
-                `Waiting for ${res.data.delay_before_next_call} seconds before next call...`
-              );
-              await new Promise(resolve =>
-                setTimeout(resolve, res.data.delay_before_next_call * 1000)
-              );
-            }
-
-            setLayerDataMap(prev => ({
-              ...prev,
-              [1]: res.data.data,
-            }));
-
-            // If there's no next_page_token, set progress to 100%
-            if (!res.data.data.next_page_token) {
-              setFetchingProgress(prev => ({
-                ...prev,
-                [1]: 100,
-              }));
-            }
-
-            // Create a synthetic layer for keyword search
-            const keywordLayer = {
+        let defaultName = `${reqFetchDataset.selectedCountry} ${reqFetchDataset.selectedCity} ${textSearchInput?.trim()}`;
+        const res = await apiRequest({
+          url: urls.fetch_dataset,
+          method: 'post',
+          body: {
+            country_name: reqFetchDataset.selectedCountry,
+            city_name: reqFetchDataset.selectedCity,
+            boolean_query: '',
+            layerId: payloadLayerId,
+            layer_name: defaultName,
+            action: action,
+            search_type: searchType,
+            text_search: textSearchInput?.trim(),
+            page_token: pageToken || '',
+            user_id: user_id,
+            zoom_level: currentZoomLevel,
+          },
+          isAuthRequest: true,
+        });
+        if (res?.data?.data) {
+          await assignPopularityCategory(res?.data?.data); //To be removed after fixed on backend
+          setLayerDataMap(prev => ({
+            ...prev,
+            [1]: res.data.data,
+          }));
+          let layers = [
+            {
               id: 1,
               name: textSearchInput?.trim(),
               points_color: '',
               excludedTypes: [],
               includedTypes: [textSearchInput?.trim()],
-            };
+            },
+          ];
+          updateGeoJSONDataset(res.data.data, 1, defaultName);
+          setReqFetchDataset(prev => ({
+            ...prev,
+            layers: layers,
+          }));
+        }
+      }
 
-            updateGeoJSONDataset(res.data.data, 1, defaultName);
+      if (!!customBody) {
+        try {
+          // Set the country and city directly
+          const countryName = customBody.country_name || customBody.selectedCountry;
+          const cityName = customBody.city_name || customBody.selectedCity;
+          setSelectedCountry(countryName);
+          setSelectedCity(cityName);
+
+          // Extract layer name and other properties from customBody
+          const defaultName =
+            customBody.layer_name ||
+            `${customBody.city_name || customBody.selectedCity} ${_.upperFirst(customBody.boolean_query)}`;
+
+          // If this is coming from the LLM, we need to prepare the body for the fetch_dataset endpoint
+          const fetchBody = {
+            user_id: authResponse?.localId,
+            city_name: customBody.city_name || customBody.selectedCity,
+            country_name: customBody.country_name || customBody.selectedCountry,
+            boolean_query: customBody.boolean_query || '',
+            action: action || customBody.action || 'sample',
+            search_type: customBody.search_type || 'category_search',
+            zoom_level: backendZoom || defaultMapConfig.zoomLevel,
+            ...customBody,
+          };
+
+          // Add this line to log the page token
+          if (pageToken) {
+            fetchBody.page_token = pageToken;
+          }
+
+          const res = await apiRequest({
+            url: urls.fetch_dataset,
+            method: 'post',
+            body: fetchBody,
+            isAuthRequest: true,
+          });
+
+          if (res?.data?.data) {
+            await assignPopularityCategory(res?.data?.data);
+
+            // Update layer data map
+            setLayerDataMap(prev => ({
+              ...prev,
+              1002: res.data.data,
+            }));
+
+            // Create a proper layer configuration
+            let layers = [
+              {
+                id: 1002,
+                name: defaultName,
+                points_color: customBody.points_color || getDefaultLayerColor(1002),
+                excludedTypes: customBody.excludedTypes || [],
+                includedTypes: customBody.boolean_query
+                  ? [customBody.boolean_query]
+                  : customBody.includedTypes || [],
+              },
+            ];
+
+            setReqFetchDataset(prev => ({
+              ...prev,
+              layers: layers,
+              selectedCity: customBody.city_name || customBody.selectedCity || prev.selectedCity,
+              selectedCountry: customBody.country_name || prev.selectedCountry,
+            }));
+
+            updateGeoJSONDataset(res.data.data, 1002, defaultName);
+
+            if (action === 'full data' || customBody.action === 'full data') {
+              setCentralizeOnce(true);
+            }
+
+            incrementFormStage();
+
+            // For full data, we handle pagination
+            if (
+              (action === 'full data' || customBody.action === 'full data') &&
+              res.data.data.next_page_token &&
+              !pageToken // Only call fetchAllPages if this is the initial request
+            ) {
+              fetchAllPages(1002, res.data.data.next_page_token, customBody);
+            }
+
+            return res.data.data;
           }
         } catch (error) {
-          console.error(`Error fetching keyword search:`, error);
+          console.error(`Error fetching custom layer`, error);
           setIsError(error instanceof Error ? error : new Error(String(error)));
+          throw error;
         }
       }
     } catch (error) {
       setIsError(error instanceof Error ? error : new Error(String(error)));
     } finally {
-      // Reset loader
       setShowLoaderTopup(false);
     }
   }
+
+  async function fetchAllPages(layerId: number, initialPageToken: string, customBody?: any) {
+    let pageToken = initialPageToken;
+    let prevPrdcerLyrId = '';
+
+    while (pageToken) {
+      const resData = await handleFetchDataset(
+        'full data',
+        pageToken,
+        layerId,
+        prevPrdcerLyrId,
+        customBody
+      );
+
+      if (!resData) {
+        console.log('No data returned, stopping pagination');
+        break;
+      }
+
+      // Use the prdcer_lyr_id from the current response for the next call
+      prevPrdcerLyrId = resData.prdcer_lyr_id;
+
+      pageToken = resData.next_page_token || '';
+    }
+  }
+
+  async function fetchAllPagesForLayer(
+    layerId: number,
+    defaultName: string,
+    initialPageToken: string,
+    initialPrdcerLyrId: string
+  ) {
+    let pageToken = initialPageToken;
+    let prevPrdcerLyrId = initialPrdcerLyrId;
+    // Loop until there is no pageToken
+    while (pageToken) {
+      // Await each API call and get its response data
+      const resData = await handleFetchDataset('full data', pageToken, layerId, prevPrdcerLyrId);
+      if (!resData) break;
+      // Use the prdcer_lyr_id from the current response for the next call
+      prevPrdcerLyrId = resData.prdcer_lyr_id;
+      pageToken = resData.next_page_token || '';
+    }
+  }
+
   async function handleGetCountryCityCategory() {
     try {
       const res = await apiRequest({
@@ -489,7 +564,7 @@ export function LayerProvider(props: { children: ReactNode }) {
       });
       setCountries(processCityData(res.data.data, setCitiesData));
     } catch (error) {
-      setIsError(error instanceof Error ? error : new Error(String(error)));
+      setIsError(error);
     }
 
     try {
@@ -499,7 +574,7 @@ export function LayerProvider(props: { children: ReactNode }) {
       });
       setCategories(res.data.data);
     } catch (error) {
-      setIsError(error instanceof Error ? error : new Error(String(error)));
+      setIsError(error);
     }
   }
 
@@ -709,7 +784,7 @@ export function LayerProvider(props: { children: ReactNode }) {
       await waitForMapReady();
 
       // Check authentication
-      if (!hasAuthCredentials(authResponse)) {
+      if (!authResponse?.localId || !authResponse?.idToken) {
         const message = 'Authentication required. Please log in to use this feature.';
         console.error(message);
         setIsError(new Error(message));
@@ -745,8 +820,8 @@ export function LayerProvider(props: { children: ReactNode }) {
               body: {
                 text_search: '',
                 page_token: '',
-                user_id: hasAuthCredentials(authResponse) ? authResponse.localId : '0000',
-                idToken: hasAuthCredentials(authResponse) ? authResponse.idToken : '',
+                user_id: authResponse.localId,
+                idToken: authResponse.idToken,
                 zoom_level: currentZoomLevel,
                 country_name: selectedCountry,
                 city_name: selectedCity,
@@ -765,10 +840,10 @@ export function LayerProvider(props: { children: ReactNode }) {
           }
           console.log('res', res);
           setGeoPoints(prevPoints => {
-            const populationLayer: MapFeatures = {
-              layerId: 1001,
+            const populationLayer = {
+              layerId: 1001, // Special ID for population layer
               type: 'FeatureCollection',
-              features: res.data.data?.features || [],
+              features: res.data.data?.features,
               display: true,
               points_color: colorOptions[0].hex,
               city_name: selectedCity,
@@ -779,11 +854,6 @@ export function LayerProvider(props: { children: ReactNode }) {
               is_refetch: isRefetch,
               basedon: 'population',
               visualization_mode: 'grid',
-              // Required properties for MapFeatures
-              bknd_dataset_id: res.data.data?.bknd_dataset_id || '',
-              prdcer_lyr_id: res.data.data?.prdcer_lyr_id || '',
-              records_count: res.data.data?.records_count || 0,
-              next_page_token: res.data.data?.next_page_token || '',
             };
 
             const filteredPoints = prevPoints.filter(
@@ -796,12 +866,6 @@ export function LayerProvider(props: { children: ReactNode }) {
           setLayerDataMap(prev => ({
             ...prev,
             1001: res.data.data,
-          }));
-
-          // Set progress to 100% for population layer
-          setFetchingProgress(prev => ({
-            ...prev,
-            1001: 100,
           }));
         } catch (error) {
           const message =
@@ -829,20 +893,26 @@ export function LayerProvider(props: { children: ReactNode }) {
     }
   }
 
-  // Define default values for the required properties
-  const [currentLayerGroup, setCurrentLayerGroup] = useState<LayerGroup | null>(null);
+  const handleSubmitFetchDataset = (
+    action: string,
+    event?: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    if (event) event.preventDefault();
 
-  // Define the required functions
-  const addLayerToGroup = (groupId: string, layer: Layer) => {
-    console.log(`Adding layer ${layer.id} to group ${groupId}`);
-  };
+    const result = validateFetchDatasetForm();
 
-  const removeLayerFromGroup = (groupId: string, layerId: number) => {
-    console.log(`Removing layer ${layerId} from group ${groupId}`);
-  };
-
-  const updateLayerInGroup = (groupId: string, layerId: number, updates: Partial<Layer>) => {
-    console.log(`Updating layer ${layerId} in group ${groupId}`, updates);
+    if (result === true) {
+      if (action === 'full data') {
+        setCentralizeOnce(true);
+      }
+      setShowLoaderTopup(true);
+      handleFetchDataset(action);
+      incrementFormStage();
+      return true;
+    } else if (result instanceof Error) {
+      return result;
+    }
+    return false;
   };
 
   return (
@@ -881,6 +951,8 @@ export function LayerProvider(props: { children: ReactNode }) {
         showLoaderTopup,
         setShowLoaderTopup,
         handleFetchDataset,
+        showErrorMessage,
+        setShowErrorMessage,
         textSearchInput,
         setTextSearchInput,
         searchType,
@@ -914,13 +986,7 @@ export function LayerProvider(props: { children: ReactNode }) {
         handlePopulationLayer,
         switchPopulationLayer,
         refetchPopulationLayer,
-        propsFetchingProgress: fetchingProgress,
-        propsSetFetchingProgress: setFetchingProgress,
-        currentLayerGroup,
-        setCurrentLayerGroup,
-        addLayerToGroup,
-        removeLayerFromGroup,
-        updateLayerInGroup,
+        handleSubmitFetchDataset,
       }}
     >
       {children}

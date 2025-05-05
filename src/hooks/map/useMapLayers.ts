@@ -622,19 +622,9 @@ export function useMapLayers() {
                       popup?.setHTML(generatePopupContent(properties, coordinates, false, false));
                     }
 
-                    // Add popup element events
                     if (popup) {
                       const popupElement = popup.getElement();
-                      popupElement.addEventListener('mouseenter', () => {
-                        isOverPopup = true;
-                      });
-                      popupElement.addEventListener('mouseleave', () => {
-                        isOverPopup = false;
-                        if (!isOverPoint && popup) {
-                          popup.remove();
-                          popup = null;
-                        }
-                      });
+                      popupElement.addEventListener('click', e => e.stopPropagation());
                     }
                   }
                 };
@@ -643,13 +633,6 @@ export function useMapLayers() {
                   if (!map) return;
                   isOverPoint = false;
                   map.getCanvas().style.cursor = '';
-
-                  setTimeout(() => {
-                    if (!isOverPopup && !isOverPoint && popup) {
-                      popup.remove();
-                      popup = null;
-                    }
-                  }, 500);
 
                   if (hoveredStateId !== null) {
                     map.setFeatureState({ source: sourceId, id: hoveredStateId }, { hover: false });

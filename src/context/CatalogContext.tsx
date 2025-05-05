@@ -5,17 +5,17 @@ import {
   ReqGradientColorBasedOnZone,
   SaveResponse,
   VisualizationMode,
-} from '../types/allTypesAndInterfaces';
-import { HttpReq } from '../services/apiService';
+  MarkerData,
+} from '../types';
 import urls from '../urls.json';
 import userIdData from '../currentUserId.json';
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import apiRequest from '../services/apiRequest';
 import html2canvas from 'html2canvas';
 import defaultMapConfig from '../mapConfig.json';
 import { isIntelligentLayer } from '../utils/layerUtils';
+import { v4 as uuidv4 } from 'uuid';
 
 const CatalogContext = createContext<CatalogContextType | undefined>(undefined);
 
@@ -36,9 +36,9 @@ export function CatalogProvider(props: { children: ReactNode }) {
   >('Home');
 
   const [geoPoints, setGeoPoints] = useState<MapFeatures[]>([]);
-  const [lastGeoIdRequest, setLastGeoIdRequest] = useState<string | undefined>();
-  const [lastGeoMessageRequest, setLastGeoMessageRequest] = useState<string | undefined>();
-  const [lastGeoError, setLastGeoError] = useState<Error | null>(null);
+  const [, setLastGeoIdRequest] = useState<string | undefined>();
+  const [, setLastGeoMessageRequest] = useState<string | undefined>();
+  const [, setLastGeoError] = useState<Error | null>(null);
 
   const [selectedColor, setSelectedColor] = useState<{
     name: string;
@@ -76,9 +76,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [gradientColorBasedOnZone, setGradientColorBasedOnZone] = useState<
     GradientColorBasedOnZone[]
   >([]);
-  const [localLoading, setLocalLoading] = useState<boolean>(false);
-  const [postResMessage, setPostResMessage] = useState<string>('');
-  const [postResId, setPostResId] = useState<string>('');
   const [chosenPallet, setChosenPallet] = useState(null);
   const [selectedBasedon, setSelectedBasedon] = useState<string>('');
   const [layerColors, setLayerColors] = useState({});
@@ -92,8 +89,14 @@ export function CatalogProvider(props: { children: ReactNode }) {
   >([]);
   const [basedOnLayerId, setBasedOnLayerId] = useState<string | null>(null);
   const [basedOnProperty, setBasedOnProperty] = useState<string | null>(null);
-  
-  async function fetchGeoPoints(id: string, typeOfCard: string,callBack?:(country:string, city:string)=>void) {
+  const [markers, setMarkers] = useState<MarkerData[]>([]);
+  const [isMarkersEnabled, setIsMarkersEnabled] = useState<boolean>(false);
+
+  async function fetchGeoPoints(
+    id: string,
+    typeOfCard: string,
+    callBack?: (country: string, city: string) => void
+  ) {
     const apiJsonRequest =
       typeOfCard === 'layer'
         ? {
@@ -151,15 +154,19 @@ export function CatalogProvider(props: { children: ReactNode }) {
       setGeoPoints(function (prevGeoPoints) {
         return prevGeoPoints.concat(updatedDataArray) as MapFeatures[];
       });
-      
-      if(callBack && updatedDataArray[0].city_name) callBack(updatedDataArray[0].country_name || defaultMapConfig.fallBackCountry, updatedDataArray[0].city_name);
+
+      if (callBack && updatedDataArray[0].city_name)
+        callBack(
+          updatedDataArray[0].country_name || defaultMapConfig.fallBackCountry,
+          updatedDataArray[0].city_name
+        );
     }
   }
 
   function handleAddClick(
     id: string,
     typeOfCard: string,
-    callBack?:(city:string, country:string)=>void
+    callBack?: (city: string, country: string) => void
   ) {
     fetchGeoPoints(id, typeOfCard, callBack);
   }
@@ -218,22 +225,31 @@ export function CatalogProvider(props: { children: ReactNode }) {
             points_color: layer.points_color,
           })),
           user_id: authResponse.localId,
-          display_elements: geoPoints.map(layer => ({
-            layer_id: layer.layerId,
-            display: layer.display,
-            points_color: layer.points_color,
-            is_heatmap: layer.is_heatmap,
-            is_grid: layer.is_grid,
-          })),
-          catalog_layer_options: geoPoints.map(layer => ({
-            layer_id: layer.layerId,
-            is_enabled: layer.is_enabled || true,
-            opacity: layer.opacity || 1,
-          })),
+          display_elements: {
+            details: geoPoints.map(layer => ({
+              layer_id: layer.layerId,
+              display: layer.display,
+              points_color: layer.points_color,
+              is_heatmap: layer.is_heatmap,
+              is_grid: layer.is_grid,
+              is_enabled: layer.is_enabled || true,
+              opacity: layer.opacity || 1,
+            })),
+            markers: markers.map(marker => ({
+              id: marker.id,
+              name: marker.name,
+              description: marker.description,
+              coordinates: marker.coordinates,
+              timestamp: marker.timestamp,
+            })),
+          },
+          thumbnail_url: thumbnailDataUrl,
         },
       };
 
       formData.append('req', JSON.stringify(requestBody));
+
+      console.log(requestBody);
 
       const res = await apiRequest({
         url: urls.save_producer_catalog,
@@ -369,20 +385,24 @@ export function CatalogProvider(props: { children: ReactNode }) {
     });
   }
 
-  async function setGeoPointsWithCb(geoPoints: MapFeatures[] | ((prev:MapFeatures[])=>MapFeatures[]), cB?:(city:string, country:string)=>void) {
+  async function setGeoPointsWithCb(
+    geoPoints: MapFeatures[] | ((prev: MapFeatures[]) => MapFeatures[]),
+    cB?: (city: string, country: string) => void
+  ) {
     let geoPointsToUse;
 
-    setGeoPoints(
-      (prev)=>{
-        geoPointsToUse = typeof geoPoints === 'function' ? geoPoints(prev) : geoPoints;
-        return geoPointsToUse;
-      }
-    );
+    setGeoPoints(prev => {
+      geoPointsToUse = typeof geoPoints === 'function' ? geoPoints(prev) : geoPoints;
+      return geoPointsToUse;
+    });
 
-    if(cB && geoPointsToUse && geoPointsToUse[0].city_name && geoPointsToUse[0].country_name) cB(geoPointsToUse[0].city_name, geoPointsToUse[0].country_name);
+    if (cB && geoPointsToUse && geoPointsToUse[0].city_name && geoPointsToUse[0].country_name)
+      cB(geoPointsToUse[0].city_name, geoPointsToUse[0].country_name);
   }
 
-  async function handleColorBasedZone(requestData?: ReqGradientColorBasedOnZone) {
+  async function handleColorBasedZone(
+    requestData?: ReqGradientColorBasedOnZone
+  ): Promise<GradientColorBasedOnZone[]> {
     const dataToUse = requestData || reqGradientColorBasedOnZone;
 
     try {
@@ -439,6 +459,76 @@ export function CatalogProvider(props: { children: ReactNode }) {
       )
     );
   };
+
+  async function handleFilteredZone(
+    requestData?: ReqGradientColorBasedOnZone
+  ): Promise<GradientColorBasedOnZone[]> {
+    const dataToUse = requestData || reqGradientColorBasedOnZone;
+
+    try {
+      const res = await apiRequest({
+        url: urls.filter_based_zone,
+        method: 'post',
+        body: dataToUse,
+        isAuthRequest: true,
+      });
+      if (res.data?.data && Array.isArray(res.data.data)) {
+        setGradientColorBasedOnZone(res.data.data);
+        return res.data.data;
+      }
+      return [];
+    } catch (error) {
+      console.error('Request failed:', error);
+      setIsError(error instanceof Error ? error : new Error(String(error)));
+      return [];
+    }
+  }
+
+  async function handleNameBasedColorZone(
+    requestData?: ReqGradientColorBasedOnZone
+  ): Promise<GradientColorBasedOnZone[]> {
+    const dataToUse = requestData || reqGradientColorBasedOnZone;
+
+    try {
+      const res = await apiRequest({
+        url: urls.gradient_color_based_on_zone,
+        method: 'post',
+        body: dataToUse,
+        isAuthRequest: true,
+      });
+      if (res.data?.data && Array.isArray(res.data.data)) {
+        setGradientColorBasedOnZone(res.data.data);
+        return res.data.data;
+      }
+      return [];
+    } catch (error) {
+      console.error('Request failed:', error);
+      setIsError(error instanceof Error ? error : new Error(String(error)));
+      return [];
+    }
+  }
+
+  function addMarker(name: string, description: string, coordinates: [number, number]) {
+    const newMarker: MarkerData = {
+      id: uuidv4(),
+      name,
+      description,
+      coordinates,
+      timestamp: Date.now(),
+    };
+
+    setMarkers(prevMarkers => {
+      const updatedMarkers = [...prevMarkers, newMarker];
+      return updatedMarkers;
+    });
+  }
+
+  function deleteMarker(id: string) {
+    setMarkers(prevMarkers => {
+      const updatedMarkers = prevMarkers.filter(marker => marker.id !== id);
+      return updatedMarkers;
+    });
+  }
 
   return (
     <CatalogContext.Provider
@@ -513,6 +603,14 @@ export function CatalogProvider(props: { children: ReactNode }) {
         setBasedOnProperty,
         updateLayerLegend,
         handleStoreUnsavedGeoPoint,
+        handleNameBasedColorZone,
+        handleFilteredZone,
+        markers,
+        setMarkers,
+        addMarker,
+        deleteMarker,
+        isMarkersEnabled,
+        setIsMarkersEnabled,
       }}
     >
       {children}

@@ -10,12 +10,12 @@ export function isIntelligentLayer(featureCollection: any) {
   if (featureCollection.is_intelligent !== undefined) {
     return !!featureCollection.is_intelligent;
   }
-  
+
   if (featureCollection.bknd_dataset_id) {
     // Split the ID by underscores and check if any part matches intelligence categories
     const parts = featureCollection.bknd_dataset_id.split('_');
     return parts.some((part: string) => intelligenceCategories.includes(part));
   }
-  
+
   return false;
-};
+}

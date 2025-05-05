@@ -5,7 +5,6 @@ import {
   getDefaultLayerColor,
 } from '../../utils/helperFunctions';
 import { PiX } from 'react-icons/pi';
-import { FaSearch } from 'react-icons/fa';
 import urls from '../../urls.json';
 import { CategoryData, City, Layer } from '../../types/allTypesAndInterfaces';
 import { useLayerContext } from '../../context/LayerContext';
@@ -16,6 +15,10 @@ import LayerDisplaySubCategories from '../LayerDisplaySubCategories/LayerDisplay
 import CategoriesBrowserSubCategories from '../CategoriesBrowserSubCategories/CategoriesBrowserSubCategories';
 import { useCatalogContext } from '../../context/CatalogContext';
 import { useMapContext } from '../../context/MapContext';
+import ChatTrigger from '../Chat/ChatTrigger';
+import Chat from '../Chat/Chat';
+import { topics } from '../../types';
+import { FaWandMagicSparkles } from 'react-icons/fa6';
 
 const FetchDatasetForm = () => {
   const nav = useNavigate();
@@ -25,6 +28,8 @@ const FetchDatasetForm = () => {
     reqFetchDataset,
     setReqFetchDataset,
     handleFetchDataset,
+    showErrorMessage,
+    setShowErrorMessage,
     validateFetchDatasetForm,
     resetFetchDatasetForm,
     categories,
@@ -49,6 +54,7 @@ const FetchDatasetForm = () => {
     setIsError,
     switchPopulationLayer,
     includePopulation,
+    handleSubmitFetchDataset,
   } = useLayerContext();
 
   // AUTH CONTEXT
@@ -57,8 +63,8 @@ const FetchDatasetForm = () => {
   // FETCHED DATA
   const [layers, setLayers] = useState<Layer[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [showErrorMessage, setShowErrorMessage] = useState<boolean>(false);
   const [citiesData, setCitiesData] = useState<{ [country: string]: City[] }>({});
+  const [errorMessage, setErrorMessage] = useState('');
   const [costEstimate, setCostEstimate] = useState<number>(0.0);
   // COLBASE CATEGORY
   const [openedCategories, setOpenedCategories] = useState<string[]>([]);
@@ -121,14 +127,6 @@ const FetchDatasetForm = () => {
   }, {} as CategoryData);
 
   async function handleGetCountryCityCategory() {
-    // HttpReq<string[]>(
-    //   urls.country_city,
-    //   (data) => setCountries(processCityData(data, setCitiesData)),
-    //   () => {},
-    //   () => {},
-    //   () => {},
-    //   setIsError
-    // );
     try {
       const res = await apiRequest({
         url: urls.country_city,
@@ -156,31 +154,11 @@ const FetchDatasetForm = () => {
         setIsError(new Error(String(error)));
       }
     }
-
-    // HttpReq<CategoryData>(
-    //   urls.nearby_categories,
-    //   setCategories,
-    //   () => {},
-    //   () => {},
-    //   () => {},
-    //   setIsError
-    // );
   }
-  function handleButtonClick(action: string, event: React.MouseEvent<HTMLButtonElement>) {
-    event.preventDefault();
-
-    const result = validateFetchDatasetForm();
-
-    if (result === true) {
-      if (action === 'full data') {
-        setCentralizeOnce(true);
-      }
-      setShowLoaderTopup(true);
-      incrementFormStage();
-      handleFetchDataset(action);
-    } else if (result instanceof Error) {
+  function onButtonClick(action: string, event: React.MouseEvent<HTMLButtonElement>) {
+    const result = handleSubmitFetchDataset(action, event);
+    if (result instanceof Error) {
       setError(result.message);
-      return false;
     }
   }
 
@@ -474,45 +452,71 @@ const FetchDatasetForm = () => {
     }
   }, [backendZoom, setReqFetchDataset]);
 
+  const typingDelay = 500;
+
+  useEffect(() => {
+    if (!textSearchInput.trim()) {
+      setCostEstimate(0.0);
+      return;
+    }
+
+    if (!selectedCountry || !selectedCity) {
+      setErrorMessage('Please select Country and city first.');
+      return;
+    } else {
+      setErrorMessage('');
+    }
+
+    const delayDebounceFn = setTimeout(async () => {
+      const typesArray = textSearchInput.split(',').map(t => t.trim());
+      const estimatedCost = await estimateCost(typesArray);
+      setCostEstimate(estimatedCost);
+    }, typingDelay);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [textSearchInput, selectedCountry, selectedCity]);
+
   return (
     <>
       <div className="flex-1 flex flex-col justify-between overflow-y-auto ">
         <div className="w-full p-4 overflow-y-auto ">
           {error && <div className="mt-6 text-red-500 font-semibold">{error}</div>}
 
+          <div className="mb-6">
+            <label className="block mb-2 text-base font-medium text-black" htmlFor="ai-fetch">
+              AI-Powered Dataset Finder
+            </label>
+            <div className="flex relative w-full">
+              <ChatTrigger
+                title="AI Dataset Finder"
+                position="auto"
+                cN="flex-grow"
+                size="h-14"
+                colors="bg-gem-gradient border text-gray-200 rounded-lg shadow-md hover:shadow-lg transition-all"
+                beforeIcon={<FaWandMagicSparkles />}
+                afterIcon={<></>}
+              />
+              <Chat topic={topics.DATASET} position="fixed left-[27.5rem] mx-2 inset-y-auto z-50" />
+            </div>
+          </div>
+
           <label className="block mb-2 text-base font-medium text-black" htmlFor="layers">
             Layers
           </label>
-          {/* Div to contain all layers should looke like a sub-section with border */}
           <div
             id="layers"
             className="flex text-sm flex-col border border-gray-300 rounded-lg p-4 gap-4"
           >
             {/* Map through layers to create multiple Layer sections */}
             {layers.map((layer, index) => (
-              <div key={layer.id}>
-                <LayerDisplaySubCategories
-                  layer={layer}
-                  layerIndex={index}
-                  onRemoveType={(type: string) => removeTypeFromLayer(type, layer.id, false)}
-                  onToggleTypeInLayer={(type: string) => toggleTypeInLayer(type, layer.id, false)}
-                  onNameChange={handleLayerNameChange}
-                />
-                {/* Progress bar for each layer */}
-                <div className="mt-2 mb-3">
-                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                    <div
-                      className="bg-green-600 h-2.5 rounded-full transition-all duration-300 ease-in-out"
-                      style={{
-                        width: `${useLayerContext().propsFetchingProgress[layer.id] || 0}%`,
-                      }}
-                    ></div>
-                  </div>
-                  <div className="text-xs text-right mt-1 text-gray-500">
-                    {useLayerContext().propsFetchingProgress[layer.id] || 0}% complete
-                  </div>
-                </div>
-              </div>
+              <LayerDisplaySubCategories
+                key={layer.id}
+                layer={layer}
+                layerIndex={index}
+                onRemoveType={(type: string) => removeTypeFromLayer(type, layer.id, false)}
+                onToggleTypeInLayer={(type: string) => toggleTypeInLayer(type, layer.id, false)}
+                onNameChange={handleLayerNameChange}
+              />
             ))}
 
             {/* Add default empty layer section */}
@@ -574,6 +578,8 @@ const FetchDatasetForm = () => {
                 value={textSearchInput}
                 onChange={e => setTextSearchInput(e.target.value)}
               />
+
+              {errorMessage && <p className="text-red-500 text-sm mt-2">{errorMessage}</p>}
             </div>
           )}
           <div className="pt-4">
@@ -729,61 +735,18 @@ const FetchDatasetForm = () => {
       <div className="flex-col flex  px-2 py-2 select-none border-t lg:mb-0 mb-14">
         <div className="flex space-x-2">
           <button
-            onClick={e => handleButtonClick('sample', e)}
+            onClick={e => onButtonClick('sample', e)}
             className="w-full h-10 bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
                  hover:bg-white transition-all cursor-pointer"
-            disabled={useLayerContext().showLoaderTopup}
           >
-            {useLayerContext().showLoaderTopup ? (
-              <div className="flex items-center">
-                <FaSearch className="animate-spin mr-2" />
-                <span>Loading...</span>
-              </div>
-            ) : (
-              'Get Sample'
-            )}
+            Get Sample
           </button>
 
           <button
             className="w-full h-10 bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer"
-            onClick={async e => {
-              const res = await apiRequest({
-                url: `${urls.list_stripe_payment_methods}?user_id=${authResponse?.localId}`,
-                method: 'get',
-                isAuthRequest: true,
-              });
-              if (res.data.data.length === 0) nav('/profile/payment-methods');
-              if (!isAuthenticated) nav('/auth');
-              try {
-
-                await apiRequest({
-                  url: urls.deduct_wallet,
-                  method: 'Post',
-                  body: {
-                    user_id: authResponse?.localId,
-                    amount: costEstimate * 100,
-                  },
-                });
-                handleButtonClick('full data', e);
-
-    
-              } catch (error: any) {
-                if (error.response.data.detail === 'Insufficient balance in wallet') {
-                  setShowErrorMessage(true);
-                }
-                console.error(error);
-              }
-            }}
-            disabled={useLayerContext().showLoaderTopup}
+            onClick={e => onButtonClick('full data', e)}
           >
-            {useLayerContext().showLoaderTopup ? (
-              <div className="flex items-center">
-                <FaSearch className="animate-spin mr-2" />
-                <span>Loading...</span>
-              </div>
-            ) : (
-              <>Full Data {isPriceVisible ? `($${costEstimate.toFixed(2)})` : null}</>
-            )}
+            Full Data {isPriceVisible ? `($${costEstimate.toFixed(2)})` : null}
           </button>
         </div>
       </div>

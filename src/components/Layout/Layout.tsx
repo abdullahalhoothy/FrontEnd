@@ -19,8 +19,9 @@ import ChangePassword from '../../pages/ChangePassword/ChangePassword';
 import PaymentMethods from '../../pages/PaymentMethods/PaymentMethods';
 import PaymentMethod from '../../pages/PaymentMethod/PaymentMethod';
 import MobileNavbar from '../MobileNavbar/MobileNavbar';
-import Wallet from "../../pages/Wallet/Wallet";
-import AddFunds from "../../pages/AddFunds/AddFunds";
+import Wallet from '../../pages/Wallet/Wallet';
+import AddFunds from '../../pages/AddFunds/AddFunds';
+import SignUp from '../../pages/Auth/SignUp';
 
 const Layout = () => {
   return (
@@ -34,6 +35,7 @@ const Layout = () => {
           <Route path="*" element={<NotFound />} />
           <Route path={'/tabularView'} element={<></>} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/sign-up" element={<SignUp />} />
           <Route path="/" element={<Home />} />
           <Route path={'/profile/*'} element={<Profile />} />
           <Route path={'/organization/*'} element={<Organization />} />
@@ -50,8 +52,8 @@ const Layout = () => {
             <Route path="change-email" element={<ChangeEmail />} />
             <Route path="payment-methods" element={<PaymentMethods />} />
             <Route path="payment-methods/add" element={<PaymentMethod />} />
-            <Route path="wallet" element={<Wallet/>}/>
-            <Route path="wallet/add" element={<AddFunds/>}/>
+            <Route path="wallet" element={<Wallet />} />
+            <Route path="wallet/add" element={<AddFunds />} />
           </Route>
           <Route path={'/organization'} element={<OrganizationLayout />}>
             <Route path="" element={<CommingSoon data={'Organization Features'} />} />

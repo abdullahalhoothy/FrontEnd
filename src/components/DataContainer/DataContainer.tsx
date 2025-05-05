@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import CatalogueCard from '../CatalogueCard/CatalogueCard';
 import styles from './DataContainer.module.css';
-import { HttpReq } from '../../services/apiService';
 import urls from '../../urls.json';
 import { Catalog, UserLayer, CardItem } from '../../types/allTypesAndInterfaces';
 import { useCatalogContext } from '../../context/CatalogContext';
@@ -9,18 +8,14 @@ import { MapFeatures } from '../../types/allTypesAndInterfaces';
 import UserLayerCard from '../UserLayerCard/UserLayerCard';
 import userIdData from '../../currentUserId.json';
 import { isValidColor } from '../../utils/helperFunctions';
-import { useAuth } from '../../context/AuthContext';
-import { hasAuthCredentials } from '../../guards';
+import { useAuth } from '../../context/AuthContext'; // Add this import
 import { useNavigate } from 'react-router-dom';
 import { useUIContext } from '../../context/UIContext';
 import apiRequest from '../../services/apiRequest';
 import { useLayerContext } from '../../context/LayerContext';
 
-// Constants
-const DEFAULT_PROGRESS_VALUE = 89;
-
 function DataContainer() {
-  const { selectedContainerType, handleAddClick, setGeoPoints } = useCatalogContext();
+  const { selectedContainerType, setMarkers, handleAddClick, setGeoPoints } = useCatalogContext();
   const { setSelectedCity, setSelectedCountry } = useLayerContext();
   const { isAuthenticated, authResponse, logout } = useAuth();
   const { closeModal } = useUIContext();
@@ -54,11 +49,7 @@ function DataContainer() {
         setResMessage(res.data.message);
         setResId(res.data.request_id);
       } catch (error) {
-        if (error instanceof Error) {
-          setError(error);
-        } else {
-          setError(new Error(String(error)));
-        }
+        setError(error);
       } finally {
         setLoading(false);
       }
@@ -67,7 +58,7 @@ function DataContainer() {
     async function fetchUserLayers() {
       setLoading(true);
 
-      const body = { user_id: hasAuthCredentials(authResponse) ? authResponse.localId : undefined };
+      const body = { user_id: authResponse?.localId };
       try {
         const res = await apiRequest({
           url: urls.user_layers,
@@ -79,11 +70,7 @@ function DataContainer() {
         setResMessage(res.data.message);
         setResId(res.data.request_id);
       } catch (error) {
-        if (error instanceof Error) {
-          setError(error);
-        } else {
-          setError(new Error(String(error)));
-        }
+        setError(error);
       } finally {
         setLoading(false);
       }
@@ -92,7 +79,7 @@ function DataContainer() {
     async function fetchUserCatalogs() {
       setLoading(true);
 
-      const body = { user_id: hasAuthCredentials(authResponse) ? authResponse.localId : undefined };
+      const body = { user_id: authResponse?.localId };
       try {
         const res = await apiRequest({
           url: urls.user_catalogs,
@@ -104,11 +91,7 @@ function DataContainer() {
         setResMessage(res.data.message);
         setResId(res.data.request_id);
       } catch (error) {
-        if (error instanceof Error) {
-          setError(error);
-        } else {
-          setError(new Error(String(error)));
-        }
+        setError(error);
       } finally {
         setLoading(false);
       }
@@ -169,11 +152,7 @@ function DataContainer() {
         setWsResMessage(res.data.message);
         setWsResId(res.data.request_id);
       } catch (error) {
-        if (error instanceof Error) {
-          setWsResError(error);
-        } else {
-          setWsResError(new Error(String(error)));
-        }
+        setWsResError(error);
       } finally {
         setWsResLoading(false);
       }
@@ -189,25 +168,10 @@ function DataContainer() {
     closeModal();
   }
 
-  // Get the progress setting function from LayerContext
-  const { propsSetFetchingProgress } = useLayerContext();
-
   // Render a card based on the item type
   function makeCard(item: Catalog | UserLayer, index: number) {
     if ('prdcer_lyr_id' in item) {
       // Render UserLayerCard if item is a user layer
-      // Add progress property with default value if not provided
-      const progress = (item as any).progress || DEFAULT_PROGRESS_VALUE;
-
-      // Store the progress in LayerContext for use in CustomizeLayer component
-      const layerId = parseInt(item.prdcer_lyr_id);
-      if (!isNaN(layerId)) {
-        propsSetFetchingProgress(prev => ({
-          ...prev,
-          [layerId]: progress,
-        }));
-      }
-
       return (
         <UserLayerCard
           key={item.prdcer_lyr_id + '-' + index} // Use a combination of id and index
@@ -217,7 +181,6 @@ function DataContainer() {
           legend={item.layer_legend}
           typeOfCard="layer"
           points_color={item.points_color}
-          progress={progress}
           onMoreInfo={function () {
             handleCatalogCardClick({
               id: item.prdcer_lyr_id,
@@ -249,6 +212,7 @@ function DataContainer() {
               typeOfCard: typeOfCard,
               ...(typeOfCard === 'userCatalog' && { lyrs: item.lyrs }),
             });
+            setMarkers(item.display_elements.markers || []);
           }}
           can_access={item.can_access ?? false}
           typeOfCard={typeOfCard}
