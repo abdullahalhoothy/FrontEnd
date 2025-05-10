@@ -8,6 +8,7 @@ import NavigationSetup from './components/NavigationSetup/NavigationSetup';
 import { MapProvider } from './context/MapContext';
 import { Toaster } from 'sonner';
 import { ChatProvider } from './context/ChatContext';
+import { CaseStudyProvider } from './components/CaseStudy/CaseStudyPanel';
 
 function App() {
   return (
@@ -21,7 +22,9 @@ function App() {
                 <LayerProvider>
                   <UIProvider>
                     <ChatProvider>
-                      <Layout />
+                      <CaseStudyProvider>
+                        <Layout />
+                      </CaseStudyProvider>
                     </ChatProvider>
                   </UIProvider>
                 </LayerProvider>

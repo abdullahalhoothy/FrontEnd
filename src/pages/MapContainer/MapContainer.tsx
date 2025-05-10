@@ -15,6 +15,9 @@ import BenchmarkControl from '../../components/Map/BenchmarkControl';
 import { PopulationControl } from '../../components/Map/PopulationControl';
 import SavedLocations from '../../components/Map/SavedLocations';
 import { useMapContext } from '../../context/MapContext';
+import { CaseStudyPanel } from '../../components/CaseStudy/CaseStudyPanel';
+import { CaseStudyProvider } from '../../components/CaseStudy/CaseStudyPanel';
+import { CaseStudyToggle } from '../../components/CaseStudy/CaseStudyToggle';
 
 function Container() {
   const { shouldInitializeFeatures, mapContainerRef } = useMapContext();
@@ -28,19 +31,22 @@ function Container() {
   useMapStyle();
 
   return (
-    <div className="flex-1 relative" id="map-container">
-      <div className="lg:absolute w-full h-full overflow-hidden" ref={mapContainerRef} />
-      <StatisticsPopups />
-      {shouldInitializeFeatures && (
-        <>
-          <div className="absolute top-4 left-4 flex items-start gap-2 z-[1]">
-            <BenchmarkControl />
-            <PopulationControl />
-          </div>
-          <SavedLocations />
-        </>
-      )}
-    </div>
+    <>
+      <div className="flex-1 relative w-full h-full" id="map-container">
+        <div className="w-full h-full overflow-hidden" ref={mapContainerRef} />
+        <StatisticsPopups />
+        {shouldInitializeFeatures && (
+          <>
+            <div className="absolute top-4 left-4 flex items-start gap-2 z-[1]">
+              <BenchmarkControl />
+              <PopulationControl />
+            </div>
+            <SavedLocations />
+          </>
+        )}
+        <CaseStudyPanel />
+      </div>
+    </>
   );
 }
 

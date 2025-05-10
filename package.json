@@ -12,12 +12,14 @@
     "format:check": "prettier --config .prettierrc.cjs --check \"src/**/*.{ts,tsx,js,jsx,json,css}\""
   },
   "dependencies": {
+    "@emotion/css": "^11.13.5",
     "@mapbox/mapbox-gl-draw": "^1.4.3",
     "@radix-ui/react-dialog": "^1.1.2",
     "@stripe/react-stripe-js": "^2.8.0",
     "@stripe/stripe-js": "^4.5.0",
     "@turf/turf": "^7.1.0",
     "@types/html2canvas": "^1.0.0",
+    "@types/jspdf": "^2.0.0",
     "@types/uuid": "^10.0.0",
     "@types/yup": "^0.32.0",
     "ag-grid-community": "31.3.2",
@@ -25,6 +27,7 @@
     "axios": "^1.7.4",
     "clsx": "^2.1.1",
     "html2canvas": "^1.4.1",
+    "jspdf": "^2.5.2",
     "lodash": "^4.17.21",
     "lru-cache": "^11.0.2",
     "mapbox-gl": "^3.3.0",
@@ -35,6 +38,11 @@
     "react-icons": "^5.3.0",
     "react-router": "^6.26.1",
     "react-router-dom": "^6.26.1",
+    "recharts": "^2.15.3",
+    "slate": "^0.114.0",
+    "slate-dom": "^0.114.0",
+    "slate-history": "^0.113.1",
+    "slate-react": "^0.114.2",
     "sonner": "^2.0.1",
     "use-long-press": "^3.3.0",
     "uuid": "^11.1.0",
@@ -60,7 +68,6 @@
     "tailwindcss": "^3.4.10",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
-    "vite": "^5.4.1",
-    "prettier": "^3.0.0"
+    "vite": "^5.4.1"
   }
 }

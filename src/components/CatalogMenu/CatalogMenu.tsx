@@ -9,6 +9,7 @@ import { useLayerContext } from '../../context/LayerContext';
 import { defaultMapConfig } from '../../hooks/map/useMapInitialization';
 import Chat from '../Chat/Chat';
 import ChatTrigger from '../Chat/ChatTrigger';
+import { CaseStudyToggle } from '../CaseStudy/CaseStudyToggle';
 
 const enableAI = true;
 
@@ -105,12 +106,9 @@ function CatalogMenu() {
   }
 
   return (
-    <div className="flex flex-col justify-between h-full w-full lg:pr-1.5">
-      <div
-        className={`flex flex-col justify-start lg:mt-7 mt-3 ${
-          !showRestorePrompt ? 'flex-grow' : ''
-        }`}
-      >
+    <div className="flex flex-col justify-between h-full w-full pt-3 lg:pr-1.5">
+      <CaseStudyToggle />
+      <div className={`flex flex-col justify-start mt-3 ${!showRestorePrompt ? 'flex-grow' : ''}`}>
         <div className="flex justify-between items-center mx-8 my-2">
           <p className={'text-lg font-semibold'}>Datasets</p>
           <button
