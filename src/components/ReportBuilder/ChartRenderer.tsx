@@ -2,6 +2,7 @@ import React from 'react';
 import DemographicChart from '../DemographicChart/DemographicChart';
 import PopulationPyramid from '../DemographicChart/PopulationPyramid';
 import TrendChart from '../DemographicChart/TrendChart';
+import DemographicInfoCard from './DemographicInfoCard';
 
 interface ChartMapping {
   [key: string]: React.FC<any>;
@@ -11,6 +12,14 @@ type ChartDataType = {
   'demographic-chart': Array<{ ageGroup: string; male: number; female: number }>;
   'population-pyramid': Array<{ ageGroup: string; male: number; female: number }>;
   'trend-chart': Array<{ year: number; youth: number; workingAge: number; elderly: number }>;
+  'demographic-card': {
+    malePercentage: number;
+    malePopulation: number;
+    totalPopulation: number;
+    saudiPercentage: number;
+    saudiPopulation: number;
+    averageIncome: number;
+  };
   [key: string]: any;
 };
 
@@ -18,6 +27,7 @@ const chartComponents: ChartMapping = {
   'demographic-chart': DemographicChart,
   'population-pyramid': PopulationPyramid,
   'trend-chart': TrendChart,
+  'demographic-card': DemographicInfoCard,
 };
 
 const chartData: ChartDataType = {
@@ -47,6 +57,18 @@ const chartData: ChartDataType = {
     { year: 2020, youth: 18, workingAge: 60, elderly: 22 },
     { year: 2025, youth: 17, workingAge: 58, elderly: 25 },
   ],
+  'demographic-card': {
+    malePercentage: 55.7,
+    malePopulation: 3.6,
+    totalPopulation: 6.5,
+    saudiPercentage: 66.5,
+    saudiPopulation: 4.3,
+    averageIncome: 7.5,
+  },
+  'scatter-plot': [
+    { femalePopulation: 10, malePopulation: 9 },
+    { femalePopulation: 12, malePopulation: 11 },
+  ],
 };
 
 interface ChartRendererProps {
@@ -71,6 +93,14 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({ chartId, title, className
 
   const ChartComponent = chartComponents[chartType];
   const data = chartData[chartType] || [];
+
+  if (chartType === 'demographic-card') {
+    return (
+      <div className={`chart-container ${className}`}>
+        <ChartComponent />
+      </div>
+    );
+  }
 
   return (
     <div className={`chart-container ${className}`}>
