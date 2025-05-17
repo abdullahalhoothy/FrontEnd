@@ -14,11 +14,20 @@ import EditorToolbar from './EditorToolbar';
 import ChartRenderer from './ChartRenderer';
 
 export type CustomElement = {
-  type: 'paragraph' | 'heading-one' | 'heading-two' | 'block-quote' | 'chart-container' | 'image';
+  type:
+    | 'paragraph'
+    | 'heading-one'
+    | 'heading-two'
+    | 'block-quote'
+    | 'chart-container'
+    | 'image'
+    | 'demographic-chart'
+    | 'trend-chart'
+    | 'pyramid-chart';
   children: CustomText[];
   chartId?: string;
   placeholder?: string;
-  placeholderType?: 'demographic' | 'pyramid' | 'trend';
+  placeholderType?: 'demographic' | 'pyramid' | 'trend' | 'info-card';
   direction?: 'ltr' | 'rtl' | 'auto';
   align?: 'left' | 'center' | 'right';
   url?: string;
@@ -99,9 +108,11 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 <div className="flex flex-col items-center justify-center p-6 text-center">
                   <div className="text-4xl mb-2">📊</div>
                   <div className="text-gray-600 font-medium mb-1">
-                    {props.element.placeholderType
-                      ? `${props.element.placeholderType.charAt(0).toUpperCase() + props.element.placeholderType.slice(1)} Chart Placeholder`
-                      : 'Chart Placeholder'}
+                    {props.element.placeholderType === 'info-card'
+                      ? 'Demographic Info Card Placeholder'
+                      : props.element.placeholderType
+                        ? `${props.element.placeholderType.charAt(0).toUpperCase() + props.element.placeholderType.slice(1)} Chart Placeholder`
+                        : 'Chart Placeholder'}
                   </div>
                   <div className="text-sm text-gray-500">
                     {props.element.placeholder ||

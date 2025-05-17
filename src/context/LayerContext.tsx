@@ -8,6 +8,7 @@ import React, {
   useRef,
   useEffect,
   useMemo,
+  useCallback,
 } from 'react';
 import {
   FetchDatasetResponse,
@@ -20,6 +21,7 @@ import {
   LayerCustomization,
   LayerState,
   MapFeatures,
+  Insights,
 } from '../types/allTypesAndInterfaces';
 import urls from '../urls.json';
 import { useCatalogContext } from './CatalogContext';
@@ -127,6 +129,10 @@ export function LayerProvider(props: { children: ReactNode }) {
   const { selectedContainerType } = useCatalogContext();
 
   const currentZoomLevel = useMemo(() => backendZoom ?? defaultMapConfig.zoomLevel, [backendZoom]);
+
+  const [currentViewportInsights, setCurrentViewportInsights] = useState<Insights | any | null>(
+    null
+  );
 
   function incrementFormStage() {
     if (createLayerformStage === 'initial') {
@@ -667,9 +673,9 @@ export function LayerProvider(props: { children: ReactNode }) {
       zoomLevel: defaultMapConfig.zoomLevel,
     });
     setLayerDataMap({});
-    setSelectedCountry(''); // Reset country
-    setSelectedCity(''); // Reset city
-    setIncludePopulation(false); // Reset area intelligence
+    setSelectedCountry('');
+    setSelectedCity('');
+    setIncludePopulation(false);
     setTextSearchInput('');
     setSearchType('category_search');
     setPassword('');
@@ -733,6 +739,17 @@ export function LayerProvider(props: { children: ReactNode }) {
   useEffect(() => {
     handlePopulationLayer(false);
   }, [selectedContainerType]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (map) {
+      fetchPopulationByViewport();
+      map.on('moveend', fetchPopulationByViewport);
+      return () => {
+        map.off('moveend', fetchPopulationByViewport);
+      };
+    }
+  }, [currentZoomLevel, mapRef.current]);
 
   const [includePopulation, setIncludePopulation] = useState(false);
 
@@ -915,6 +932,123 @@ export function LayerProvider(props: { children: ReactNode }) {
     return false;
   };
 
+  function calculateInsights(features: any) {
+    if (features.length === 0) return null;
+
+    // Initialize aggregation variables
+    let totalPopulation = 0;
+    let totalMalePopulation = 0;
+    let totalFemalePopulation = 0;
+    let medianAgesTotal: number[] = [];
+    let medianAgesFemale: number[] = [];
+    let densityValues: number[] = [];
+
+    // Collect data for aggregation
+    for (const feature of features) {
+      const props = feature.properties;
+
+      totalPopulation += props.Population_Count;
+      totalMalePopulation += props.Male_Population;
+      totalFemalePopulation += props.Female_Population;
+      medianAgesTotal.push(props.Median_Age_Total);
+      medianAgesFemale.push(props.Median_Age_Female); // Collect female median ages
+      densityValues.push(props.Population_Density_KM2);
+    }
+
+    // Calculate median of Median_Age_Total
+    medianAgesTotal.sort((a, b) => a - b);
+    const medianOfMedianAgesTotal =
+      medianAgesTotal.length > 0
+        ? medianAgesTotal.length % 2 === 0
+          ? (medianAgesTotal[medianAgesTotal.length / 2 - 1] +
+              medianAgesTotal[medianAgesTotal.length / 2]) /
+            2
+          : medianAgesTotal[Math.floor(medianAgesTotal.length / 2)]
+        : 0;
+
+    // Calculate median of Median_Age_Female
+    medianAgesFemale.sort((a, b) => a - b);
+    const medianOfMedianAgesFemale =
+      medianAgesFemale.length > 0
+        ? medianAgesFemale.length % 2 === 0
+          ? (medianAgesFemale[medianAgesFemale.length / 2 - 1] +
+              medianAgesFemale[medianAgesFemale.length / 2]) /
+            2
+          : medianAgesFemale[Math.floor(medianAgesFemale.length / 2)]
+        : 0;
+
+    // Calculate median of population densities
+    densityValues.sort((a, b) => a - b);
+    const medianDensity =
+      densityValues.length > 0
+        ? densityValues.length % 2 === 0
+          ? (densityValues[densityValues.length / 2 - 1] +
+              densityValues[densityValues.length / 2]) /
+            2
+          : densityValues[Math.floor(densityValues.length / 2)]
+        : 0;
+
+    // Calculate average density (simple average)
+    const avgDensity =
+      densityValues.length > 0
+        ? densityValues.reduce((sum, value) => sum + value, 0) / densityValues.length
+        : 0;
+
+    // Calculate female population percentage
+    const femalePercentage =
+      totalPopulation > 0 ? (totalFemalePopulation / totalPopulation) * 100 : 0;
+    const malePercentage = totalPopulation > 0 ? (totalMalePopulation / totalPopulation) * 100 : 0;
+
+    return {
+      population: {
+        total: totalPopulation,
+        male: totalMalePopulation,
+        female: totalFemalePopulation,
+        femalePercentage: parseFloat(femalePercentage.toFixed(2)),
+        malePercentage: parseFloat(malePercentage.toFixed(2)),
+      },
+      populationDensity: {
+        average: parseFloat(avgDensity.toFixed(2)),
+        median: parseFloat(medianDensity.toFixed(2)),
+      },
+      age: {
+        medianOfMediansTotal: parseFloat(medianOfMedianAgesTotal.toFixed(1)),
+        medianOfMediansFemale: parseFloat(medianOfMedianAgesFemale.toFixed(1)), // Add female median age
+      },
+      featureCount: features.length,
+    };
+  }
+
+  const fetchPopulationByViewport = useCallback(async (): Promise<void> => {
+    const map = mapRef.current;
+    if (!map) {
+      console.warn('Map not initialized');
+      return;
+    }
+    const bounds = map.getBounds();
+    const reqBody = {
+      min_lng: bounds.getWest(),
+      min_lat: bounds.getSouth(),
+      max_lng: bounds.getEast(),
+      max_lat: bounds.getNorth(),
+      zoom_level: currentZoomLevel,
+      user_id: authResponse?.localId,
+    };
+    const res = await apiRequest({
+      url: urls.fetch_population_by_viewport,
+      method: 'post',
+      body: reqBody,
+      isAuthRequest: true,
+    });
+    if (!res.data.data) {
+      throw new Error('No data returned for current viewport');
+    }
+    const features = res.data.data.features;
+    const insights = calculateInsights(features);
+    setCurrentViewportInsights(insights);
+    return;
+  }, [currentZoomLevel, mapRef.current]);
+
   return (
     <LayerContext.Provider
       value={{
@@ -987,6 +1121,7 @@ export function LayerProvider(props: { children: ReactNode }) {
         switchPopulationLayer,
         refetchPopulationLayer,
         handleSubmitFetchDataset,
+        currentViewportInsights,
       }}
     >
       {children}

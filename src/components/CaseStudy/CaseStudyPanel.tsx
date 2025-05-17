@@ -1,36 +1,23 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { createContext, useContext } from 'react';
-import DemographicChart from '../DemographicChart/DemographicChart';
-import PopulationPyramid from '../DemographicChart/PopulationPyramid';
-import TrendChart from '../DemographicChart/TrendChart';
-import RichTextEditor, { initialValue } from '../ReportBuilder/RichTextEditor';
+import RichTextEditor from '../ReportBuilder/RichTextEditor';
 import RichTextContent from '../ReportBuilder/RichTextContent';
 import { Descendant, Text, Element } from 'slate';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-console.log('[File: CaseStudyPanel.tsx] Module loaded'); // Log when the module itself is loaded
-
 export const CaseStudyContext = createContext<{
   showCaseStudy: boolean;
   setShowCaseStudy: React.Dispatch<React.SetStateAction<boolean>>;
 }>({
-  showCaseStudy: false, // Default to false, actual state will be from Provider
-  setShowCaseStudy: () => {
-    console.warn('[DefaultContext] setShowCaseStudy called on default CaseStudyContext');
-  },
+  showCaseStudy: false,
+  setShowCaseStudy: () => {},
 });
 
 export const useCaseStudy = () => useContext(CaseStudyContext);
 
 export const CaseStudyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  console.log('[CaseStudyProvider] Mounted'); // Log when Provider component mounts
   const [showCaseStudy, setShowCaseStudy] = useState(false);
-  console.log('[CaseStudyProvider] State in Provider:', showCaseStudy);
-
-  useEffect(() => {
-    console.log('[CaseStudyProvider] showCaseStudy state changed to:', showCaseStudy);
-  }, [showCaseStudy]);
 
   return (
     <CaseStudyContext.Provider value={{ showCaseStudy, setShowCaseStudy }}>
@@ -38,120 +25,115 @@ export const CaseStudyProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     </CaseStudyContext.Provider>
   );
 };
-
-const regionData = [
-  { ageGroup: '0-14', male: 10, female: 9 },
-  { ageGroup: '15-24', male: 12, female: 11 },
-  { ageGroup: '25-34', male: 15, female: 14 },
-  { ageGroup: '35-44', male: 13, female: 14 },
-  { ageGroup: '45-54', male: 11, female: 12 },
-  { ageGroup: '55-64', male: 8, female: 9 },
-  { ageGroup: '65+', male: 7, female: 9 },
-];
-
 const defaultCaseStudyContent: Descendant[] = [
   {
     type: 'heading-one',
-    children: [{ text: 'Demographic Analysis' }],
+    direction: 'rtl',
+    align: 'right',
+    children: [{ text: 'التحليل الديموغرافي' }],
   },
   {
     type: 'paragraph',
+    direction: 'rtl',
+    align: 'right',
     children: [
       {
-        text: 'This region shows interesting demographic patterns that may influence business and policy decisions.',
+        text: 'تُظهِر هذه المنطقة أنماطاً ديموغرافية مثيرة للاهتمام قد تؤثر على قرارات الأعمال والسياسات.',
       },
     ],
   },
   {
     type: 'chart-container',
     placeholderType: 'demographic',
-    placeholder: 'Sample demographic analysis chart. Edit to insert a specific chart.',
+    direction: 'rtl',
+    align: 'right',
+    placeholder: 'مثال على التحليل الديموغرافي. قم بتعديله لإدراج مخطط معين.',
     children: [{ text: '' }],
   },
   {
     type: 'heading-two',
-    children: [{ text: 'Key Insights' }],
+    direction: 'rtl',
+    align: 'right',
+    children: [{ text: 'الاستنتاجات الرئيسية' }],
   },
   {
     type: 'paragraph',
+    direction: 'rtl',
+    align: 'right',
+    children: [{ text: 'يتكون السكان العمري (25-54) من 47% من السكان الكلي', bold: true }],
+  },
+  {
+    type: 'paragraph',
+    direction: 'rtl',
+    align: 'right',
+    children: [{ text: 'يتم توزيع الجنسين بشكل متوازن عبر جميع المجموعات العمرية' }],
+  },
+  {
+    type: 'paragraph',
+    direction: 'rtl',
+    align: 'right',
     children: [
-      { text: 'Working age population (25-54) comprises 47% of the total population', bold: true },
+      { text: 'يشير النمو السكاني المتعلق بالأعمار (65+) إلى إمكانية الحاجة إلى خدمات مرتبطة' },
     ],
   },
   {
     type: 'paragraph',
-    children: [{ text: 'Gender distribution is relatively balanced across all age groups' }],
-  },
-  {
-    type: 'paragraph',
-    children: [
-      { text: 'Growing senior population (65+) indicates potential need for related services' },
-    ],
-  },
-  {
-    type: 'paragraph',
-    children: [{ text: 'Projected shift from youth to elderly demographic over the next decade' }],
+    direction: 'rtl',
+    align: 'right',
+    children: [{ text: 'التحول المتوقع من الشباب إلى السكان المتقدمين العمرية خلال العقد القادم' }],
   },
   {
     type: 'heading-two',
-    children: [{ text: 'Analysis' }],
+    direction: 'rtl',
+    align: 'right',
+    children: [{ text: 'التحليل' }],
   },
   {
     type: 'chart-container',
     placeholderType: 'trend',
-    placeholder: 'Sample trend analysis chart. Edit to insert a specific chart.',
+    direction: 'rtl',
+    align: 'right',
+    placeholder: 'مثال على التحليل المتوقع. قم بتعديله لإدراج مخطط معين.',
     children: [{ text: '' }],
   },
   {
     type: 'paragraph',
+    direction: 'rtl',
+    align: 'right',
     children: [
       {
-        text: 'The demographic profile suggests a mature market with a solid base of working-age individuals. The balanced gender distribution across age groups indicates similar service needs for both demographics. The growing senior segment creates opportunities in healthcare, leisure, and retirement services.',
+        text: 'يشير الملف الديموغرافي إلى سوق كبيرة ومستقرة مع قاعدة عملية جيدة من الأفراد العمرية. يشير التوزيع الجنسي المتوازن عبر المجموعات العمرية إلى حاجات خدمة مماثلة لكلا العمرين. ينشأ النمو السكاني المتعلق بالأعمار إمكانيات في الرعاية الصحية، والترفيه، والخدمات التقاعدية.',
       },
     ],
   },
   {
     type: 'paragraph',
+    direction: 'rtl',
+    align: 'right',
     children: [
       {
-        text: 'Trend analysis indicates a gradual aging of the population over time, with implications for workforce planning, healthcare demand, and housing needs. Businesses should consider these demographic shifts when developing long-term strategies for this region.',
+        text: 'يشير التحليل المتوقع إلى تقدم عمري للسكان مع الزمن، مع تأثيرات لتخطيط العمالة، الطلب الصحي، والحاجات المنزلية. يجب على الشركات النظر في هذه التحولات الديموغرافية عند تطوير سياسات طويلة المدى لهذه المنطقة.',
       },
     ],
   },
 ];
 
 export const CaseStudyPanel: React.FC = () => {
-  console.log('[CaseStudyPanel Component] Mounted'); // Log when Panel component mounts
   const { showCaseStudy, setShowCaseStudy } = useCaseStudy();
   const [isInitialRender, setIsInitialRender] = useState(true);
-  const [activeTab, setActiveTab] = useState<'chart' | 'pyramid' | 'trend'>('chart');
   const [isEditMode, setIsEditMode] = useState(false);
   const [editorContent, setEditorContent] = useState<Descendant[]>(defaultCaseStudyContent);
   const [isPanelExpanded, setIsPanelExpanded] = useState(false);
 
   const activeChartContainerRef = useRef<HTMLDivElement>(null);
-
-  console.log('[CaseStudyPanel Component] Received showCaseStudy from context:', showCaseStudy);
-
   useEffect(() => {
-    console.log(
-      '[CaseStudyPanel Component] useEffect - showCaseStudy is now:',
-      showCaseStudy,
-      ', isInitialRender:',
-      isInitialRender
-    );
     if (isInitialRender) {
       setIsInitialRender(false);
     }
   }, [showCaseStudy, isInitialRender]);
 
   const handleInternalClose = () => {
-    console.log(
-      '[CaseStudyPanel Component] Internal close clicked. Current showCaseStudy:',
-      showCaseStudy
-    );
     setShowCaseStudy(false);
-    console.log('[CaseStudyPanel Component] Internal close - new showCaseStudy set to: false');
   };
 
   const togglePanelExpansion = () => {
@@ -247,7 +229,7 @@ export const CaseStudyPanel: React.FC = () => {
       color: string = '#000000',
       backgroundColor: string = '',
       fontNameToUse: string = 'helvetica',
-      isRTL: boolean = false,
+      isRTL: boolean = true,
       textAlign: 'left' | 'center' | 'right' | 'justify' | undefined = 'left'
     ) => {
       if (!text || text.trim() === '') return;
@@ -333,7 +315,7 @@ export const CaseStudyPanel: React.FC = () => {
 
     const processNode = (node: Descendant) => {
       let currentFont = 'helvetica'; // Default font
-      let isRTL = false;
+      let isRTL = true;
       let nodeTextAlign: 'left' | 'center' | 'right' | 'justify' | undefined = undefined;
 
       if (Element.isElement(node)) {
@@ -664,77 +646,17 @@ export const CaseStudyPanel: React.FC = () => {
           </div>
         </div>
 
-        {isEditMode ? (
-          <div className="space-y-4">
+        <div className="space-y-4">
+          {isEditMode ? (
             <RichTextEditor
               value={editorContent}
               onChange={handleEditorChange}
               className="min-h-[500px]"
             />
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <RichTextContent value={editorContent} className="space-y-4" />
-
-            {/* Tab buttons for switching between visualization types */}
-            <div className="flex border-b border-gray-200 mb-4">
-              <button
-                className={`py-2 px-4 font-medium ${
-                  activeTab === 'chart'
-                    ? 'text-gem border-b-2 border-gem'
-                    : 'text-gray-500 hover:text-gem'
-                }`}
-                onClick={() => setActiveTab('chart')}
-              >
-                Bar Chart
-              </button>
-              <button
-                className={`py-2 px-4 font-medium ${
-                  activeTab === 'pyramid'
-                    ? 'text-gem border-b-2 border-gem'
-                    : 'text-gray-500 hover:text-gem'
-                }`}
-                onClick={() => setActiveTab('pyramid')}
-              >
-                Pyramid
-              </button>
-              <button
-                className={`py-2 px-4 font-medium ${
-                  activeTab === 'trend'
-                    ? 'text-gem border-b-2 border-gem'
-                    : 'text-gray-500 hover:text-gem'
-                }`}
-                onClick={() => setActiveTab('trend')}
-              >
-                Trends
-              </button>
-            </div>
-
-            {/* Assign ref to this container to capture the active chart */}
-            <div ref={activeChartContainerRef} className="active-chart-container">
-              {/* Demographic visualizations */}
-              {activeTab === 'chart' && (
-                <DemographicChart
-                  title="Age Distribution by Gender"
-                  data={regionData}
-                  className="my-4"
-                />
-              )}
-
-              {activeTab === 'pyramid' && (
-                <PopulationPyramid
-                  title="Population Structure"
-                  data={regionData}
-                  className="my-4"
-                />
-              )}
-
-              {activeTab === 'trend' && (
-                <TrendChart title="Demographic Trends (2000-2025)" className="my-4" />
-              )}
-            </div>
-          </div>
-        )}
+          ) : (
+            <RichTextContent value={editorContent} className="space-y-4 text-right" />
+          )}
+        </div>
       </div>
     </div>
   );
