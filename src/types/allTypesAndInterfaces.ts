@@ -1,6 +1,7 @@
 import { AxiosRequestConfig } from 'axios';
 import React, { ReactNode } from 'react';
 import { MarkerData } from './marker';
+import { Insights } from './casStudy';
 
 export interface ModalProps {
   children: React.ReactNode;
@@ -345,6 +346,7 @@ export interface LayerContextType {
     action: string,
     event?: React.MouseEvent<HTMLButtonElement>
   ) => boolean | Error;
+  currentViewportInsights: Insights | null;
 }
 
 export interface ReqFetchDataset {

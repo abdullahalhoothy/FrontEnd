@@ -269,10 +269,12 @@ const EditorToolbar: React.FC = () => {
     );
   };
 
-  const insertChart = (chartType: 'demographic-chart' | 'population-pyramid' | 'trend-chart') => {
+  const insertChart = (
+    chartType: 'demographic-chart' | 'population-pyramid' | 'trend-chart' | 'demographic-card'
+  ) => {
     const chartId = `${Date.now()}-${chartType}`;
 
-    let phType: 'demographic' | 'pyramid' | 'trend';
+    let phType: 'demographic' | 'pyramid' | 'trend' | 'info-card';
     let phText: string;
 
     switch (chartType) {
@@ -287,6 +289,10 @@ const EditorToolbar: React.FC = () => {
       case 'trend-chart':
         phType = 'trend';
         phText = 'Trend Chart';
+        break;
+      case 'demographic-card':
+        phType = 'info-card';
+        phText = 'Demographic Info Card';
         break;
       default:
         phType = 'demographic';
@@ -328,7 +334,7 @@ const EditorToolbar: React.FC = () => {
 
   return (
     <div className="flex flex-wrap items-center">
-      <div className="flex items-center">
+      <div className="flex items-center flex-wrap">
         <ToolbarButton
           format="bold"
           icon={
@@ -515,6 +521,12 @@ const EditorToolbar: React.FC = () => {
                   onClick={() => insertChart('trend-chart')}
                 >
                   Demographic Trends
+                </button>
+                <button
+                  className="block w-full text-left px-3 py-2 text-sm rounded hover:bg-gray-100"
+                  onClick={() => insertChart('demographic-card')}
+                >
+                  Demographic Info Card
                 </button>
               </div>
             </div>
