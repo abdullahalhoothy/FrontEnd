@@ -15,7 +15,8 @@ import apiRequest from '../../services/apiRequest';
 import { useLayerContext } from '../../context/LayerContext';
 
 function DataContainer() {
-  const { selectedContainerType, setMarkers, handleAddClick, setGeoPoints } = useCatalogContext();
+  const { selectedContainerType, setMarkers, handleAddClick, setGeoPoints, setCaseStudyContent } =
+    useCatalogContext();
   const { setSelectedCity, setSelectedCountry } = useLayerContext();
   const { isAuthenticated, authResponse, logout } = useAuth();
   const { closeModal } = useUIContext();
@@ -201,7 +202,7 @@ function DataContainer() {
         <CatalogueCard
           key={(item.id || item.prdcer_ctlg_id || '') + '-' + index}
           id={item.id || item.prdcer_ctlg_id || ''}
-          thumbnail_url={item.thumbnail_url || ''}
+          thumbnail_url={item.thumbnail_url || item.image || ''}
           name={item.name || item.prdcer_ctlg_name || ''}
           records_number={item.records_number || item.total_records || 0}
           description={item.description || item.ctlg_description || ''}
@@ -213,6 +214,7 @@ function DataContainer() {
               ...(typeOfCard === 'userCatalog' && { lyrs: item.lyrs }),
             });
             setMarkers(item.display_elements.markers || []);
+            setCaseStudyContent(item.display_elements.case_study || []);
           }}
           can_access={item.can_access ?? false}
           typeOfCard={typeOfCard}

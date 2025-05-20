@@ -178,15 +178,15 @@ function CatalogMenu() {
             </div>
           </div>
         )}
-        <div className="block overflow-y-auto overflow-x-hidden h-[calc(100vh-20rem)]">
-          <div className="flex flex-col flex-grow justify-start items-center px-4">
+        <div className="block overflow-y-auto overflow-x-hidden h-auto">
+          <div className="flex flex-col flex-grow overflow-y-scroll justify-start items-center px-4">
             {safeGeoPoints.map(function (_, index) {
               return <MultipleLayersSetting key={index} layerIndex={index} />;
             })}
           </div>
         </div>
       </div>
-      <div className="w-full flex-col lg:h-[9%] flex px-2 py-2 select-none border-t lg:mb-0 mb-14">
+      <div className="w-full flex-col flex px-2 py-2 select-none border-t lg:mb-0 mb-14">
         <div className="flex w-full space-x-2">
           <button
             disabled={!(safeGeoPoints.length > 0)}

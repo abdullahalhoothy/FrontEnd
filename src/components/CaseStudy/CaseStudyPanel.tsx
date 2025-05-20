@@ -5,6 +5,7 @@ import RichTextContent from '../ReportBuilder/RichTextContent';
 import { Descendant, Text, Element } from 'slate';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { useCatalogContext } from '../../context/CatalogContext';
 
 export const CaseStudyContext = createContext<{
   showCaseStudy: boolean;
@@ -25,104 +26,12 @@ export const CaseStudyProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     </CaseStudyContext.Provider>
   );
 };
-const defaultCaseStudyContent: Descendant[] = [
-  {
-    type: 'heading-one',
-    direction: 'rtl',
-    align: 'right',
-    children: [{ text: 'التحليل الديموغرافي' }],
-  },
-  {
-    type: 'paragraph',
-    direction: 'rtl',
-    align: 'right',
-    children: [
-      {
-        text: 'تُظهِر هذه المنطقة أنماطاً ديموغرافية مثيرة للاهتمام قد تؤثر على قرارات الأعمال والسياسات.',
-      },
-    ],
-  },
-  {
-    type: 'chart-container',
-    placeholderType: 'demographic',
-    direction: 'rtl',
-    align: 'right',
-    placeholder: 'مثال على التحليل الديموغرافي. قم بتعديله لإدراج مخطط معين.',
-    children: [{ text: '' }],
-  },
-  {
-    type: 'heading-two',
-    direction: 'rtl',
-    align: 'right',
-    children: [{ text: 'الاستنتاجات الرئيسية' }],
-  },
-  {
-    type: 'paragraph',
-    direction: 'rtl',
-    align: 'right',
-    children: [{ text: 'يتكون السكان العمري (25-54) من 47% من السكان الكلي', bold: true }],
-  },
-  {
-    type: 'paragraph',
-    direction: 'rtl',
-    align: 'right',
-    children: [{ text: 'يتم توزيع الجنسين بشكل متوازن عبر جميع المجموعات العمرية' }],
-  },
-  {
-    type: 'paragraph',
-    direction: 'rtl',
-    align: 'right',
-    children: [
-      { text: 'يشير النمو السكاني المتعلق بالأعمار (65+) إلى إمكانية الحاجة إلى خدمات مرتبطة' },
-    ],
-  },
-  {
-    type: 'paragraph',
-    direction: 'rtl',
-    align: 'right',
-    children: [{ text: 'التحول المتوقع من الشباب إلى السكان المتقدمين العمرية خلال العقد القادم' }],
-  },
-  {
-    type: 'heading-two',
-    direction: 'rtl',
-    align: 'right',
-    children: [{ text: 'التحليل' }],
-  },
-  {
-    type: 'chart-container',
-    placeholderType: 'trend',
-    direction: 'rtl',
-    align: 'right',
-    placeholder: 'مثال على التحليل المتوقع. قم بتعديله لإدراج مخطط معين.',
-    children: [{ text: '' }],
-  },
-  {
-    type: 'paragraph',
-    direction: 'rtl',
-    align: 'right',
-    children: [
-      {
-        text: 'يشير الملف الديموغرافي إلى سوق كبيرة ومستقرة مع قاعدة عملية جيدة من الأفراد العمرية. يشير التوزيع الجنسي المتوازن عبر المجموعات العمرية إلى حاجات خدمة مماثلة لكلا العمرين. ينشأ النمو السكاني المتعلق بالأعمار إمكانيات في الرعاية الصحية، والترفيه، والخدمات التقاعدية.',
-      },
-    ],
-  },
-  {
-    type: 'paragraph',
-    direction: 'rtl',
-    align: 'right',
-    children: [
-      {
-        text: 'يشير التحليل المتوقع إلى تقدم عمري للسكان مع الزمن، مع تأثيرات لتخطيط العمالة، الطلب الصحي، والحاجات المنزلية. يجب على الشركات النظر في هذه التحولات الديموغرافية عند تطوير سياسات طويلة المدى لهذه المنطقة.',
-      },
-    ],
-  },
-];
 
 export const CaseStudyPanel: React.FC = () => {
   const { showCaseStudy, setShowCaseStudy } = useCaseStudy();
   const [isInitialRender, setIsInitialRender] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [editorContent, setEditorContent] = useState<Descendant[]>(defaultCaseStudyContent);
+  const { caseStudyContent, setCaseStudyContent } = useCatalogContext();
   const [isPanelExpanded, setIsPanelExpanded] = useState(false);
 
   const activeChartContainerRef = useRef<HTMLDivElement>(null);
@@ -496,21 +405,23 @@ export const CaseStudyPanel: React.FC = () => {
       fontSize?: string;
     };
 
-    editorContent.forEach(processNode);
+    caseStudyContent.forEach(processNode);
 
     if (activeChartContainerRef.current) {
       try {
         const canvas = await html2canvas(activeChartContainerRef.current, {
-          scale: 2, // Higher scale for better image quality
-          useCORS: true, // If charts load external images/fonts
-          backgroundColor: '#ffffff', // Ensure background for transparency issues
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
         });
         const imgData = canvas.toDataURL('image/png');
         const imgProps = pdf.getImageProperties(imgData);
         const imgWidth = pageWidth - 2 * margin;
         const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
 
-        const spaceForChart = imgHeight + 20; // Image height + some padding
+        const chartPadding = 20;
+
+        const spaceForChart = imgHeight + chartPadding;
 
         if (yPos + spaceForChart > pageHeight - margin) {
           pdf.addPage();
@@ -547,11 +458,7 @@ export const CaseStudyPanel: React.FC = () => {
       );
     }
 
-    pdf.save('case-study-export.pdf');
-  };
-
-  const handleEditorChange = (value: Descendant[]) => {
-    setEditorContent(value);
+    pdf.save('Case Study.pdf');
   };
 
   return (
@@ -649,12 +556,12 @@ export const CaseStudyPanel: React.FC = () => {
         <div className="space-y-4">
           {isEditMode ? (
             <RichTextEditor
-              value={editorContent}
-              onChange={handleEditorChange}
+              value={caseStudyContent}
+              onChange={setCaseStudyContent}
               className="min-h-[500px]"
             />
           ) : (
-            <RichTextContent value={editorContent} className="space-y-4 text-right" />
+            <RichTextContent value={caseStudyContent} className="space-y-4 text-right" />
           )}
         </div>
       </div>

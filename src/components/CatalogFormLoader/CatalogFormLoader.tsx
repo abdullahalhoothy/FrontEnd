@@ -3,7 +3,6 @@ import { useCatalogContext } from '../../context/CatalogContext';
 import CatalogMenu from '../CatalogMenu/CatalogMenu';
 import CatalogDetailsForm from '../CatalogDetailsForm/CatalogDetailsForm';
 import { useUIContext } from '../../context/UIContext';
-import SavedIconFeedback from '../SavedIconFeedback/SavedIconFeedback';
 
 const CatalogFormLoader = () => {
   const { formStage, resetFormStage } = useCatalogContext();

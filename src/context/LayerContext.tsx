@@ -1031,7 +1031,9 @@ export function LayerProvider(props: { children: ReactNode }) {
       min_lat: bounds.getSouth(),
       max_lng: bounds.getEast(),
       max_lat: bounds.getNorth(),
-      zoom_level: currentZoomLevel,
+      population: true,
+      income: true,
+      zoom_level: 7 + currentZoomLevel,
       user_id: authResponse?.localId,
     };
     const res = await apiRequest({

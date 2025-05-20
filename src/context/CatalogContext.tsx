@@ -16,6 +16,100 @@ import html2canvas from 'html2canvas';
 import defaultMapConfig from '../mapConfig.json';
 import { isIntelligentLayer } from '../utils/layerUtils';
 import { v4 as uuidv4 } from 'uuid';
+import { Descendant } from 'slate';
+
+const defaultCaseStudyContent: Descendant[] = [
+  {
+    type: 'heading-one',
+    direction: 'rtl',
+    align: 'right',
+    children: [{ text: 'التحليل الديموغرافي' }],
+  },
+  {
+    type: 'paragraph',
+    direction: 'rtl',
+    align: 'right',
+    children: [
+      {
+        text: 'تُظهِر هذه المنطقة أنماطاً ديموغرافية مثيرة للاهتمام قد تؤثر على قرارات الأعمال والسياسات.',
+      },
+    ],
+  },
+  {
+    type: 'chart-container',
+    placeholderType: 'demographic',
+    direction: 'rtl',
+    align: 'right',
+    placeholder: 'مثال على التحليل الديموغرافي. قم بتعديله لإدراج مخطط معين.',
+    children: [{ text: '' }],
+  },
+  {
+    type: 'heading-two',
+    direction: 'rtl',
+    align: 'right',
+    children: [{ text: 'الاستنتاجات الرئيسية' }],
+  },
+  {
+    type: 'paragraph',
+    direction: 'rtl',
+    align: 'right',
+    children: [{ text: 'يتكون السكان العمري (25-54) من 47% من السكان الكلي', bold: true }],
+  },
+  {
+    type: 'paragraph',
+    direction: 'rtl',
+    align: 'right',
+    children: [{ text: 'يتم توزيع الجنسين بشكل متوازن عبر جميع المجموعات العمرية' }],
+  },
+  {
+    type: 'paragraph',
+    direction: 'rtl',
+    align: 'right',
+    children: [
+      { text: 'يشير النمو السكاني المتعلق بالأعمار (65+) إلى إمكانية الحاجة إلى خدمات مرتبطة' },
+    ],
+  },
+  {
+    type: 'paragraph',
+    direction: 'rtl',
+    align: 'right',
+    children: [{ text: 'التحول المتوقع من الشباب إلى السكان المتقدمين العمرية خلال العقد القادم' }],
+  },
+  {
+    type: 'heading-two',
+    direction: 'rtl',
+    align: 'right',
+    children: [{ text: 'التحليل' }],
+  },
+  {
+    type: 'chart-container',
+    placeholderType: 'trend',
+    direction: 'rtl',
+    align: 'right',
+    placeholder: 'مثال على التحليل المتوقع. قم بتعديله لإدراج مخطط معين.',
+    children: [{ text: '' }],
+  },
+  {
+    type: 'paragraph',
+    direction: 'rtl',
+    align: 'right',
+    children: [
+      {
+        text: 'يشير الملف الديموغرافي إلى سوق كبيرة ومستقرة مع قاعدة عملية جيدة من الأفراد العمرية. يشير التوزيع الجنسي المتوازن عبر المجموعات العمرية إلى حاجات خدمة مماثلة لكلا العمرين. ينشأ النمو السكاني المتعلق بالأعمار إمكانيات في الرعاية الصحية، والترفيه، والخدمات التقاعدية.',
+      },
+    ],
+  },
+  {
+    type: 'paragraph',
+    direction: 'rtl',
+    align: 'right',
+    children: [
+      {
+        text: 'يشير التحليل المتوقع إلى تقدم عمري للسكان مع الزمن، مع تأثيرات لتخطيط العمالة، الطلب الصحي، والحاجات المنزلية. يجب على الشركات النظر في هذه التحولات الديموغرافية عند تطوير سياسات طويلة المدى لهذه المنطقة.',
+      },
+    ],
+  },
+];
 
 const CatalogContext = createContext<CatalogContextType | undefined>(undefined);
 
@@ -59,7 +153,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [radiusInput, setRadiusInput] = useState<number | null>(null);
   const [isRadiusMode, setIsRadiusMode] = useState(false);
   const [colors, setColors] = useState<string[][]>([]);
-
   const [reqGradientColorBasedOnZone, setReqGradientColorBasedOnZone] =
     useState<ReqGradientColorBasedOnZone>({
       prdcer_lyr_id: '',
@@ -91,6 +184,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [basedOnProperty, setBasedOnProperty] = useState<string | null>(null);
   const [markers, setMarkers] = useState<MarkerData[]>([]);
   const [isMarkersEnabled, setIsMarkersEnabled] = useState<boolean>(false);
+  const [caseStudyContent, setCaseStudyContent] = useState<Descendant[]>(defaultCaseStudyContent);
 
   async function fetchGeoPoints(
     id: string,
@@ -242,8 +336,9 @@ export function CatalogProvider(props: { children: ReactNode }) {
               coordinates: marker.coordinates,
               timestamp: marker.timestamp,
             })),
+            case_study: caseStudyContent,
           },
-          thumbnail_url: thumbnailDataUrl,
+          image: thumbnailDataUrl,
         },
       };
 
@@ -611,6 +706,8 @@ export function CatalogProvider(props: { children: ReactNode }) {
         deleteMarker,
         isMarkersEnabled,
         setIsMarkersEnabled,
+        caseStudyContent,
+        setCaseStudyContent,
       }}
     >
       {children}

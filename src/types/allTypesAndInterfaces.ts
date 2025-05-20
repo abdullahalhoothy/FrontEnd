@@ -2,6 +2,7 @@ import { AxiosRequestConfig } from 'axios';
 import React, { ReactNode } from 'react';
 import { MarkerData } from './marker';
 import { Insights } from './casStudy';
+import { Descendant } from 'slate';
 
 export interface ModalProps {
   children: React.ReactNode;
@@ -23,6 +24,7 @@ export interface Catalog {
   name: string;
   description: string;
   thumbnail_url: string;
+  image?: string;
   records_number: number;
   catalog_link: string;
   can_access: boolean;
@@ -40,6 +42,7 @@ export interface Catalog {
       timestamp: number;
       coordinates: [number, number];
     }[];
+    case_study: Descendant[];
   };
 }
 
@@ -101,7 +104,6 @@ export interface CardItem {
   city_name?: string;
 }
 
-// Catalog Context Type
 export interface CatalogContextType {
   formStage: 'catalog' | 'catalogDetails' | 'save';
   saveMethod: string;
@@ -111,6 +113,7 @@ export interface CatalogContextType {
   subscriptionPrice: string;
   description: string;
   name: string;
+  caseStudyContent?: Descendant[];
   selectedContainerType: 'Catalogue' | 'Layer' | 'Home';
   setFormStage: React.Dispatch<React.SetStateAction<'catalog' | 'catalogDetails' | 'save'>>;
   setSaveMethod: React.Dispatch<React.SetStateAction<string>>;
@@ -120,6 +123,7 @@ export interface CatalogContextType {
   setSubscriptionPrice: React.Dispatch<React.SetStateAction<string>>;
   setDescription: React.Dispatch<React.SetStateAction<string>>;
   setName: React.Dispatch<React.SetStateAction<string>>;
+  setCaseStudyContent: React.Dispatch<React.SetStateAction<Descendant[]>>;
   setSelectedContainerType: React.Dispatch<React.SetStateAction<'Catalogue' | 'Layer' | 'Home'>>;
   handleAddClick: (
     id: string,
