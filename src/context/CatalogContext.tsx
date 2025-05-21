@@ -338,7 +338,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
             })),
             case_study: caseStudyContent,
           },
-          image: thumbnailDataUrl,
         },
       };
 

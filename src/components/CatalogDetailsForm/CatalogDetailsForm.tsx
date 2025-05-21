@@ -67,7 +67,7 @@ function CatalogDetailsForm() {
   }
 
   return (
-    <div className="flex flex-col justify-between h-full w-full lg:pr-1.5">
+    <div className="flex flex-col h-full w-full lg:pr-1.5">
       <div className="flex flex-col mt-7 px-4">
         {error && <p className=" text-red-500 font-semibold">{error}</p>}
 

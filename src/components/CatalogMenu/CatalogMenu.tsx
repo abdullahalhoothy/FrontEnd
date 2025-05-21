@@ -107,8 +107,8 @@ function CatalogMenu() {
 
   return (
     <div className="flex flex-col justify-between h-full w-full pt-3 lg:pr-1.5">
-      <CaseStudyToggle />
-      <div className={`flex flex-col justify-start mt-3 ${!showRestorePrompt ? 'flex-grow' : ''}`}>
+      <div className={`flex flex-col justify-start mt-3`}>
+        <CaseStudyToggle />
         <div className="flex justify-between items-center mx-8 my-2">
           <p className={'text-lg font-semibold'}>Datasets</p>
           <button
