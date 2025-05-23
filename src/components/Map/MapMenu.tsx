@@ -27,6 +27,7 @@ interface MapMenuProps {
   lngLat: mapboxgl.LngLat;
   onClose: () => void;
   onSave: (lngLat: mapboxgl.LngLat) => void;
+  onMeasureDistance: () => void;
   onAction?: (actionId: string) => void;
 }
 
@@ -46,7 +47,7 @@ const menuItems = [
   { id: 'add_missing', icon: <FaPlusCircle size={18} />, text: 'Add a missing place' },
   { id: 'add_business', icon: <FaBuilding size={18} />, text: 'Add your business' },
   { id: 'report_problem', icon: <FaFlag size={18} />, text: 'Report a data problem' },
-  { id: 'measure_distance', icon: <FaRuler size={18} />, text: 'Measure distance' },
+  { id: 'measure_distance', icon: <FaRuler size={18} />, text: 'Measure distance', enabled: true },
 ];
 
 const MapMenu: React.FC<MapMenuProps> = ({
@@ -55,6 +56,7 @@ const MapMenu: React.FC<MapMenuProps> = ({
   lngLat,
   onClose,
   onSave,
+  onMeasureDistance,
   onAction = actionId => console.log(actionId),
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
@@ -225,6 +227,8 @@ const MapMenu: React.FC<MapMenuProps> = ({
   const handleItemClick = (id: string) => {
     if (id === 'save') {
       onSave(lngLat);
+    } else if (id === 'measure_distance') {
+      onMeasureDistance(lngLat);
     } else {
       onAction(id);
     }

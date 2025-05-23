@@ -1,13 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaTrash } from 'react-icons/fa';
-import styles from './MultipleLayersSetting.module.css';
 import ColorSelect from '../ColorSelect/ColorSelect';
 import { useCatalogContext } from '../../context/CatalogContext';
-import {
-  GradientColorBasedOnZone,
-  MultipleLayersSettingProps,
-  DisplayType,
-} from '../../types/allTypesAndInterfaces';
+import { MultipleLayersSettingProps, DisplayType } from '../../types/allTypesAndInterfaces';
 import DropdownColorSelect from '../ColorSelect/DropdownColorSelect';
 import { IoIosArrowDropdown } from 'react-icons/io';
 import { RiCloseCircleLine } from 'react-icons/ri';
@@ -19,7 +14,6 @@ import { toast } from 'sonner';
 
 const initialBasedon = 'radius';
 const initialRadius = 1000;
-
 
 const getFormattedThreshold = (value: string, basedOn: string | null) => {
   if (
@@ -53,7 +47,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     setGeoPoints,
     updateLayerDisplay,
     updateLayerHeatmap,
-    removeLayer,
     restoreLayer,
     isAdvanced,
     setIsAdvanced,
@@ -74,13 +67,10 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     setIsRadiusMode,
     updateLayerGrid,
     updateLayerColor,
-    resetState,
     basedOnLayerId,
     basedOnProperty,
-    setBasedOnProperty,
     setIsLoading,
     isLoading,
-    gradientColorBasedOnZone,
     handleFilteredZone,
     handleNameBasedColorZone,
   } = useCatalogContext();

@@ -64,7 +64,10 @@ export function MapProvider({ children }: { children: ReactNode }) {
   // Ensure zoom handler is properly attached
   useEffect(() => {
     const map = mapRef.current;
+
     if (!map || !mapState.isStyleLoaded) return;
+
+    map.dragRotate.disable();
 
     const onZoom = () => {
       handleZoomChange();

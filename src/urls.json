@@ -43,5 +43,6 @@
   "filter_based_zone": "/filter_based_on",
   "process_llm_query": "/process_llm_query",
   "gradient_color_based_on_zone_llm": "gradient_color_based_on_zone_llm",
-  "fetch_population_by_viewport": "/fetch_population_by_viewport"
+  "fetch_population_by_viewport": "/fetch_population_by_viewport",
+  "distance_drive_time_polygon": "/distance_drive_time_polygon"
 }

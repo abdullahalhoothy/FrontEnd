@@ -6,12 +6,7 @@ import { useCatalogContext } from '../../context/CatalogContext';
 import { useLongPress } from 'use-long-press';
 import MapMenu from './MapMenu';
 import './mapbox-custom.css';
-
-const isMobile = () => {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBe  rry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent
-  );
-};
+import { useMeasurement } from '../../hooks/useMeasurement';
 
 const SavedLocations: React.FC = () => {
   const { mapRef, shouldInitializeFeatures } = useMapContext();
@@ -21,6 +16,15 @@ const SavedLocations: React.FC = () => {
   const [lastLngLat, setLastLngLat] = useState<mapboxgl.LngLat | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
   const [menuLngLat, setMenuLngLat] = useState<mapboxgl.LngLat | null>(null);
+
+  const { isMobile } = useUIContext();
+  const { isMeasuring, initializeMeasureMode, exitMeasureMode, handleMapClickForMeasurement } =
+    useMeasurement();
+
+  const handleMapClickForMeasurementRef = useRef(handleMapClickForMeasurement);
+  useEffect(() => {
+    handleMapClickForMeasurementRef.current = handleMapClickForMeasurement;
+  }, [handleMapClickForMeasurement]);
 
   const markersRef = useRef<{ [id: string]: mapboxgl.Marker }>({});
 
@@ -34,6 +38,9 @@ const SavedLocations: React.FC = () => {
         tempMarker.remove();
         setTempMarker(null);
       }
+      if (isMeasuring) {
+        exitMeasureMode();
+      }
 
       Object.values(markersRef.current).forEach(marker => {
         try {
@@ -45,7 +52,7 @@ const SavedLocations: React.FC = () => {
 
       markersRef.current = {};
     }
-  }, [isMarkersEnabled, tempMarker, setMarkers]);
+  }, [isMarkersEnabled, tempMarker, setMarkers, isMeasuring, exitMeasureMode]);
 
   const handleCloseModal = useCallback(() => {
     if (tempMarker) {
@@ -299,9 +306,18 @@ const SavedLocations: React.FC = () => {
     [isMarkersEnabled, mapRef, tempMarker, addMarker, openModal, createMarkerModal]
   );
 
+  const startMeasureDistance = useCallback(() => {
+    closeMenu();
+    initializeMeasureMode();
+  }, [closeMenu, initializeMeasureMode]);
+
   const longPressHandler = useLongPress(
     event => {
       if (!isMarkersEnabled || !lastLngLat) return;
+
+      if (isMeasuring) {
+        exitMeasureMode();
+      }
 
       if (event.target) {
         const touch = (event as unknown as TouchEvent).touches[0];
@@ -333,6 +349,10 @@ const SavedLocations: React.FC = () => {
     const handleRightClick = (e: mapboxgl.MapMouseEvent) => {
       if (!isMarkersEnabled) return;
       e.preventDefault();
+
+      if (isMeasuring) {
+        exitMeasureMode();
+      }
 
       // Show the context menu at the clicked position
       setMenuPosition({ x: e.originalEvent.clientX, y: e.originalEvent.clientY });
@@ -414,6 +434,48 @@ const SavedLocations: React.FC = () => {
     closeMenu,
   ]);
 
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !shouldInitializeFeatures) {
+      console.log('[SavedLocations EFFECT] Map not ready or features not init.');
+      return;
+    }
+
+    const eventHandler = (e: mapboxgl.MapMouseEvent) => {
+      handleMapClickForMeasurementRef.current(e);
+    };
+
+    if (isMeasuring) {
+      console.log(
+        '[SavedLocations EFFECT] ADDING click listener for measurement (isMeasuring is true).'
+      );
+      map.on('click', eventHandler);
+    } else {
+      console.log('[SavedLocations EFFECT] NOT adding listener (isMeasuring is false).');
+    }
+
+    return () => {
+      console.log('[SavedLocations EFFECT CLEANUP] REMOVING click listener for measurement.');
+      map.off('click', eventHandler);
+    };
+  }, [isMeasuring, mapRef, shouldInitializeFeatures]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (isMeasuring) {
+          exitMeasureMode();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isMeasuring, exitMeasureMode]);
+
   return (
     <>
       {menuPosition && menuLngLat && (
@@ -423,8 +485,20 @@ const SavedLocations: React.FC = () => {
           lngLat={menuLngLat}
           onClose={closeMenu}
           onSave={createNewMarker}
+          onMeasureDistance={startMeasureDistance}
           onAction={action => console.log('Action:', action)}
         />
+      )}
+
+      {isMeasuring && (
+        <div className="absolute bottom-4 right-4 p-2 rounded z-10">
+          <button
+            className="shadow px-3 py-1 bg-rose-700 text-white rounded hover:bg-rose-600 text-sm"
+            onClick={exitMeasureMode}
+          >
+            Cancel Measurement
+          </button>
+        </div>
       )}
     </>
   );
