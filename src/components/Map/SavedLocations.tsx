@@ -366,7 +366,7 @@ const SavedLocations: React.FC = () => {
     };
 
     // Apply longPress to the map container for mobile
-    if (isMobile() && map.getContainer()) {
+    if (isMobile && map.getContainer()) {
       const container = map.getContainer();
       container.setAttribute('role', 'application');
       Object.entries(longPressHandler()).forEach(([key, value]) => {
@@ -402,7 +402,7 @@ const SavedLocations: React.FC = () => {
       map.off('touchstart', handleTouchStart);
       map.off('click', handleMapClick);
 
-      if (isMobile() && map.getContainer()) {
+      if (isMobile && map.getContainer()) {
         const container = map.getContainer();
         Object.entries(longPressHandler()).forEach(([key, value]) => {
           container.removeEventListener(

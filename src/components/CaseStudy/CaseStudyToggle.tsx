@@ -3,24 +3,15 @@ import { useCaseStudy } from './CaseStudyPanel';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 export const CaseStudyToggle: React.FC = () => {
-  console.log('[CaseStudyToggle] Mounted');
   const { showCaseStudy, setShowCaseStudy } = useCaseStudy();
   const [isDisabled, setIsDisabled] = useState(false);
 
-  console.log('[CaseStudyToggle] Initial showCaseStudy from context:', showCaseStudy);
-
   const handleToggle = () => {
     if (!isDisabled) {
-      console.log('[CaseStudyToggle] handleToggle - current showCaseStudy:', showCaseStudy);
       const newState = !showCaseStudy;
       setShowCaseStudy(newState);
-      console.log('[CaseStudyToggle] handleToggle - new showCaseStudy set to:', newState);
     }
   };
-
-  useEffect(() => {
-    console.log('[CaseStudyToggle] useEffect - showCaseStudy from context is now:', showCaseStudy);
-  }, [showCaseStudy]);
 
   return (
     <div className="w-full flex justify-center my-4">
